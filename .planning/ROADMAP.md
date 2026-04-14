@@ -88,8 +88,13 @@ Plans:
   3. Next watering date recalculates automatically after logging (last watered + interval days) and is correct relative to the user's local timezone
   4. User can view a chronological watering history for each plant and can log a retroactive watering date
   5. User can edit or delete a mistaken watering log; duplicate logs within a short window are prevented
-**Plans**: TBD
+**Plans:** 3 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 04-01-PLAN.md — Watering data layer: Zod schemas, urgency classification query, Server Actions (log/edit/delete), types, tests, shadcn installs
+- [ ] 04-02-PLAN.md — Dashboard UI: urgency sections, responsive card grid, optimistic water button, timezone sync, loading skeletons
+- [ ] 04-03-PLAN.md — Plant detail watering: history list with pagination, log/edit/delete dialogs, date picker, kebab menus
 
 ### Phase 5: Notes, Search, and Filters
 **Goal**: Users can annotate individual plants with timestamped notes and quickly find any plant in their collection
@@ -138,7 +143,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Scaffold and Foundations | 0/3 | Planning complete | - |
 | 2. Authentication and Onboarding | 0/4 | Planning complete | - |
 | 3. Plant Collection and Rooms | 0/6 | Planning complete | - |
-| 4. Dashboard and Watering Core Loop | 0/? | Not started | - |
+| 4. Dashboard and Watering Core Loop | 0/3 | Planning complete | - |
 | 5. Notes, Search, and Filters | 0/? | Not started | - |
 | 6. Reminders and Demo Mode | 0/? | Not started | - |
 | 7. Polish and Accessibility | 0/? | Not started | - |
