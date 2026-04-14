@@ -563,17 +563,19 @@ function handleWater(plantId: string) {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **`@date-fns/tz` vs client-sent UTC boundaries**
+1. **`@date-fns/tz` vs client-sent UTC boundaries** -- RESOLVED
    - What we know: D-12 requires timezone-correct "due today". Client has `Intl.DateTimeFormat().resolvedOptions().timeZone`. `date-fns` has companion package `@date-fns/tz`.
    - What's unclear: Whether `@date-fns/tz` is fully compatible with `date-fns@4.x` (the `4.x` line is relatively new and the companion may lag). The simpler alternative — client sends UTC start/end timestamps for the local day as query params — avoids this entirely.
    - Recommendation: Default to the simpler approach (client sends `?tzStart=<UTC ms>&tzEnd=<UTC ms>`) for Wave 1. Upgrade to `@date-fns/tz` only if the client-side computation causes issues.
+   - **Resolution:** Adopted a hybrid approach. A `TimezoneSync` client component (Plan 01) sets a `user_tz` cookie with the IANA timezone string. The dashboard Server Component (Plan 02) reads this cookie and computes UTC day boundaries server-side using `toLocaleDateString("en-CA", { timeZone })` to derive the user's local date, then constructs `todayStart`/`todayEnd` as UTC Date objects. No `@date-fns/tz` dependency needed.
 
-2. **`deleteWateringLog` and `nextWateringAt` recalculation**
+2. **`deleteWateringLog` and `nextWateringAt` recalculation** -- RESOLVED
    - What we know: Deleting the most recent log must recalculate `Plant.nextWateringAt` from the new most-recent log.
    - What's unclear: What happens when all logs are deleted? The plant was created with `nextWateringAt = addDays(now, interval)` (from `createPlant` action). Should deleting all logs reset to creation-time behavior?
    - Recommendation: If all logs deleted, set `lastWateredAt = null` and `nextWateringAt = addDays(now, plant.wateringInterval)` (reset countdown from today). This matches user mental model.
+   - **Resolution:** Adopted the recommendation. Plan 01 Task 2 implements `deleteWateringLog` with explicit handling: when no logs remain after deletion, sets `lastWateredAt = null` and `nextWateringAt = addDays(new Date(), plant.wateringInterval)` to reset the countdown from today.
 
 ---
 
