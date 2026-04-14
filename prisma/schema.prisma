@@ -12,8 +12,10 @@ model User {
   email         String        @unique
   passwordHash  String
   name          String?
-  createdAt     DateTime      @default(now()) @db.Timestamptz(3)
-  updatedAt     DateTime      @updatedAt @db.Timestamptz(3)
+  createdAt             DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime      @updatedAt @db.Timestamptz(3)
+  onboardingCompleted   Boolean       @default(false)
+  plantCountRange       String?
   plants        Plant[]
   rooms         Room[]
   reminders     Reminder[]
