@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { addDays } from "date-fns";
 import { logWateringSchema, editWateringLogSchema } from "./schemas";
+import { getWateringHistory } from "./queries";
 
 export async function logWatering(data: unknown) {
   const session = await auth();
@@ -160,4 +161,11 @@ export async function deleteWateringLog(logId: string) {
   revalidatePath("/plants/" + log.plantId);
 
   return { success: true };
+}
+
+export async function loadMoreWateringHistory(plantId: string, skip: number) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+
+  return getWateringHistory(plantId, session.user.id, skip, 20);
 }
