@@ -101,6 +101,8 @@ Users can see at a glance which plants need watering today and log it in one act
 | shadcn/ui + Tailwind | Copy-paste components, full control, great DX with Tailwind | — Pending |
 | Minimal onboarding | Low friction — plant count + reminder pref, then first plant | — Pending |
 | Custom rooms + presets | Flexibility with common defaults (Living room, Kitchen, etc.) | — Pending |
+| Prisma output in src/generated/ | Avoids shadowing src/app/ with root app/ dir | Validated in Phase 1 |
+| Split auth config (auth.config.ts + auth.ts) | Edge-safe proxy.ts needs import-free config | Validated in Phase 1 |
 
 ## Evolution
 
@@ -120,4 +122,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-13 after initialization*
+*Last updated: 2026-04-14 after Phase 1 completion — scaffold and foundations built, auth configured, test harness operational*
