@@ -4,6 +4,7 @@ import { getPlants, getCatalog } from "@/features/plants/queries";
 import { getRoomsForSelect } from "@/features/rooms/queries";
 import { PlantGrid } from "@/components/plants/plant-grid";
 import { AddPlantDialog } from "@/components/plants/add-plant-dialog";
+import { RoomFilter } from "@/components/plants/room-filter";
 import { Leaf } from "lucide-react";
 
 export default async function PlantsPage({
@@ -27,6 +28,10 @@ export default async function PlantsPage({
         <h1 className="text-xl font-semibold">My Plants</h1>
         <AddPlantDialog catalog={catalog} rooms={rooms} />
       </div>
+
+      {rooms.length > 0 && (
+        <RoomFilter rooms={rooms} activeRoomId={params.room} />
+      )}
 
       {plants.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-3xl text-center">
