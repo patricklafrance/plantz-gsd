@@ -32,7 +32,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The `lib/db.ts` Prisma singleton exists and prevents connection pool exhaustion in dev and serverless environments
   4. NextAuth v5 is configured with the credentials provider and JWT session strategy; `proxy.ts` middleware rejects unauthenticated requests to protected routes
   5. Vitest and Playwright are configured and a single passing test exists for each
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Bootstrap Next.js 16, Prisma schema (7 entities, TIMESTAMPTZ), db singleton, design tokens, directory structure
+- [ ] 01-02-PLAN.md — NextAuth v5 split config (auth.config.ts + auth.ts), proxy.ts route protection, API route handler
+- [ ] 01-03-PLAN.md — Test harness (Vitest + Playwright), shadcn/ui initialization with 7 base components, Prisma schema push to PostgreSQL
 
 ### Phase 2: Authentication and Onboarding
 **Goal**: Users can create accounts, log in securely, and complete minimal onboarding before reaching their dashboard
@@ -113,11 +118,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffold and Foundations | 0/? | Not started | - |
+| 1. Scaffold and Foundations | 0/3 | Planning complete | - |
 | 2. Authentication and Onboarding | 0/? | Not started | - |
 | 3. Plant Collection and Rooms | 0/? | Not started | - |
 | 4. Dashboard and Watering Core Loop | 0/? | Not started | - |
