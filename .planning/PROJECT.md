@@ -12,12 +12,10 @@ Users can see at a glance which plants need watering today and log it in one act
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Users can create an account and log in securely (NextAuth.js, email/password) — Validated in Phase 2: Authentication and Onboarding
+- [x] Users can go through minimal onboarding (plant count) — Validated in Phase 2: Authentication and Onboarding (reminder preference deferred per D-08)
 
 ### Active
-
-- [ ] Users can create an account and log in securely (NextAuth.js, email/password)
-- [ ] Users can go through minimal onboarding (plant count, reminder preference)
 - [ ] Users can add, edit, archive, and delete plants with confirmation
 - [ ] Users can organize plants by room (custom names + common presets)
 - [ ] Users can log watering in one quick action from the dashboard
