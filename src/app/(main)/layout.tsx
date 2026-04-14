@@ -31,13 +31,13 @@ export default async function MainLayout({
           <div className="flex items-center gap-md">
             {!user?.onboardingCompleted && (
               <Link
-                href="/dashboard"
+                href="/dashboard#onboarding"
                 className="text-sm font-medium text-accent hover:underline"
               >
                 Complete setup
               </Link>
             )}
-            <span className="text-sm text-muted">{user?.email}</span>
+            <span className="text-sm text-muted-foreground">{user?.email}</span>
             <LogoutButton />
           </div>
         </nav>

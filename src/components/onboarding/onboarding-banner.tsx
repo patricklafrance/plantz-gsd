@@ -57,6 +57,7 @@ export function OnboardingBanner({ userId }: OnboardingBannerProps) {
 
   return (
     <div
+      id="onboarding"
       className={cn(
         "transition-all duration-300 ease-out",
         isCollapsing ? "max-h-0 opacity-0 overflow-hidden" : "max-h-96 opacity-100"
@@ -71,11 +72,11 @@ export function OnboardingBanner({ userId }: OnboardingBannerProps) {
 
           <div className="flex-1 space-y-xs">
             <p className="text-base font-medium">Welcome to Plant Minder</p>
-            <p className="text-base text-muted">How many plants are you tracking?</p>
+            <p className="text-base text-muted-foreground">How many plants are you tracking?</p>
           </div>
 
           {isCompleted ? (
-            <p className="text-sm text-muted">Got it — your tips are personalized.</p>
+            <p className="text-sm text-muted-foreground">Got it — your tips are personalized.</p>
           ) : (
             <div className="flex flex-wrap gap-sm">
               {PLANT_RANGES.map((range) => (
@@ -99,7 +100,7 @@ export function OnboardingBanner({ userId }: OnboardingBannerProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-2 top-2 h-11 w-11 text-muted"
+          className="absolute right-2 top-2 h-11 w-11 text-muted-foreground"
           onClick={() => setDismissed(true)}
           aria-label="Dismiss setup banner"
         >

@@ -27,7 +27,7 @@ export default async function DashboardPage() {
           <Leaf className="h-8 w-8 text-accent" />
         </div>
         <h2 className="text-xl font-semibold">No plants yet</h2>
-        <p className="mt-sm max-w-sm text-muted">
+        <p className="mt-sm text-muted-foreground">
           Add your first plant to start tracking your watering schedule.
         </p>
       </div>
