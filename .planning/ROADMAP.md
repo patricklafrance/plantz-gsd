@@ -67,8 +67,16 @@ Plans:
   3. User can archive a plant and it disappears from the active collection and dashboard; user can permanently delete a plant after a confirmation dialog
   4. User can view a plant's detail page showing species, care info, status, next watering date, history, and notes
   5. User can create rooms with custom names (or select from presets), assign plants to rooms, filter the collection by room, and view a room summary page
-**Plans**: TBD
+**Plans:** 6 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 03-00-PLAN.md — Wave 0: shadcn component installs (Dialog, AlertDialog, Select), Zod schemas, shared types, test stubs
+- [ ] 03-01-PLAN.md — Catalog data (40 houseplants), seed script, schema onDelete fix, database push + seed
+- [ ] 03-02-PLAN.md — Plant and room Server Actions (CRUD) and query functions
+- [ ] 03-03-PLAN.md — Plants collection page, plant card/grid components, two-step add-plant dialog
+- [ ] 03-04-PLAN.md — Plant detail page, edit dialog, archive/delete actions, nav + dashboard updates
+- [ ] 03-05-PLAN.md — Room management page, room detail page, room filter pill bar
 
 ### Phase 4: Dashboard and Watering Core Loop
 **Goal**: Users can see at a glance which plants need watering today and log it in one tap — the core value of the product
@@ -129,7 +137,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Scaffold and Foundations | 0/3 | Planning complete | - |
 | 2. Authentication and Onboarding | 0/4 | Planning complete | - |
-| 3. Plant Collection and Rooms | 0/? | Not started | - |
+| 3. Plant Collection and Rooms | 0/6 | Planning complete | - |
 | 4. Dashboard and Watering Core Loop | 0/? | Not started | - |
 | 5. Notes, Search, and Filters | 0/? | Not started | - |
 | 6. Reminders and Demo Mode | 0/? | Not started | - |
