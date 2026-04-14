@@ -55,7 +55,7 @@ Plans:
 - [x] 02-00-PLAN.md — Wave 0: Test stubs and fixtures for all Phase 2 behaviors (Nyquist compliance)
 - [x] 02-01-PLAN.md — Auth infrastructure: Prisma onboarding fields, Zod schemas, session callbacks, Server Actions, shadcn form+sonner, schema push
 - [x] 02-02-PLAN.md — Auth UI: Login form and register form with RHF+Zod validation, inline errors, toast notifications, cross-links
-- [ ] 02-03-PLAN.md — Dashboard shell: Root redirect, authenticated nav with logout, onboarding banner, dashboard page with empty state
+- [x] 02-03-PLAN.md — Dashboard shell: Root redirect, authenticated nav with logout, onboarding banner, dashboard page with empty state
 
 ### Phase 3: Plant Collection and Rooms
 **Goal**: Users can build and manage a personal plant collection, select from a seeded catalog, and organize plants by room
