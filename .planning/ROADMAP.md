@@ -49,9 +49,10 @@ Plans:
   3. User can log out from any page and is redirected to the public login page
   4. After first login, user is prompted for plant count and reminder preference before reaching the dashboard
   5. Unauthenticated users visiting protected routes are redirected to the login page
-**Plans:** 3 plans
+**Plans:** 4 plans
 
 Plans:
+- [ ] 02-00-PLAN.md — Wave 0: Test stubs and fixtures for all Phase 2 behaviors (Nyquist compliance)
 - [ ] 02-01-PLAN.md — Auth infrastructure: Prisma onboarding fields, Zod schemas, session callbacks, Server Actions, shadcn form+sonner, schema push
 - [ ] 02-02-PLAN.md — Auth UI: Login form and register form with RHF+Zod validation, inline errors, toast notifications, cross-links
 - [ ] 02-03-PLAN.md — Dashboard shell: Root redirect, authenticated nav with logout, onboarding banner, dashboard page with empty state
@@ -127,7 +128,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Scaffold and Foundations | 0/3 | Planning complete | - |
-| 2. Authentication and Onboarding | 0/3 | Planning complete | - |
+| 2. Authentication and Onboarding | 0/4 | Planning complete | - |
 | 3. Plant Collection and Rooms | 0/? | Not started | - |
 | 4. Dashboard and Watering Core Loop | 0/? | Not started | - |
 | 5. Notes, Search, and Filters | 0/? | Not started | - |
