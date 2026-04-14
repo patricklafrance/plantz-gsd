@@ -599,22 +599,22 @@ export const catalogData: CatalogEntry[] = [
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **CareProfile `name` field uniqueness and seed upsert key**
+1. **CareProfile `name` field uniqueness and seed upsert key** — RESOLVED (Plan 03-01)
    - What we know: `CareProfile` has `name String @unique` in the schema.
    - What's unclear: Whether "name" should be the common name ("Pothos") or scientific name ("Epipremnum aureum"), affecting how duplicates are handled on re-seed.
-   - Recommendation: Use common name as the unique key for readability; store scientific name in `species`. The `upsert({ where: { name } })` pattern handles re-runs safely.
+   - Resolution: Use common name as the unique key for readability; store scientific name in `species`. The `upsert({ where: { name } })` pattern handles re-runs safely. Implemented in Plan 03-01 catalog seed script.
 
-2. **Room deletion behavior when plants are assigned (Claude's Discretion)**
+2. **Room deletion behavior when plants are assigned (Claude's Discretion)** — RESOLVED (Plan 03-01)
    - What we know: `Plant.roomId` is nullable (`String?`). No cascade or setNull rule exists in the current schema.
    - What's unclear: Whether to block deletion if plants exist, or auto-unassign.
-   - Recommendation: Add `onDelete: SetNull` to `Plant.room` relation in schema via a new migration. This unassigns plants automatically when their room is deleted — most user-friendly behavior for a personal app.
+   - Resolution: Add `onDelete: SetNull` to `Plant.room` relation in schema. This unassigns plants automatically when their room is deleted — most user-friendly behavior for a personal app. Implemented in Plan 03-01 schema fix task.
 
-3. **Room filter implementation: Tabs vs. URL params**
+3. **Room filter implementation: Tabs vs. URL params** — RESOLVED (Plan 03-05)
    - What we know: D-10 specifies a horizontal pill bar. The implementation could be client-side state (faster), URL search params (shareable/bookmarkable), or shadcn Tabs component.
    - What's unclear: Whether room filter state should survive page refresh.
-   - Recommendation: URL search param (`?room=roomId`) — simplest approach that works with Server Components (read `searchParams` in page.tsx), makes filtered views bookmarkable, and doesn't require a separate client wrapper. No Tabs component needed; plain Button pills with `aria-selected` are sufficient.
+   - Resolution: URL search param (`?room=roomId`) — simplest approach that works with Server Components (read `searchParams` in page.tsx), makes filtered views bookmarkable, and doesn't require a separate client wrapper. No Tabs component needed; plain Button pills with `aria-selected` are sufficient. Implemented in Plan 03-05 room filter task.
 
 ---
 
