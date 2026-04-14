@@ -66,11 +66,11 @@ Font family: **Geist** for all text (sans-serif). Loaded via `next/font/google` 
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | Body | 16px | 400 (regular) | 1.5 | Paragraphs, descriptions, form labels |
-| Label | 14px | 500 (medium) | 1.4 | Nav items, badges, table headers, input labels |
+| Label | 14px | 600 (semibold) | 1.4 | Nav items, badges, table headers, input labels |
 | Heading | 20px | 600 (semibold) | 1.2 | Section headings, card titles, page sub-headings |
 | Display | 28px | 600 (semibold) | 1.2 | Page titles, onboarding headlines |
 
-Weights in use: **400** (regular) and **600** (semibold). Weight 500 is permitted for Label role only as a visual midpoint for UI chrome; it does not count as a third weight for body or heading content. If a single-weight constraint is required, collapse Label to 600.
+Weights in use: **400** (regular) and **600** (semibold). Label is distinguished from Body through size (14px vs 16px), not weight. No third weight is declared or used.
 
 ---
 
