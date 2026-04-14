@@ -637,22 +637,22 @@ test("home page loads without errors", async ({ page }) => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Docker vs local PostgreSQL for dev setup**
+1. **Docker vs local PostgreSQL for dev setup** — RESOLVED
    - What we know: Docker and Docker Compose are not installed on this machine. winget and choco are available. PostgreSQL 17 CLI (`psql`) is not present.
    - What's unclear: Whether the developer prefers installing PostgreSQL natively via winget, or using a cloud dev database (Neon, Supabase free tier, Railway). Both are viable.
-   - Recommendation (Claude's discretion): Include a `docker-compose.yml` for teams/CI, and document winget install path for solo dev. The plan should include a Wave 0 task to establish the database connection before any Prisma work.
+   - RESOLVED: Plan 01-03 Task 3 uses a checkpoint:human-verify gate to establish PostgreSQL connectivity. The user_setup frontmatter documents both local install (winget) and cloud dev DB (Neon/Supabase free tier) paths. No docker-compose.yml included since Docker is not installed.
 
-2. **Prisma generated client output path: `app/generated/prisma` vs default**
+2. **Prisma generated client output path: `app/generated/prisma` vs default** — RESOLVED
    - What we know: Prisma 7's official Next.js guide uses `app/generated/prisma` as the output path. This requires `serverExternalPackages` config in `next.config.ts`.
    - What's unclear: Whether there are any import path convenience tradeoffs worth reconsidering.
-   - Recommendation: Use `app/generated/prisma` as the official Prisma guide recommends. The extra `next.config.ts` line is a small price for following the documented pattern.
+   - RESOLVED: Plan 01-01 Task 2 uses `output = "../app/generated/prisma"` in the Prisma generator block, matching the official Prisma 7 + Next.js guide. The `next.config.ts` serverExternalPackages entry is set in Plan 01-01 Task 1.
 
-3. **bcrypt vs bcryptjs**
+3. **bcrypt vs bcryptjs** — RESOLVED
    - What we know: `bcrypt` requires native build tools (node-gyp, Python). `bcryptjs` is pure JavaScript, slightly slower but no build dependency issues.
    - What's unclear: Whether the dev environment has native build tools available.
-   - Recommendation: Use `bcryptjs` for this greenfield project to avoid CI/CD native toolchain complexity.
+   - RESOLVED: Plan 01-01 Task 1 installs `bcryptjs` (pure JS). Plan 01-02 Task 1 imports `bcryptjs` in auth.ts for password comparison. No native build tools required.
 
 ---
 
