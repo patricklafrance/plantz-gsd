@@ -35,9 +35,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Bootstrap Next.js 16, Prisma schema (7 entities, TIMESTAMPTZ), db singleton, design tokens, directory structure
-- [ ] 01-02-PLAN.md — NextAuth v5 split config (auth.config.ts + auth.ts), proxy.ts route protection, API route handler
-- [ ] 01-03-PLAN.md — Test harness (Vitest + Playwright), shadcn/ui initialization with 7 base components, Prisma schema push to PostgreSQL
+- [x] 01-01-PLAN.md — Bootstrap Next.js 16, Prisma schema (7 entities, TIMESTAMPTZ), db singleton, design tokens, directory structure
+- [x] 01-02-PLAN.md — NextAuth v5 split config (auth.config.ts + auth.ts), proxy.ts route protection, API route handler
+- [x] 01-03-PLAN.md — Test harness (Vitest + Playwright), shadcn/ui initialization with 7 base components, Prisma schema push to PostgreSQL
 
 ### Phase 2: Authentication and Onboarding
 **Goal**: Users can create accounts, log in securely, and complete minimal onboarding before reaching their dashboard
