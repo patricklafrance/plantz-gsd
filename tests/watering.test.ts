@@ -29,6 +29,18 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
+// Mock auth for Server Action tests
+// actions.ts imports "../../../auth" which resolves to root auth.ts
+// From tests/ directory, root auth.ts is "../auth"
+vi.mock("../auth", () => ({
+  auth: vi.fn(),
+}));
+
+// Mock revalidatePath for Server Action tests
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}));
+
 // ============================================================
 // Schema validation tests
 // ============================================================
@@ -353,5 +365,233 @@ describe("nextWateringAt recalculation", () => {
     const expected = new Date("2026-04-17T14:30:00Z");
     const result = addDays(wateredAt, interval);
     expect(result.getTime()).toBe(expected.getTime());
+  });
+});
+
+// ============================================================
+// Server Action tests
+// ============================================================
+
+describe("Server Actions", () => {
+  // Get mocked modules
+  let db: Record<string, Record<string, ReturnType<typeof vi.fn>>>;
+  let authMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+
+    const dbModule = await import("@/lib/db");
+    db = (dbModule as unknown as { db: typeof db }).db;
+
+    const authModule = await import("../auth");
+    authMock = (authModule as unknown as { auth: ReturnType<typeof vi.fn> }).auth;
+  });
+
+  describe("logWatering", () => {
+    test("returns auth error when not authenticated", async () => {
+      authMock.mockResolvedValue(null);
+
+      const { logWatering } = await import("@/features/watering/actions");
+      const result = await logWatering({ plantId: "p1" });
+      expect(result).toEqual({ error: "Not authenticated." });
+    });
+
+    test("returns error for unowned plant", async () => {
+      authMock.mockResolvedValue({ user: { id: "u1" } });
+      db.plant.findFirst.mockResolvedValue(null);
+
+      const { logWatering } = await import("@/features/watering/actions");
+      const result = await logWatering({ plantId: "p1" });
+      expect(result).toEqual({ error: "Plant not found." });
+    });
+
+    test("returns DUPLICATE within 60s window", async () => {
+      authMock.mockResolvedValue({ user: { id: "u1" } });
+      db.plant.findFirst.mockResolvedValue({
+        id: "p1",
+        userId: "u1",
+        wateringInterval: 7,
+        nickname: "Monstera",
+      });
+      // Simulate a recent log exists (duplicate)
+      db.wateringLog.findFirst.mockResolvedValue({
+        id: "log-recent",
+        plantId: "p1",
+        createdAt: new Date(),
+      });
+
+      const { logWatering } = await import("@/features/watering/actions");
+      const result = await logWatering({ plantId: "p1" });
+      expect(result).toEqual({ error: "DUPLICATE" });
+    });
+
+    test("creates log and updates plant in transaction on success", async () => {
+      authMock.mockResolvedValue({ user: { id: "u1" } });
+      db.plant.findFirst.mockResolvedValue({
+        id: "p1",
+        userId: "u1",
+        wateringInterval: 7,
+        nickname: "Monstera",
+      });
+      // No duplicate
+      db.wateringLog.findFirst.mockResolvedValue(null);
+      db.$transaction.mockResolvedValue([{}, {}]);
+
+      const { logWatering } = await import("@/features/watering/actions");
+      const result = await logWatering({ plantId: "p1" });
+
+      expect(result).toHaveProperty("success", true);
+      expect(result).toHaveProperty("plantNickname", "Monstera");
+      expect(result).toHaveProperty("nextWateringAt");
+      expect(db.$transaction).toHaveBeenCalledOnce();
+    });
+
+    test("uses custom past wateredAt for nextWateringAt calculation", async () => {
+      authMock.mockResolvedValue({ user: { id: "u1" } });
+      db.plant.findFirst.mockResolvedValue({
+        id: "p1",
+        userId: "u1",
+        wateringInterval: 7,
+        nickname: "Monstera",
+      });
+      db.wateringLog.findFirst.mockResolvedValue(null);
+      db.$transaction.mockResolvedValue([{}, {}]);
+
+      const pastDate = new Date("2026-04-10T12:00:00Z");
+      const expectedNext = addDays(pastDate, 7);
+
+      const { logWatering } = await import("@/features/watering/actions");
+      const result = await logWatering({
+        plantId: "p1",
+        wateredAt: pastDate.toISOString(),
+      });
+
+      expect(result).toHaveProperty("success", true);
+      expect((result as { nextWateringAt: Date }).nextWateringAt.getTime()).toBe(
+        expectedNext.getTime()
+      );
+    });
+  });
+
+  describe("editWateringLog", () => {
+    test("returns error for unowned log", async () => {
+      authMock.mockResolvedValue({ user: { id: "u1" } });
+      db.wateringLog.findFirst.mockResolvedValue(null);
+
+      const { editWateringLog } = await import(
+        "@/features/watering/actions"
+      );
+      const yesterday = subDays(new Date(), 1);
+      const result = await editWateringLog({
+        logId: "log-1",
+        wateredAt: yesterday.toISOString(),
+      });
+      expect(result).toEqual({ error: "Log not found." });
+    });
+
+    test("updates log and recalculates nextWateringAt", async () => {
+      authMock.mockResolvedValue({ user: { id: "u1" } });
+      // First findFirst (ownership check) returns the log
+      db.wateringLog.findFirst
+        .mockResolvedValueOnce({
+          id: "log-1",
+          plantId: "p1",
+          plant: { id: "p1", wateringInterval: 7 },
+        })
+        // Second findFirst (most recent log after update)
+        .mockResolvedValueOnce({
+          id: "log-1",
+          wateredAt: new Date("2026-04-12T10:00:00Z"),
+        });
+      db.wateringLog.update.mockResolvedValue({});
+      db.plant.update.mockResolvedValue({});
+
+      const { editWateringLog } = await import(
+        "@/features/watering/actions"
+      );
+      const yesterday = subDays(new Date(), 1);
+      const result = await editWateringLog({
+        logId: "log-1",
+        wateredAt: yesterday.toISOString(),
+      });
+
+      expect(result).toEqual({ success: true });
+      expect(db.wateringLog.update).toHaveBeenCalledOnce();
+      expect(db.plant.update).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe("deleteWateringLog", () => {
+    test("returns error for unowned log", async () => {
+      authMock.mockResolvedValue({ user: { id: "u1" } });
+      db.wateringLog.findFirst.mockResolvedValue(null);
+
+      const { deleteWateringLog } = await import(
+        "@/features/watering/actions"
+      );
+      const result = await deleteWateringLog("log-1");
+      expect(result).toEqual({ error: "Log not found." });
+    });
+
+    test("resets nextWateringAt when no logs remain", async () => {
+      authMock.mockResolvedValue({ user: { id: "u1" } });
+      // First findFirst (ownership check)
+      db.wateringLog.findFirst
+        .mockResolvedValueOnce({
+          id: "log-1",
+          plantId: "p1",
+          plant: { id: "p1", wateringInterval: 7 },
+        })
+        // Second findFirst (find most recent after delete) — no logs remain
+        .mockResolvedValueOnce(null);
+      db.wateringLog.delete.mockResolvedValue({});
+      db.plant.update.mockResolvedValue({});
+
+      const { deleteWateringLog } = await import(
+        "@/features/watering/actions"
+      );
+      const result = await deleteWateringLog("log-1");
+
+      expect(result).toEqual({ success: true });
+      expect(db.plant.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            lastWateredAt: null,
+          }),
+        })
+      );
+    });
+
+    test("recalculates from remaining logs after deletion", async () => {
+      const remainingLogDate = new Date("2026-04-08T10:00:00Z");
+      authMock.mockResolvedValue({ user: { id: "u1" } });
+      db.wateringLog.findFirst
+        .mockResolvedValueOnce({
+          id: "log-2",
+          plantId: "p1",
+          plant: { id: "p1", wateringInterval: 7 },
+        })
+        .mockResolvedValueOnce({
+          id: "log-1",
+          wateredAt: remainingLogDate,
+        });
+      db.wateringLog.delete.mockResolvedValue({});
+      db.plant.update.mockResolvedValue({});
+
+      const { deleteWateringLog } = await import(
+        "@/features/watering/actions"
+      );
+      const result = await deleteWateringLog("log-2");
+
+      expect(result).toEqual({ success: true });
+      expect(db.plant.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            lastWateredAt: remainingLogDate,
+            nextWateringAt: addDays(remainingLogDate, 7),
+          }),
+        })
+      );
+    });
   });
 });
