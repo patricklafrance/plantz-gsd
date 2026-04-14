@@ -4,19 +4,23 @@ import { expect, test, vi } from "vitest";
 // It redirects to /dashboard when authenticated, /login when not.
 // This is tested via E2E (Playwright) rather than unit tests.
 
+// Mock next/server before next-auth tries to import it at evaluation time
+vi.mock("next/server", () => ({
+  NextResponse: { redirect: vi.fn(), next: vi.fn() },
+  NextRequest: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn(),
+}));
+
+// Mock auth module (resolved path from project root)
+vi.mock("../auth", () => ({
+  auth: vi.fn().mockResolvedValue(null),
+}));
+
 test("home page module exports a default async function", async () => {
-  // Mock next/navigation redirect so the import does not throw
-  vi.mock("next/navigation", () => ({
-    redirect: vi.fn(),
-  }));
-
-  // Mock auth to return null (unauthenticated) so the component body runs
-  vi.mock("../../auth", () => ({
-    auth: vi.fn().mockResolvedValue(null),
-  }));
-
   const { default: HomePage } = await import("../src/app/page");
   expect(typeof HomePage).toBe("function");
-  // The component is async and returns void (via redirect)
   expect(HomePage.constructor.name).toBe("AsyncFunction");
 });
