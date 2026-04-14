@@ -29,6 +29,20 @@ export default async function MainLayout({
             <span className="text-base font-semibold">Plant Minder</span>
           </Link>
           <div className="flex items-center gap-md">
+            <Link
+              href="/plants"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Plants
+            </Link>
+            <Link
+              href="/rooms"
+              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Rooms
+            </Link>
+          </div>
+          <div className="flex items-center gap-md">
             {!user?.onboardingCompleted && (
               <Link
                 href="/dashboard#onboarding"

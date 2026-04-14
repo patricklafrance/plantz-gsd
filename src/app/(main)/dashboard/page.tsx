@@ -3,6 +3,9 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { OnboardingBanner } from "@/components/onboarding/onboarding-banner";
 import { Leaf } from "lucide-react";
+import { AddPlantDialog } from "@/components/plants/add-plant-dialog";
+import { getCatalog } from "@/features/plants/queries";
+import { getRoomsForSelect } from "@/features/rooms/queries";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -10,10 +13,14 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const user = await db.user.findUnique({
-    where: { id: session.user.id },
-    select: { onboardingCompleted: true },
-  });
+  const [user, catalog, rooms] = await Promise.all([
+    db.user.findUnique({
+      where: { id: session.user.id },
+      select: { onboardingCompleted: true },
+    }),
+    getCatalog(),
+    getRoomsForSelect(session.user.id),
+  ]);
 
   return (
     <div className="space-y-lg">
@@ -21,7 +28,13 @@ export default async function DashboardPage() {
         <OnboardingBanner userId={session.user.id} />
       )}
 
-      {/* Empty state — visible below banner (D-06) */}
+      {/* Dashboard header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Dashboard</h1>
+        <AddPlantDialog catalog={catalog} rooms={rooms} />
+      </div>
+
+      {/* Empty state — visible when no plants (D-06) */}
       <div className="flex flex-col items-center justify-center py-3xl text-center">
         <div className="mb-md rounded-full bg-accent/10 p-lg">
           <Leaf className="h-8 w-8 text-accent" />
@@ -30,6 +43,9 @@ export default async function DashboardPage() {
         <p className="mt-sm text-muted-foreground">
           Add your first plant to start tracking your watering schedule.
         </p>
+        <div className="mt-md">
+          <AddPlantDialog catalog={catalog} rooms={rooms} />
+        </div>
       </div>
     </div>
   );
