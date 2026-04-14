@@ -135,6 +135,8 @@ No third-party registries. shadcn official only.
 
 **Element:** Droplet icon button on every dashboard plant card, right side.
 
+**Primary visual anchor:** The urgency status badge is the primary visual anchor on each card — it communicates the action needed at a glance. The water droplet button is the primary interactive focal point, positioned on the right so the eye travels from status to action.
+
 **Anatomy:**
 ```
 [PlantCard] [Leaf icon | Nickname / species / room | Status badge | [Droplet button]]
@@ -208,7 +210,7 @@ Badge text (not just color) conveys urgency — required by UIAX-03:
 - Date field: shadcn Calendar in a Popover, defaults to today, allows any past date, no future dates
 - Optional note field: `<Input>` with `placeholder="Optional note (e.g. used filtered water)"`, maxLength 280
 - Submit CTA: "Log watering" (primary button, `bg-accent text-accent-foreground`)
-- Cancel: "Cancel" (ghost button)
+- Dismiss: "Don't log" (ghost button)
 - On success: dialog closes, sonner toast: "[Nickname] watered on [date]. Next: [date]"
 
 **Date picker display format:** "April 14, 2026" (full month name, date-fns `format(date, "MMMM d, yyyy")`)
@@ -239,7 +241,7 @@ Badge text (not just color) conveys urgency — required by UIAX-03:
 - Date field: same Calendar/Popover as log dialog, pre-filled with entry's `wateredAt`
 - Note field: pre-filled with existing note
 - Submit CTA: "Save changes"
-- Cancel: "Cancel"
+- Dismiss: "Discard changes" (ghost button)
 - On success: entry updates in place, toast: "Watering log updated."
 
 ### 7. Delete Watering Log (D-10)
@@ -252,7 +254,7 @@ Badge text (not just color) conveys urgency — required by UIAX-03:
 - Title: "Delete watering log?"
 - Body: "This will remove the log from [Nickname]'s history and recalculate the next watering date."
 - Destructive CTA: "Delete log" — `variant="destructive"`
-- Cancel: "Cancel"
+- Dismiss: "Keep log" (ghost button)
 
 ### 8. Loading Skeletons (DASH-04)
 
@@ -300,7 +302,10 @@ When user has plants but none need attention (all recently watered, none overdue
 | History entry delete confirmation body | "This will remove the log from [Nickname]'s history and recalculate the next watering date." | D-10 |
 | History entry delete CTA | "Delete log" | D-10 |
 | Log watering dialog title | "Log watering" | D-09 |
+| Log watering dialog dismiss | "Don't log" | Checker fix — names what is abandoned |
 | Edit watering log dialog title | "Edit watering log" | D-10 |
+| Edit watering log dialog dismiss | "Discard changes" | Checker fix — names what is abandoned |
+| Delete watering log dialog dismiss | "Keep log" | Checker fix — names what is preserved |
 | Edit success toast | "Watering log updated." | Default |
 | Note field placeholder | "Optional note (e.g. used filtered water)" | Claude discretion |
 | Load more history button | "Load more" | Claude discretion |
