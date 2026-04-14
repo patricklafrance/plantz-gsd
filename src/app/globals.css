@@ -5,6 +5,21 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+  /* Container sizes (required for max-w-sm, max-w-lg, etc.) */
+  --container-3xs: 16rem;
+  --container-2xs: 18rem;
+  --container-xs: 20rem;
+  --container-sm: 24rem;
+  --container-md: 28rem;
+  --container-lg: 32rem;
+  --container-xl: 36rem;
+  --container-2xl: 42rem;
+  --container-3xl: 48rem;
+  --container-4xl: 56rem;
+  --container-5xl: 64rem;
+  --container-6xl: 72rem;
+  --container-7xl: 80rem;
+
   /* Font */
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
 

@@ -34,7 +34,7 @@ import {
 import { createPlant } from "@/features/plants/actions";
 import { createPlantSchema, type CreatePlantInput } from "@/features/plants/schemas";
 import { CATALOG_CATEGORIES, catalogData } from "../../../prisma/data/catalog";
-import type { CareProfile } from "@/generated/prisma";
+import type { CareProfile } from "@/generated/prisma/client";
 
 // Build a name->category map for grouping DB entries
 const categoryByName = new Map<string, string>(
@@ -53,7 +53,7 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
   const [step, setStep] = useState<"catalog" | "form">("catalog");
   const [selectedProfile, setSelectedProfile] = useState<CareProfile | null>(null);
   const [search, setSearch] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | undefined>(undefined);
 
   const form = useForm<CreatePlantInput>({
     resolver: zodResolver(createPlantSchema),
@@ -90,7 +90,7 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
       setStep("catalog");
       setSelectedProfile(null);
       setSearch("");
-      setFormError(null);
+      setFormError(undefined);
       form.reset({
         nickname: "",
         species: "",
@@ -101,7 +101,7 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
   }
 
   async function onSubmit(data: CreatePlantInput) {
-    setFormError(null);
+    setFormError(undefined);
     const result = await createPlant({
       ...data,
       careProfileId: selectedProfile?.id,
@@ -144,7 +144,7 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[32rem] max-h-[90vh] overflow-y-auto">
         {step === "catalog" ? (
           <>
             <DialogHeader>

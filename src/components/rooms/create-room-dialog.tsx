@@ -19,7 +19,7 @@ import { createRoom, updateRoom } from "@/features/rooms/actions";
 
 interface CreateRoomDialogProps {
   room?: { id: string; name: string };
-  trigger?: React.ReactNode;
+  trigger?: React.ReactElement;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -33,7 +33,7 @@ export function CreateRoomDialog({
   const isEditMode = !!room;
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [name, setName] = useState(room?.name ?? "");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | undefined>(undefined);
   const [submitting, setSubmitting] = useState(false);
 
   const isControlled =
@@ -49,13 +49,13 @@ export function CreateRoomDialog({
     if (!val) {
       // Reset on close
       setName(room?.name ?? "");
-      setError(null);
+      setError(undefined);
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    setError(undefined);
 
     const trimmed = name.trim();
     if (!trimmed) {
@@ -102,7 +102,7 @@ export function CreateRoomDialog({
       {!isControlled && (
         <DialogTrigger render={trigger ?? defaultTrigger} />
       )}
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-[24rem]">
         <DialogHeader>
           <DialogTitle>
             {isEditMode ? "Rename room" : "Create room"}

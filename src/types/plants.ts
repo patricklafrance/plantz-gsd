@@ -1,4 +1,4 @@
-import type { Plant, Room, CareProfile } from "@/generated/prisma";
+import type { Plant, Room, CareProfile } from "@/generated/prisma/client";
 
 export type PlantWithRelations = Plant & {
   room: Room | null;

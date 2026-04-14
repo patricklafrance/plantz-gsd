@@ -44,7 +44,7 @@ interface EditPlantDialogProps {
 
 export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
   const [open, setOpen] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | undefined>(undefined);
 
   const form = useForm<EditPlantInput>({
     resolver: zodResolver(editPlantSchema),
@@ -60,7 +60,7 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
   function handleOpenChange(isOpen: boolean) {
     setOpen(isOpen);
     if (!isOpen) {
-      setFormError(null);
+      setFormError(undefined);
       form.reset({
         id: plant.id,
         nickname: plant.nickname,
@@ -72,7 +72,7 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
   }
 
   async function onSubmit(data: EditPlantInput) {
-    setFormError(null);
+    setFormError(undefined);
     const result = await updatePlant(data);
 
     if ("error" in result) {
@@ -94,7 +94,7 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[28rem]">
         <DialogHeader>
           <DialogTitle>Edit plant</DialogTitle>
         </DialogHeader>
