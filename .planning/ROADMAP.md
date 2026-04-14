@@ -71,12 +71,12 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 03-00-PLAN.md — Wave 0: shadcn component installs (Dialog, AlertDialog, Select), Zod schemas, shared types, test stubs
-- [ ] 03-01-PLAN.md — Catalog data (40 houseplants), seed script, schema onDelete fix, database push + seed
-- [ ] 03-02-PLAN.md — Plant and room Server Actions (CRUD) and query functions
-- [ ] 03-03-PLAN.md — Plants collection page, plant card/grid components, two-step add-plant dialog
-- [ ] 03-04-PLAN.md — Plant detail page, edit dialog, archive/delete actions, nav + dashboard updates
-- [ ] 03-05-PLAN.md — Room management page, room detail page, room filter pill bar
+- [x] 03-00-PLAN.md — Wave 0: shadcn component installs (Dialog, AlertDialog, Select), Zod schemas, shared types, test stubs
+- [x] 03-01-PLAN.md — Catalog data (40 houseplants), seed script, schema onDelete fix, database push + seed
+- [x] 03-02-PLAN.md — Plant and room Server Actions (CRUD) and query functions
+- [x] 03-03-PLAN.md — Plants collection page, plant card/grid components, two-step add-plant dialog
+- [x] 03-04-PLAN.md — Plant detail page, edit dialog, archive/delete actions, nav + dashboard updates
+- [x] 03-05-PLAN.md — Room management page, room detail page, room filter pill bar
 
 ### Phase 4: Dashboard and Watering Core Loop
 **Goal**: Users can see at a glance which plants need watering today and log it in one tap — the core value of the product
