@@ -38,7 +38,6 @@ export function OnboardingBanner({ userId }: OnboardingBannerProps) {
     setIsCompleting(true);
 
     const result = await completeOnboarding({
-      userId,
       plantCountRange: range,
     });
 

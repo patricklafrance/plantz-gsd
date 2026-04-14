@@ -1,6 +1,6 @@
 "use server";
 
-import { signIn } from "../../../auth";
+import { auth, signIn } from "../../../auth";
 import { db } from "@/lib/db";
 import bcryptjs from "bcryptjs";
 import { registerSchema } from "./schemas";
@@ -59,9 +59,13 @@ export async function registerUser(data: {
 }
 
 export async function completeOnboarding(data: {
-  userId: string;
   plantCountRange: string;
 }) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Session expired. Please sign in again." };
+  }
+
   // Validate the plant count range
   const parsed = onboardingSchema.safeParse({
     plantCountRange: data.plantCountRange,
@@ -70,13 +74,8 @@ export async function completeOnboarding(data: {
     return { error: "Invalid selection." };
   }
 
-  const user = await db.user.findUnique({ where: { id: data.userId } });
-  if (!user) {
-    return { error: "Session expired. Please sign in again." };
-  }
-
   await db.user.update({
-    where: { id: data.userId },
+    where: { id: session.user.id },
     data: {
       onboardingCompleted: true,
       plantCountRange: parsed.data.plantCountRange,
