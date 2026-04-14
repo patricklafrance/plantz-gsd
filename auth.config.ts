@@ -10,25 +10,22 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const isOnProtectedRoute =
-        nextUrl.pathname.startsWith("/dashboard") ||
-        nextUrl.pathname.startsWith("/plants") ||
-        nextUrl.pathname.startsWith("/rooms");
+      const publicPaths = ["/login", "/register"];
+      const isPublicRoute = publicPaths.some(
+        (path) =>
+          nextUrl.pathname === path || nextUrl.pathname.startsWith(path + "/"),
+      );
 
-      if (isOnProtectedRoute) {
-        return isLoggedIn;
-        // Returning false redirects to pages.signIn ("/login")
+      if (isPublicRoute) {
+        // Redirect logged-in users away from auth pages to dashboard
+        if (isLoggedIn) {
+          return Response.redirect(new URL("/dashboard", nextUrl));
+        }
+        return true;
       }
 
-      // Redirect logged-in users away from auth pages to dashboard
-      if (
-        isLoggedIn &&
-        (nextUrl.pathname === "/login" || nextUrl.pathname === "/register")
-      ) {
-        return Response.redirect(new URL("/dashboard", nextUrl));
-      }
-
-      return true;
+      // All other routes require authentication
+      return isLoggedIn;
     },
   },
   providers: [],
