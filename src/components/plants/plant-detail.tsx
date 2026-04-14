@@ -7,10 +7,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { WateringHistory } from "@/components/watering/watering-history";
+import { LogWateringDialog } from "@/components/watering/log-watering-dialog";
 import type { PlantWithRelations } from "@/types/plants";
+import type { WateringLog } from "@/generated/prisma/client";
 
 interface PlantDetailProps {
   plant: PlantWithRelations;
+  wateringLogs: WateringLog[];
+  wateringLogCount: number;
 }
 
 function getLightIcon(lightRequirement: string | null) {
@@ -39,7 +44,7 @@ function getLightLabel(lightRequirement: string | null) {
   }
 }
 
-export function PlantDetail({ plant }: PlantDetailProps) {
+export function PlantDetail({ plant, wateringLogs, wateringLogCount }: PlantDetailProps) {
   const now = new Date();
   const nextWatering = plant.nextWateringAt;
 
@@ -62,8 +67,9 @@ export function PlantDetail({ plant }: PlantDetailProps) {
     <div className="space-y-lg">
       {/* Status card */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Next watering</CardTitle>
+          <LogWateringDialog plantId={plant.id} plantNickname={plant.nickname} />
         </CardHeader>
         <CardContent>
           {wateringStatus === "not-scheduled" && (
@@ -149,9 +155,12 @@ export function PlantDetail({ plant }: PlantDetailProps) {
           <CardTitle>Watering history</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            No waterings logged yet. Watering history will appear here.
-          </p>
+          <WateringHistory
+            plantId={plant.id}
+            plantNickname={plant.nickname}
+            initialLogs={wateringLogs}
+            totalCount={wateringLogCount}
+          />
         </CardContent>
       </Card>
 
