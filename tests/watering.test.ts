@@ -425,7 +425,8 @@ describe("Server Actions", () => {
       expect(result).toEqual({ error: "DUPLICATE" });
     });
 
-    test("creates log and updates plant in transaction on success", async () => {
+    test("creates log and updates plant on success", async () => {
+      const now = new Date();
       authMock.mockResolvedValue({ user: { id: "u1" } });
       db.plant.findFirst.mockResolvedValue({
         id: "p1",
@@ -433,9 +434,12 @@ describe("Server Actions", () => {
         wateringInterval: 7,
         nickname: "Monstera",
       });
-      // No duplicate
-      db.wateringLog.findFirst.mockResolvedValue(null);
-      db.$transaction.mockResolvedValue([{}, {}]);
+      // First findFirst call: no duplicate; second: most recent log
+      db.wateringLog.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ wateredAt: now });
+      db.wateringLog.create.mockResolvedValue({});
+      db.plant.update.mockResolvedValue({});
 
       const { logWatering } = await import("@/features/watering/actions");
       const result = await logWatering({ plantId: "p1" });
@@ -443,10 +447,12 @@ describe("Server Actions", () => {
       expect(result).toHaveProperty("success", true);
       expect(result).toHaveProperty("plantNickname", "Monstera");
       expect(result).toHaveProperty("nextWateringAt");
-      expect(db.$transaction).toHaveBeenCalledOnce();
+      expect(db.wateringLog.create).toHaveBeenCalledOnce();
+      expect(db.plant.update).toHaveBeenCalledOnce();
     });
 
-    test("uses custom past wateredAt for nextWateringAt calculation", async () => {
+    test("uses most recent log for nextWateringAt even with past wateredAt", async () => {
+      const mostRecentDate = new Date("2026-04-14T12:00:00Z");
       authMock.mockResolvedValue({ user: { id: "u1" } });
       db.plant.findFirst.mockResolvedValue({
         id: "p1",
@@ -454,11 +460,15 @@ describe("Server Actions", () => {
         wateringInterval: 7,
         nickname: "Monstera",
       });
-      db.wateringLog.findFirst.mockResolvedValue(null);
-      db.$transaction.mockResolvedValue([{}, {}]);
+      // First findFirst: no duplicate; second: most recent log (today, not the past date)
+      db.wateringLog.findFirst
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ wateredAt: mostRecentDate });
+      db.wateringLog.create.mockResolvedValue({});
+      db.plant.update.mockResolvedValue({});
 
       const pastDate = new Date("2026-04-10T12:00:00Z");
-      const expectedNext = addDays(pastDate, 7);
+      const expectedNext = addDays(mostRecentDate, 7);
 
       const { logWatering } = await import("@/features/watering/actions");
       const result = await logWatering({
