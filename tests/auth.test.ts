@@ -35,3 +35,34 @@ describe("auth configuration", () => {
     expect(proxySource).not.toContain("middleware");
   });
 });
+
+// --- Phase 2 behavior stubs (Wave 0) ---
+// These tests verify behaviors added by Plan 02-01.
+// They will fail until implementation is complete.
+
+describe("auth session callbacks (Phase 2)", () => {
+  test.todo("jwt callback stores user.id in token when user object is present");
+  test.todo("session callback copies token.id to session.user.id");
+});
+
+describe("registration action (Phase 2)", () => {
+  test.todo("registerUser creates a user with bcrypt-hashed password");
+  test.todo("registerUser returns error for duplicate email");
+  test.todo("registerUser returns error for invalid input (Zod validation)");
+  test.todo("registerUser calls signIn after successful creation");
+});
+
+describe("onboarding action (Phase 2)", () => {
+  test.todo("completeOnboarding updates user onboardingCompleted to true");
+  test.todo("completeOnboarding validates plantCountRange against enum");
+  test.todo("completeOnboarding returns error for invalid range");
+});
+
+describe("zod schemas (Phase 2)", () => {
+  test.todo("loginSchema accepts valid email and password");
+  test.todo("loginSchema rejects invalid email");
+  test.todo("registerSchema rejects password shorter than 6 characters");
+  test.todo("registerSchema rejects mismatched passwords");
+  test.todo("onboardingSchema accepts valid plant count range");
+  test.todo("onboardingSchema rejects invalid plant count range");
+});
