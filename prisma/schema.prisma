@@ -1,13 +1,93 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  output   = "../app/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  passwordHash  String
+  name          String?
+  createdAt     DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime      @updatedAt @db.Timestamptz(3)
+  plants        Plant[]
+  rooms         Room[]
+  reminders     Reminder[]
+}
+
+model Room {
+  id        String    @id @default(cuid())
+  name      String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plants    Plant[]
+  createdAt DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+}
+
+model Plant {
+  id               String         @id @default(cuid())
+  nickname         String
+  species          String?
+  roomId           String?
+  room             Room?          @relation(fields: [roomId], references: [id])
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wateringInterval Int
+  lastWateredAt    DateTime?      @db.Timestamptz(3)
+  nextWateringAt   DateTime?      @db.Timestamptz(3)
+  archivedAt       DateTime?      @db.Timestamptz(3)
+  careProfileId    String?
+  careProfile      CareProfile?   @relation(fields: [careProfileId], references: [id])
+  wateringLogs     WateringLog[]
+  healthLogs       HealthLog[]
+  reminders        Reminder[]
+  createdAt        DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime       @updatedAt @db.Timestamptz(3)
+}
+
+model WateringLog {
+  id        String   @id @default(cuid())
+  plantId   String
+  plant     Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  wateredAt DateTime @db.Timestamptz(3)
+  note      String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model HealthLog {
+  id          String   @id @default(cuid())
+  plantId     String
+  plant       Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  observation String
+  severity    String?
+  loggedAt    DateTime @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model CareProfile {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  species          String
+  wateringInterval Int
+  lightRequirement String?
+  notes            String?
+  plants           Plant[]
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model Reminder {
+  id           String    @id @default(cuid())
+  plantId      String
+  plant        Plant     @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enabled      Boolean   @default(true)
+  snoozedUntil DateTime? @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
 }
