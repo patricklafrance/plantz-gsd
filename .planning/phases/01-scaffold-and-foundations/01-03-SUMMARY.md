@@ -157,6 +157,10 @@ Task 3 requires PostgreSQL to be running and DATABASE_URL configured. See plan f
 - cn() utility available at `@/lib/utils`
 - Phase 2 is blocked on Prisma schema push (Task 3 checkpoint)
 
+## Self-Check: PASSED
+
+All created files verified present. Commit 41d186e verified in git history. SUMMARY.md created at correct path.
+
 ---
 *Phase: 01-scaffold-and-foundations*
 *Completed: 2026-04-14 (partial — Task 3 pending user PostgreSQL setup)*
