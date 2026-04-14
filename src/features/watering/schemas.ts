@@ -4,7 +4,7 @@ export const logWateringSchema = z.object({
   plantId: z.string().min(1, "Plant ID is required."),
   wateredAt: z.coerce
     .date()
-    .max(new Date(), "Cannot log future watering.")
+    .refine((d) => d <= new Date(), "Cannot log future watering.")
     .optional(),
   note: z
     .string()
@@ -14,7 +14,9 @@ export const logWateringSchema = z.object({
 
 export const editWateringLogSchema = z.object({
   logId: z.string().min(1, "Log ID is required."),
-  wateredAt: z.coerce.date().max(new Date(), "Cannot log future watering."),
+  wateredAt: z.coerce
+    .date()
+    .refine((d) => d <= new Date(), "Cannot log future watering."),
   note: z
     .string()
     .max(280, "Note must be 280 characters or fewer.")

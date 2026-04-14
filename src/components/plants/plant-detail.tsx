@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useCallback } from "react";
 import { differenceInDays, format } from "date-fns";
 import { Sun, CloudSun, Cloud } from "lucide-react";
 import {
@@ -9,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { WateringHistory } from "@/components/watering/watering-history";
 import { LogWateringDialog } from "@/components/watering/log-watering-dialog";
+import { loadMoreWateringHistory } from "@/features/watering/actions";
 import type { PlantWithRelations } from "@/types/plants";
 import type { WateringLog } from "@/generated/prisma/client";
 
@@ -45,6 +49,17 @@ function getLightLabel(lightRequirement: string | null) {
 }
 
 export function PlantDetail({ plant, wateringLogs, wateringLogCount }: PlantDetailProps) {
+  const [logs, setLogs] = useState<WateringLog[]>(wateringLogs);
+  const [logCount, setLogCount] = useState(wateringLogCount);
+
+  const refetchLogs = useCallback(async () => {
+    const result = await loadMoreWateringHistory(plant.id, 0);
+    if (!("error" in result)) {
+      setLogs(result.logs);
+      setLogCount(result.total);
+    }
+  }, [plant.id]);
+
   const now = new Date();
   const nextWatering = plant.nextWateringAt;
 
@@ -69,7 +84,7 @@ export function PlantDetail({ plant, wateringLogs, wateringLogCount }: PlantDeta
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Next watering</CardTitle>
-          <LogWateringDialog plantId={plant.id} plantNickname={plant.nickname} />
+          <LogWateringDialog plantId={plant.id} plantNickname={plant.nickname} onLogged={refetchLogs} />
         </CardHeader>
         <CardContent>
           {wateringStatus === "not-scheduled" && (
@@ -158,8 +173,9 @@ export function PlantDetail({ plant, wateringLogs, wateringLogCount }: PlantDeta
           <WateringHistory
             plantId={plant.id}
             plantNickname={plant.nickname}
-            initialLogs={wateringLogs}
-            totalCount={wateringLogCount}
+            initialLogs={logs}
+            totalCount={logCount}
+            onMutated={refetchLogs}
           />
         </CardContent>
       </Card>

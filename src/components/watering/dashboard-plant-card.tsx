@@ -72,9 +72,9 @@ export function DashboardPlantCard({
           <p className="text-sm text-muted-foreground truncate">
             {plant.species ?? "Unknown species"}
           </p>
-          {plant.room && (
-            <p className="text-xs text-muted-foreground">{plant.room.name}</p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            {plant.room?.name ?? "\u00A0"}
+          </p>
         </div>
         <div className="shrink-0">{getStatusBadge(plant)}</div>
         <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>

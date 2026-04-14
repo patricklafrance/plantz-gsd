@@ -24,37 +24,42 @@ export async function logWatering(data: unknown) {
   });
   if (!plant) return { error: "Plant not found." };
 
-  // Duplicate check (D-11): reject a second log within 60 seconds
+  // Compute watering dates
+  const wateredAt = parsed.data.wateredAt ?? new Date();
+
+  // Duplicate check (D-11): reject a second log within 60 seconds for the same date
   const sixtySecondsAgo = new Date(Date.now() - 60_000);
   const recentLog = await db.wateringLog.findFirst({
     where: {
       plantId: parsed.data.plantId,
       createdAt: { gte: sixtySecondsAgo },
+      wateredAt,
     },
   });
   if (recentLog) return { error: "DUPLICATE" };
 
-  // Compute watering dates
-  const wateredAt = parsed.data.wateredAt ?? new Date();
-  const nextWateringAt = addDays(wateredAt, plant.wateringInterval);
+  // Create the watering log first
+  await db.wateringLog.create({
+    data: {
+      plantId: plant.id,
+      wateredAt,
+      note: parsed.data.note ?? null,
+    },
+  });
 
-  // Atomic transaction: create log + update plant
-  await db.$transaction([
-    db.wateringLog.create({
-      data: {
-        plantId: plant.id,
-        wateredAt,
-        note: parsed.data.note ?? null,
-      },
-    }),
-    db.plant.update({
-      where: { id: plant.id },
-      data: {
-        lastWateredAt: wateredAt,
-        nextWateringAt,
-      },
-    }),
-  ]);
+  // Recalculate from the most recent log (handles retroactive entries correctly)
+  const mostRecent = await db.wateringLog.findFirst({
+    where: { plantId: plant.id },
+    orderBy: { wateredAt: "desc" },
+  });
+
+  const lastWateredAt = mostRecent!.wateredAt;
+  const nextWateringAt = addDays(lastWateredAt, plant.wateringInterval);
+
+  await db.plant.update({
+    where: { id: plant.id },
+    data: { lastWateredAt, nextWateringAt },
+  });
 
   revalidatePath("/dashboard");
   revalidatePath("/plants/" + plant.id);

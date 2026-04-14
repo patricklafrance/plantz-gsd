@@ -41,55 +41,51 @@ export function DashboardClient({ groups }: DashboardClientProps) {
   );
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
 
-  async function handleWater(plant: DashboardPlant) {
-    // Add to watering set for loading spinner
-    setWateringPlantIds((prev) => new Set(prev).add(plant.id));
-
+  function handleWater(plant: DashboardPlant) {
     // Add to removing set for fade-out animation
     setRemovingIds((prev) => new Set(prev).add(plant.id));
+    setWateringPlantIds((prev) => new Set(prev).add(plant.id));
 
-    // Wait for animation, then optimistically remove
-    setTimeout(() => {
-      startTransition(async () => {
-        removeFromGroups(plant.id);
+    startTransition(async () => {
+      // Optimistically remove from groups — stays applied until transition ends
+      removeFromGroups(plant.id);
 
-        const result = await logWatering({ plantId: plant.id });
+      const result = await logWatering({ plantId: plant.id });
 
-        // Clean up state
-        setWateringPlantIds((prev) => {
-          const next = new Set(prev);
-          next.delete(plant.id);
-          return next;
-        });
-        setRemovingIds((prev) => {
-          const next = new Set(prev);
-          next.delete(plant.id);
-          return next;
-        });
-
-        if (!result) {
-          toast.error("Couldn't log watering. Try again.");
-          return;
-        }
-
-        if ("error" in result) {
-          if (result.error === "DUPLICATE") {
-            toast("Already logged! Edit from history if needed.");
-          } else {
-            toast.error("Couldn't log watering. Try again.");
-          }
-          return;
-        }
-
-        if ("success" in result && result.success) {
-          toast(
-            plant.nickname +
-              " watered! Next: " +
-              format(new Date(result.nextWateringAt), "MMM d")
-          );
-        }
+      // Clean up local state
+      setWateringPlantIds((prev) => {
+        const next = new Set(prev);
+        next.delete(plant.id);
+        return next;
       });
-    }, 300);
+      setRemovingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(plant.id);
+        return next;
+      });
+
+      if (!result) {
+        toast.error("Couldn't log watering. Try again.");
+        return;
+      }
+
+      if ("error" in result) {
+        if (result.error === "DUPLICATE") {
+          toast("Already logged! Edit from history if needed.");
+        } else {
+          toast.error("Couldn't log watering. Try again.");
+        }
+        return;
+      }
+
+      if ("success" in result && result.success) {
+        toast(
+          plant.nickname +
+            " watered! Next: " +
+            format(new Date(result.nextWateringAt), "MMM d")
+        );
+      }
+    });
   }
 
   const sections = [

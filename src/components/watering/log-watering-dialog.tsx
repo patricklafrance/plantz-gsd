@@ -46,6 +46,8 @@ interface LogWateringDialogProps {
   editLog?: { id: string; wateredAt: Date; note: string | null };
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onLogged?: () => void;
+  onEdited?: () => void;
 }
 
 export function LogWateringDialog({
@@ -54,6 +56,8 @@ export function LogWateringDialog({
   editLog,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
+  onLogged,
+  onEdited,
 }: LogWateringDialogProps) {
   const isEditMode = !!editLog;
   const [internalOpen, setInternalOpen] = useState(false);
@@ -93,6 +97,7 @@ export function LogWateringDialog({
       }
       toast("Watering log updated.");
       handleOpenChange(false);
+      onEdited?.();
     } else {
       const result = await logWatering({
         plantId,
@@ -113,6 +118,7 @@ export function LogWateringDialog({
           `${plantNickname} watered on ${format(wateredAt, "MMMM d")}. Next: ${format(new Date(result.nextWateringAt), "MMMM d")}`
         );
         handleOpenChange(false);
+        onLogged?.();
       }
     }
   }

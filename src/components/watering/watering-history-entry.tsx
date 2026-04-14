@@ -31,6 +31,8 @@ interface WateringHistoryEntryProps {
   log: WateringLog;
   plantId: string;
   plantNickname: string;
+  onDeleted?: () => void;
+  onEdited?: () => void;
 }
 
 function formatRelativeTime(date: Date): string {
@@ -44,6 +46,8 @@ export function WateringHistoryEntry({
   log,
   plantId,
   plantNickname,
+  onDeleted,
+  onEdited,
 }: WateringHistoryEntryProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -62,6 +66,7 @@ export function WateringHistoryEntry({
 
     setDeleteOpen(false);
     toast("Watering log deleted.");
+    onDeleted?.();
   }
 
   return (
@@ -92,17 +97,17 @@ export function WateringHistoryEntry({
                 size="icon"
                 className="h-8 w-8 shrink-0"
                 aria-label="Watering log options"
-              />
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
             }
-          >
-            <MoreVertical className="h-4 w-4" />
-          </DropdownMenuTrigger>
+          />
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+            <DropdownMenuItem onClick={() => setEditOpen(true)}>
               Edit
             </DropdownMenuItem>
             <DropdownMenuItem
-              onSelect={() => setDeleteOpen(true)}
+              onClick={() => setDeleteOpen(true)}
               variant="destructive"
             >
               Delete
@@ -122,6 +127,7 @@ export function WateringHistoryEntry({
         }}
         open={editOpen}
         onOpenChange={setEditOpen}
+        onEdited={onEdited}
       />
 
       {/* Delete confirmation */}

@@ -93,23 +93,20 @@ async function DashboardContent({
     );
   }
 
-  // Has plants but nothing needs attention
-  if (allCaughtUp) {
-    return (
-      <div className="flex flex-col items-center justify-center py-3xl text-center">
-        <div className="mb-md rounded-full bg-accent/10 p-lg">
-          <CheckCircle2 className="h-8 w-8 text-accent" />
+  // Normal dashboard — show "all caught up" banner when nothing needs attention
+  return (
+    <div className="space-y-xl">
+      {allCaughtUp && (
+        <div className="flex items-center gap-sm rounded-lg bg-accent/10 px-md py-sm">
+          <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />
+          <p className="text-sm font-medium">
+            All caught up! Check back when the next one is due.
+          </p>
         </div>
-        <h2 className="text-xl font-semibold">All caught up!</h2>
-        <p className="mt-sm text-muted-foreground">
-          Your plants are all watered. Check back when the next one is due.
-        </p>
-      </div>
-    );
-  }
-
-  // Normal dashboard with urgency sections
-  return <DashboardClient groups={groups} />;
+      )}
+      <DashboardClient groups={groups} />
+    </div>
+  );
 }
 
 export default async function DashboardPage() {

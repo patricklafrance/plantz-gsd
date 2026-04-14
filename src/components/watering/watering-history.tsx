@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ interface WateringHistoryProps {
   plantNickname: string;
   initialLogs: WateringLog[];
   totalCount: number;
+  onMutated?: () => void;
 }
 
 export function WateringHistory({
@@ -20,10 +21,17 @@ export function WateringHistory({
   plantNickname,
   initialLogs,
   totalCount,
+  onMutated,
 }: WateringHistoryProps) {
   const [logs, setLogs] = useState<WateringLog[]>(initialLogs);
   const [total, setTotal] = useState(totalCount);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sync with parent when initialLogs changes (after refetch)
+  useEffect(() => {
+    setLogs(initialLogs);
+    setTotal(totalCount);
+  }, [initialLogs, totalCount]);
 
   const hasMore = logs.length < total;
 
@@ -54,6 +62,12 @@ export function WateringHistory({
           log={log}
           plantId={plantId}
           plantNickname={plantNickname}
+          onDeleted={() => {
+            setLogs((prev) => prev.filter((l) => l.id !== log.id));
+            setTotal((prev) => prev - 1);
+            onMutated?.();
+          }}
+          onEdited={onMutated}
         />
       ))}
       {hasMore && (
