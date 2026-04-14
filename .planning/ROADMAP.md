@@ -92,9 +92,9 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 04-01-PLAN.md — Watering data layer: Zod schemas, urgency classification query, Server Actions (log/edit/delete), types, tests, shadcn installs
-- [ ] 04-02-PLAN.md — Dashboard UI: urgency sections, responsive card grid, optimistic water button, timezone sync, loading skeletons
-- [ ] 04-03-PLAN.md — Plant detail watering: history list with pagination, log/edit/delete dialogs, date picker, kebab menus
+- [x] 04-01-PLAN.md — Watering data layer: Zod schemas, urgency classification query, Server Actions (log/edit/delete), types, tests, shadcn installs
+- [x] 04-02-PLAN.md — Dashboard UI: urgency sections, responsive card grid, optimistic water button, timezone sync, loading skeletons
+- [x] 04-03-PLAN.md — Plant detail watering: history list with pagination, log/edit/delete dialogs, date picker, kebab menus
 
 ### Phase 5: Notes, Search, and Filters
 **Goal**: Users can annotate individual plants with timestamped notes and quickly find any plant in their collection
