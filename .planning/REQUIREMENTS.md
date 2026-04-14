@@ -126,61 +126,61 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
-| AUTH-05 | Phase 1 | Pending |
-| PLNT-01 | Phase 2 | Pending |
-| PLNT-02 | Phase 2 | Pending |
-| PLNT-03 | Phase 2 | Pending |
-| PLNT-04 | Phase 2 | Pending |
-| PLNT-05 | Phase 2 | Pending |
-| PLNT-06 | Phase 2 | Pending |
-| PLNT-07 | Phase 2 | Pending |
-| PLNT-08 | Phase 2 | Pending |
-| ROOM-01 | Phase 2 | Pending |
-| ROOM-02 | Phase 2 | Pending |
-| ROOM-03 | Phase 2 | Pending |
-| ROOM-04 | Phase 2 | Pending |
-| ROOM-05 | Phase 2 | Pending |
-| DASH-01 | Phase 3 | Pending |
-| DASH-02 | Phase 3 | Pending |
-| DASH-03 | Phase 3 | Pending |
-| DASH-04 | Phase 3 | Pending |
-| DASH-05 | Phase 3 | Pending |
-| WATR-01 | Phase 3 | Pending |
-| WATR-02 | Phase 3 | Pending |
-| WATR-03 | Phase 3 | Pending |
-| WATR-04 | Phase 3 | Pending |
-| WATR-05 | Phase 3 | Pending |
-| WATR-06 | Phase 3 | Pending |
-| WATR-07 | Phase 3 | Pending |
-| NOTE-01 | Phase 4 | Pending |
-| NOTE-02 | Phase 4 | Pending |
-| NOTE-03 | Phase 4 | Pending |
-| RMDR-01 | Phase 5 | Pending |
-| RMDR-02 | Phase 5 | Pending |
-| RMDR-03 | Phase 5 | Pending |
-| RMDR-04 | Phase 5 | Pending |
-| RMDR-05 | Phase 5 | Pending |
-| DEMO-01 | Phase 5 | Pending |
-| DEMO-02 | Phase 5 | Pending |
-| DEMO-03 | Phase 5 | Pending |
-| SRCH-01 | Phase 4 | Pending |
-| SRCH-02 | Phase 4 | Pending |
-| SRCH-03 | Phase 4 | Pending |
-| UIAX-01 | Phase 6 | Pending |
-| UIAX-02 | Phase 6 | Pending |
-| UIAX-03 | Phase 6 | Pending |
-| UIAX-04 | Phase 6 | Pending |
-| UIAX-05 | Phase 3 | Pending |
+| AUTH-01 | Phase 2 | Pending |
+| AUTH-02 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Pending |
+| AUTH-04 | Phase 2 | Pending |
+| AUTH-05 | Phase 2 | Pending |
+| PLNT-01 | Phase 3 | Pending |
+| PLNT-02 | Phase 3 | Pending |
+| PLNT-03 | Phase 3 | Pending |
+| PLNT-04 | Phase 3 | Pending |
+| PLNT-05 | Phase 3 | Pending |
+| PLNT-06 | Phase 3 | Pending |
+| PLNT-07 | Phase 3 | Pending |
+| PLNT-08 | Phase 3 | Pending |
+| ROOM-01 | Phase 3 | Pending |
+| ROOM-02 | Phase 3 | Pending |
+| ROOM-03 | Phase 3 | Pending |
+| ROOM-04 | Phase 3 | Pending |
+| ROOM-05 | Phase 3 | Pending |
+| DASH-01 | Phase 4 | Pending |
+| DASH-02 | Phase 4 | Pending |
+| DASH-03 | Phase 4 | Pending |
+| DASH-04 | Phase 4 | Pending |
+| DASH-05 | Phase 4 | Pending |
+| WATR-01 | Phase 4 | Pending |
+| WATR-02 | Phase 4 | Pending |
+| WATR-03 | Phase 4 | Pending |
+| WATR-04 | Phase 4 | Pending |
+| WATR-05 | Phase 4 | Pending |
+| WATR-06 | Phase 4 | Pending |
+| WATR-07 | Phase 4 | Pending |
+| UIAX-05 | Phase 4 | Pending |
+| NOTE-01 | Phase 5 | Pending |
+| NOTE-02 | Phase 5 | Pending |
+| NOTE-03 | Phase 5 | Pending |
+| SRCH-01 | Phase 5 | Pending |
+| SRCH-02 | Phase 5 | Pending |
+| SRCH-03 | Phase 5 | Pending |
+| RMDR-01 | Phase 6 | Pending |
+| RMDR-02 | Phase 6 | Pending |
+| RMDR-03 | Phase 6 | Pending |
+| RMDR-04 | Phase 6 | Pending |
+| RMDR-05 | Phase 6 | Pending |
+| DEMO-01 | Phase 6 | Pending |
+| DEMO-02 | Phase 6 | Pending |
+| DEMO-03 | Phase 6 | Pending |
+| UIAX-01 | Phase 7 | Pending |
+| UIAX-02 | Phase 7 | Pending |
+| UIAX-03 | Phase 7 | Pending |
+| UIAX-04 | Phase 7 | Pending |
 
 **Coverage:**
 - v1 requirements: 46 total
-- Mapped to phases: 46
+- Mapped to phases: 46 (Phases 2-7; Phase 1 is infrastructure with no user-facing requirements)
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-13*
-*Last updated: 2026-04-13 after initial definition*
+*Last updated: 2026-04-13 after roadmap creation (phase numbers updated to 7-phase structure)*
