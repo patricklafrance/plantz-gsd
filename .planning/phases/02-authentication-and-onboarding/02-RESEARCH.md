@@ -571,22 +571,25 @@ export async function dismissOnboarding(userId: string) {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does `auth.ts` need jwt/session callbacks added, or does Phase 1 already include them?**
    - What we know: The `auth.ts` in the codebase does NOT include jwt/session callbacks. It only has the Credentials provider.
    - What's unclear: `token.sub` is the user ID in NextAuth JWT — some versions auto-populate `session.user.id` from `sub`, others don't.
    - Recommendation: Add jwt/session callbacks in Wave 1 of the plan and add a TypeScript type augmentation to verify at compile time.
+   - RESOLVED: Plan 02-01 Task 1 adds jwt and session callbacks to auth.ts, plus a next-auth.d.ts type augmentation.
 
 2. **Does shadcn `form` component need to be added via CLI, or is it already available?**
    - What we know: `src/components/ui/` has button, card, input, label, skeleton, badge, separator — no `form.tsx`.
    - What's unclear: The shadcn `Form` component wraps RHF's FormProvider — it's required for the `FormField`/`FormMessage` pattern.
    - Recommendation: Add `form` component in Wave 0 (setup) via `npx shadcn@latest add form`. Also add `sonner` for toast notifications.
+   - RESOLVED: Plan 02-01 Task 2 installs form and sonner via `npx shadcn@latest add form sonner`.
 
 3. **What is the exact `isRedirectError` import path in Next.js 16?**
    - What we know: In Next.js 14-15, it was `next/dist/client/components/redirect-error`.
    - What's unclear: Next.js 16 may have moved or exported this utility differently.
    - Recommendation: Check `node_modules/next/dist` at implementation time, or use the pattern of catching only non-redirect errors by checking `error.digest?.startsWith("NEXT_REDIRECT")`.
+   - RESOLVED: Plan 02-01 Task 2 uses `next/dist/client/components/redirect-error` with a runtime verification fallback pattern.
 
 ---
 
