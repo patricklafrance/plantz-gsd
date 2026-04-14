@@ -70,6 +70,11 @@ export async function completeOnboarding(data: {
     return { error: "Invalid selection." };
   }
 
+  const user = await db.user.findUnique({ where: { id: data.userId } });
+  if (!user) {
+    return { error: "Session expired. Please sign in again." };
+  }
+
   await db.user.update({
     where: { id: data.userId },
     data: {
