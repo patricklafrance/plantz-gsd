@@ -14,19 +14,19 @@ Users can see at a glance which plants need watering today and log it in one act
 
 - [x] Users can create an account and log in securely (NextAuth.js, email/password) — Validated in Phase 2: Authentication and Onboarding
 - [x] Users can go through minimal onboarding (plant count) — Validated in Phase 2: Authentication and Onboarding (reminder preference deferred per D-08)
+- [x] Users can add, edit, archive, and delete plants with confirmation — Validated in Phase 3: Plant Collection and Rooms
+- [x] Users can organize plants by room (custom names + common presets) — Validated in Phase 3: Plant Collection and Rooms
+- [x] Users can log watering in one quick action from the dashboard — Validated in Phase 4: Dashboard and Watering Core Loop
+- [x] Users can see due today, overdue, upcoming, and recently watered plants (urgency-first dashboard) — Validated in Phase 4: Dashboard and Watering Core Loop
+- [x] Users can view watering history for each plant — Validated in Phase 4: Dashboard and Watering Core Loop
+- [x] Watering logic uses firm interval countdown with overdue alerts — Validated in Phase 4: Dashboard and Watering Core Loop
+- [x] Next watering date recalculates automatically after logging — Validated in Phase 4: Dashboard and Watering Core Loop
 
 ### Active
-- [ ] Users can add, edit, archive, and delete plants with confirmation
-- [ ] Users can organize plants by room (custom names + common presets)
-- [ ] Users can log watering in one quick action from the dashboard
-- [ ] Users can see due today, overdue, upcoming, and recently watered plants (urgency-first dashboard)
-- [ ] Users can view watering history for each plant
+- [ ] Users can view plant detail pages with care info, status, and history
 - [ ] Users can add timestamped notes and basic health observations
 - [ ] Users can configure in-app reminder preferences
 - [ ] Users can browse a seeded plant care catalog (~30-50 common houseplants)
-- [ ] Users can view plant detail pages with care info, status, and history
-- [ ] Watering logic uses firm interval countdown with overdue alerts
-- [ ] Next watering date recalculates automatically after logging
 - [ ] Guest/demo mode lets visitors explore with pre-loaded sample plants
 - [ ] App is responsive and polished on mobile and desktop
 - [ ] App is accessible (keyboard nav, contrast, screen reader friendly)
