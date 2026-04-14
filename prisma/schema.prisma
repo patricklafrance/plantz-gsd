@@ -36,7 +36,7 @@ model Plant {
   nickname         String
   species          String?
   roomId           String?
-  room             Room?          @relation(fields: [roomId], references: [id])
+  room             Room?          @relation(fields: [roomId], references: [id], onDelete: SetNull)
   userId           String
   user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   wateringInterval Int
