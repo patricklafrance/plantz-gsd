@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Leaf } from "lucide-react";
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { TimezoneSync } from "@/components/watering/timezone-sync";
 
 export default async function MainLayout({
   children,
@@ -22,6 +23,7 @@ export default async function MainLayout({
 
   return (
     <div className="min-h-screen bg-background">
+      <TimezoneSync />
       <header className="border-b border-border">
         <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-md">
           <Link href="/dashboard" className="flex items-center gap-sm">
