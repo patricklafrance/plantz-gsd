@@ -134,13 +134,19 @@ export function LoginForm() {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="justify-center border-t bg-muted/50 py-4">
+      <CardFooter className="flex flex-col items-center gap-2 border-t bg-muted/50 py-4">
         <p className="text-sm text-muted-foreground">
           Don&apos;t have an account?{" "}
           <Link href="/register" className="text-accent hover:underline font-medium">
             Sign up
           </Link>
         </p>
+        <Link
+          href="/demo"
+          className="text-sm text-accent hover:underline"
+        >
+          Explore without signing up
+        </Link>
       </CardFooter>
     </Card>
   );
