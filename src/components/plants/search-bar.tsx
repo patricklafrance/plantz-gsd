@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,19 +20,21 @@ export function SearchBar({ defaultValue }: { defaultValue?: string }) {
   const searchParams = useSearchParams();
   const [value, setValue] = useState(defaultValue ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchParamsRef = useRef(searchParams);
+  searchParamsRef.current = searchParams;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const updateURL = useCallback(
-    debounce((query: string) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (query) {
-        params.set("search", query);
-      } else {
-        params.delete("search");
-      }
-      router.push(`/plants?${params.toString()}`);
-    }, 300),
-    [searchParams] // Recreate on searchParams change to avoid stale closure
+  const updateURL = useMemo(
+    () =>
+      debounce((query: string) => {
+        const params = new URLSearchParams(searchParamsRef.current.toString());
+        if (query) {
+          params.set("search", query);
+        } else {
+          params.delete("search");
+        }
+        router.push(`/plants?${params.toString()}`);
+      }, 300),
+    [] // stable — reads from ref
   );
 
   function handleClear() {
