@@ -27,16 +27,19 @@ export async function logWatering(data: unknown) {
   // Compute watering dates
   const wateredAt = parsed.data.wateredAt ?? new Date();
 
-  // Duplicate check (D-11): reject a second log within 60 seconds for the same date
-  const sixtySecondsAgo = new Date(Date.now() - 60_000);
-  const recentLog = await db.wateringLog.findFirst({
+  // Duplicate check: reject if a watering log already exists for the same calendar date
+  const dayStart = new Date(wateredAt);
+  dayStart.setUTCHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
+
+  const existingLog = await db.wateringLog.findFirst({
     where: {
       plantId: parsed.data.plantId,
-      createdAt: { gte: sixtySecondsAgo },
-      wateredAt,
+      wateredAt: { gte: dayStart, lt: dayEnd },
     },
   });
-  if (recentLog) return { error: "DUPLICATE" };
+  if (existingLog) return { error: "DUPLICATE" };
 
   // Create the watering log first
   await db.wateringLog.create({

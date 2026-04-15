@@ -405,7 +405,7 @@ describe("Server Actions", () => {
       expect(result).toEqual({ error: "Plant not found." });
     });
 
-    test("returns DUPLICATE within 60s window", async () => {
+    test("returns DUPLICATE when a log already exists for the same calendar date", async () => {
       authMock.mockResolvedValue({ user: { id: "u1" } });
       db.plant.findFirst.mockResolvedValue({
         id: "p1",
@@ -413,11 +413,11 @@ describe("Server Actions", () => {
         wateringInterval: 7,
         nickname: "Monstera",
       });
-      // Simulate a recent log exists (duplicate)
+      // Simulate an existing log on the same day
       db.wateringLog.findFirst.mockResolvedValue({
-        id: "log-recent",
+        id: "log-existing",
         plantId: "p1",
-        createdAt: new Date(),
+        wateredAt: new Date(),
       });
 
       const { logWatering } = await import("@/features/watering/actions");

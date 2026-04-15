@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Timeline } from "@/components/timeline/timeline";
+import { LogWateringDialog } from "@/components/watering/log-watering-dialog";
 import type { PlantWithRelations } from "@/types/plants";
 import type { TimelineEntry as TimelineEntryType } from "@/types/timeline";
 
@@ -155,8 +156,9 @@ export function PlantDetail({
 
       {/* Timeline card (per D-01: replaces separate Watering history + Notes cards) */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Timeline</CardTitle>
+          <LogWateringDialog plantId={plant.id} plantNickname={plant.nickname} />
         </CardHeader>
         <CardContent>
           <Timeline
