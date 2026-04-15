@@ -117,6 +117,7 @@ Components already installed — all Phase 5 needs are covered:
 | `select.tsx` | Installed | Not used — sort is a DropdownMenu button, not a Select |
 | `skeleton.tsx` | Installed | Timeline loading skeleton (if timeline is in a Suspense boundary) |
 | `separator.tsx` | Installed | Divider between room filter row and status filter row (optional) |
+| `tooltip.tsx` | Installed | Tooltip wrapper for icon-only actions (clear-search X, kebab trigger) — see Interaction Contracts |
 
 Components to add: None. All needed components are installed.
 
@@ -140,6 +141,7 @@ No third-party registries. shadcn official only.
 - Search icon: `Search` from lucide-react, `absolute left-sm top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground`, pointer-events-none
 - Input: `pl-[2.25rem]` (override left padding to clear icon), `pr-md` default or `pr-8` when clear button visible
 - Clear button: `absolute right-sm`, appears only when input has value. Icon: `X` from lucide-react, `h-4 w-4`, `variant="ghost" size="icon" h-8 w-8`. `aria-label="Clear search"`. Clears input and removes `search` URL param.
+- Clear button tooltip: wrap in shadcn `<Tooltip>` with `<TooltipContent>Clear search</TooltipContent>`. Tooltip appears on hover for sighted users. The `aria-label` on the button remains the accessible name for screen readers.
 - Debounce: 300ms from last keystroke before URL param updates (D-08)
 - Controlled local state: `value` syncs to local state immediately for display; URL update is debounced
 - Search query persists in URL — survives page navigation and refresh (D-08)
@@ -234,6 +236,11 @@ No third-party registries. shadcn official only.
 - Watering: `Droplets` from lucide-react, `h-4 w-4 text-blue-500`, container `h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0` (use `text-blue-500 bg-blue-50` — Tailwind v4 defaults; do not add a new CSS variable)
 - Both containers use `shrink-0` to prevent compression in flex layouts
 
+**Kebab menu trigger spec:**
+- Icon: `MoreHorizontal` from lucide-react, `h-4 w-4`
+- Button: `<Button variant="ghost" size="icon" aria-label="Note options">` (or "Watering options" for watering entries)
+- Tooltip: wrap trigger in shadcn `<Tooltip>` with `<TooltipContent>More options</TooltipContent>`. Tooltip appears on hover for sighted users. The `aria-label` on the button remains the accessible name for screen readers.
+
 **Timestamp format:**
 - Relative for recent (within 7 days): `"Today"`, `"Yesterday"`, `"3 days ago"` — date-fns `formatDistanceToNow` / `isToday` / `isYesterday`
 - Absolute for older: `"April 4, 2026"` — `format(date, "MMMM d, yyyy")`
@@ -274,13 +281,13 @@ No third-party registries. shadcn official only.
 1. Note entry switches from display mode to edit mode in place.
 2. `<p className="text-sm">` becomes `<textarea className="text-sm w-full resize-none ...">` pre-filled with current content.
 3. Textarea auto-sizes to content (use `rows={Math.max(2, lineCount)}`).
-4. Below textarea: `<Button size="sm">Save</Button>` and `<Button size="sm" variant="ghost">Cancel</Button>` — in a `flex gap-sm` row.
-5. Save on: "Save" button click OR `Ctrl+Enter` (keyboard shortcut).
-6. Cancel on: "Cancel" button OR `Escape` key — restores display mode without saving.
+4. Below textarea: `<Button size="sm">Save note</Button>` and `<Button size="sm" variant="ghost">Discard changes</Button>` — in a `flex gap-sm` row.
+5. Save on: "Save note" button click OR `Ctrl+Enter` (keyboard shortcut).
+6. Discard on: "Discard changes" button OR `Escape` key — restores display mode without saving.
 7. On save: call `updateNote` Server Action. Optimistic: show updated content immediately. On error: revert to prior content and show toast.
 8. `aria-label="Edit note"` on the textarea.
 
-**Do not save on blur.** Blur without explicit Save/Cancel is treated as Cancel.
+**Do not save on blur.** Blur without explicit Save / Discard is treated as Discard.
 
 ### 7. Delete Note (NOTE-03, D-05)
 
@@ -342,10 +349,13 @@ When a plant has NO timeline entries at all (new plant, no watering logged, no n
 | Element | Copy | Source |
 |---------|------|--------|
 | Primary CTA — add note | "Add" | D-04 — inline label |
-| Primary CTA — save note edit | "Save" | Claude discretion |
-| Cancel note edit | "Cancel" | Claude discretion |
+| Primary CTA — save note edit | "Save note" | Claude discretion |
+| Discard note edit | "Discard changes" | Claude discretion |
 | Primary CTA — plants search bar placeholder | "Search plants..." | Claude discretion |
 | Clear search button aria-label | "Clear search" | Claude discretion |
+| Clear search button tooltip | "Clear search" | Claude discretion |
+| Kebab menu trigger aria-label (note entry) | "Note options" | Claude discretion |
+| Kebab menu trigger tooltip | "More options" | Claude discretion |
 | Sort dropdown trigger label (default) | "Sort: Next watering" | Claude discretion |
 | Sort option — default | "Next watering" | Claude discretion |
 | Sort option — alphabetical | "Name (A-Z)" | Claude discretion |
@@ -421,7 +431,7 @@ Max content width: `max-w-5xl` (consistent with all other pages).
 
 | Registry | Blocks Used | Safety Gate |
 |----------|-------------|-------------|
-| shadcn official | badge, button, card, input, dropdown-menu, alert-dialog, sonner, skeleton, separator, form, select, popover, calendar, dialog, label | not required — official registry |
+| shadcn official | badge, button, card, input, dropdown-menu, alert-dialog, sonner, skeleton, separator, form, select, popover, calendar, dialog, label, tooltip | not required — official registry |
 
 No third-party registries declared for this phase. All Phase 5 UI primitives are already installed.
 
