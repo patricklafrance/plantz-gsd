@@ -51,7 +51,7 @@ Declared values from `globals.css` — do not override:
 |---------|-------|--------|
 | Bell icon touch target | 44px min (use `p-2.5` on the button wrapper) | WCAG 2.5.5 touch target minimum for nav icon buttons |
 | Snooze pill buttons | h-7 (sm size via Button `size="sm"`) | Pill row fits inline on plant detail without overwhelming layout |
-| Notification badge position | `-top-1.5 -right-1.5` (6px offset) | Absolute overlay on Bell icon — consistent with established badge-on-icon pattern |
+| Notification badge position | `-top-1 -right-1` (4px offset) | Absolute overlay on Bell icon — grid-aligned 4px offset consistent with xs spacing token |
 
 ---
 
@@ -62,11 +62,11 @@ Inherited from established project typography. Do not introduce new sizes or wei
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | Body | 16px (text-base) | 400 (normal) | 1.5 | General content, dropdown item secondary text |
-| Label / UI small | 14px (text-sm) | 500 (medium) | 1.4 | Nav links, dropdown item names, preferences labels, snooze pill labels |
+| Label / UI small | 14px (text-sm) | 600 (semibold) | 1.4 | Nav links, dropdown item names, preferences labels, snooze pill labels |
 | Caption / Meta | 12px (text-xs) | 400 (normal) | 1.4 | Notification item room + status line, badge count, helper text |
 | Heading | 20px (text-xl) | 600 (semibold) | 1.2 | Preferences page section headings |
 
-**Weights in use:** 400 (normal) and 600 (semibold) only. Weight 500 (medium) is used for interactive labels only (nav links, form labels) — no new weights introduced.
+**Weights in use:** 400 (normal) and 600 (semibold) only. No weight 500 is used in this phase.
 
 ---
 
@@ -126,18 +126,19 @@ Components used in this phase — all already installed:
 ### Notification Bell (Nav)
 
 - **Resting state (count = 0):** Bell icon at `h-5 w-5 text-muted-foreground`. No badge rendered. Bell icon button has `aria-label="No plants need attention"`.
-- **Active state (count > 0):** Bell icon at `h-5 w-5 text-foreground`. Badge overlaid at `-top-1.5 -right-1.5` with `bg-accent text-accent-foreground`. Count capped display at "99+". `aria-label="{count} plants need attention"`.
+- **Active state (count > 0):** Bell icon at `h-5 w-5 text-foreground`. Badge overlaid at `-top-1 -right-1` with `bg-accent text-accent-foreground`. Count capped display at "99+". `aria-label="{count} plants need attention"`.
 - **Bell animation:** No animation for v1. Static icon only.
 - **Dropdown trigger:** Ghost button wrapper, `size="icon"` (32px), with extra padding for 44px touch target (`p-2.5` on the outer wrapper or use `size="icon-lg"` at 36px — use 36px icon-lg for the touch target). Positioned in the right action group of the nav, between nav links and logout.
-- **Dropdown panel:** `w-72`, `align="end"`. Max 5 items visible before scroll (`max-h-[320px] overflow-y-auto`). Items listed in urgency order: overdue first, then due today. Each item: plant nickname in `text-sm font-medium text-foreground`, then room + status on a second line in `text-xs text-muted-foreground`. No dividers between items. Clicking any item navigates to `/plants/{plantId}`.
+- **Dropdown panel:** `w-72`, `align="end"`. Max 5 items visible before scroll (`max-h-[320px] overflow-y-auto`). Items listed in urgency order: overdue first, then due today. Each item: plant nickname in `text-sm font-semibold text-foreground`, then room + status on a second line in `text-xs text-muted-foreground`. No dividers between items. Clicking any item navigates to `/plants/{plantId}`.
 - **Empty dropdown:** Single non-interactive row: "All caught up!" in `text-sm text-muted-foreground px-md py-sm`.
 
 ### Snooze Pills (Plant Detail Page)
 
+- **Focal point:** The snooze pill row is the primary call-to-action for overdue/due-today plants on the detail page. It draws the eye through horizontal pill grouping and sits directly below the plant status label.
 - **Visibility condition:** Pill row renders only when plant status is overdue or due today (computed server-side, passed as prop).
 - **Pill layout:** Horizontal row of 4 pills: `1d`, `2d`, `1w`, `Custom`. Use `Button size="sm" variant="outline"` for each. `gap-sm` between pills. Row label above: `text-xs text-muted-foreground` reading "Snooze reminder:".
 - **Snooze confirmation:** On pill click (`1d`, `2d`, `1w`), Server Action fires immediately. Toast: "Reminder snoozed for {N} day(s)." using Sonner. No confirmation dialog for quick snooze durations.
-- **Custom snooze flow:** Clicking "Custom" opens a Dialog (not a popover) with a Calendar date picker. Dialog title: "Choose snooze date". Calendar shows today as the minimum selectable date. Cancel button (outline) and "Snooze" button (default). On confirm, Server Action fires and toast fires: "Reminder snoozed until {date}."
+- **Custom snooze flow:** Clicking "Custom" opens a Dialog (not a popover) with a Calendar date picker. Dialog title: "Choose snooze date". Calendar shows today as the minimum selectable date. "Keep current schedule" button (outline) and "Snooze reminder" button (default). On confirm, Server Action fires and toast fires: "Reminder snoozed until {date}."
 - **Post-snooze state:** Pills disappear (plant no longer qualifies as overdue/due-today from the reminder perspective). The plant's status label on the detail page still reflects its actual watering status — snooze only affects the notification badge and dropdown, not the urgency classification display.
 
 ### Global Reminders Toggle (Preferences Page)
@@ -154,8 +155,9 @@ Components used in this phase — all already installed:
 
 ### Preferences Page (/preferences)
 
+- **Focal point:** The global reminders Switch is the primary interactive element on this page. It sits at the top of the first card, visually leading the page hierarchy before account settings.
 - **Page layout:** Single column, `max-w-xl mx-auto`. Two Card sections: "Reminders" and "Account". `gap-lg` between cards.
-- **Nav integration:** Add "Preferences" text link to the right action group of the nav (between "Complete setup" conditional link and the email display). `text-sm font-medium text-muted-foreground hover:text-foreground`.
+- **Nav integration:** Add "Preferences" text link to the right action group of the nav (between "Complete setup" conditional link and the email display). `text-sm font-semibold text-muted-foreground hover:text-foreground`.
 - **Reminders section:** Card with Switch component (global toggle). Save is implicit on toggle — no Save button needed.
 - **Account section:** Card with sub-sections: Change Email (form: current password + new email), Change Password (form: current password + new password + confirm), Delete Account (destructive zone with AlertDialog).
 
@@ -187,8 +189,8 @@ Components used in this phase — all already installed:
 | Snooze row label | "Snooze reminder:" |
 | Snooze pill labels | "1d", "2d", "1w", "Custom" |
 | Custom dialog title | "Choose snooze date" |
-| Custom dialog cancel | "Cancel" |
-| Custom dialog confirm | "Snooze" |
+| Custom dialog cancel | "Keep current schedule" |
+| Custom dialog confirm | "Snooze reminder" |
 | Toast — quick snooze (1d) | "Reminder snoozed for 1 day." |
 | Toast — quick snooze (2d) | "Reminder snoozed for 2 days." |
 | Toast — quick snooze (1w) | "Reminder snoozed for 1 week." |
@@ -223,7 +225,7 @@ Components used in this phase — all already installed:
 | Delete account button | "Delete account" (destructive variant) |
 | Delete account dialog title | "Delete your account?" |
 | Delete account dialog body | "This will permanently delete all your plants, watering history, and notes. This cannot be undone." |
-| Delete account dialog cancel | "Cancel" |
+| Delete account dialog cancel | "Keep my account" |
 | Delete account dialog confirm | "Yes, delete my account" (destructive) |
 
 ### Demo Mode
