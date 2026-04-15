@@ -78,14 +78,6 @@ export default async function MainLayout({
           </div>
           <div className="flex items-center gap-4">
             <NotificationBell count={reminderCount} items={reminderItems} />
-            {!user?.onboardingCompleted && (
-              <Link
-                href="/dashboard#onboarding"
-                className="text-sm font-medium text-accent hover:underline"
-              >
-                Complete setup
-              </Link>
-            )}
             <UserMenu email={user?.email ?? ""} name={user?.name} />
           </div>
         </nav>
