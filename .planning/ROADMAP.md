@@ -109,9 +109,9 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 05-01-PLAN.md — Note model + schema push, timeline types, Zod schemas, note CRUD Server Actions, timeline query, all test stubs
-- [ ] 05-02-PLAN.md — Unified timeline UI on plant detail page (replaces watering history + notes cards)
-- [ ] 05-03-PLAN.md — Search bar, status filter pills, sort dropdown, extended getPlants query on plants collection page
+- [x] 05-01-PLAN.md — Note model + schema push, timeline types, Zod schemas, note CRUD Server Actions, timeline query, all test stubs
+- [x] 05-02-PLAN.md — Unified timeline UI on plant detail page (replaces watering history + notes cards)
+- [x] 05-03-PLAN.md — Search bar, status filter pills, sort dropdown, extended getPlants query on plants collection page
 
 ### Phase 6: Reminders and Demo Mode
 **Goal**: Signed-in users receive in-app reminders for plants needing attention; unauthenticated visitors can explore the full app experience with sample data
