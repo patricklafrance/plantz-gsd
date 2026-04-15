@@ -2,12 +2,12 @@ import { z } from "zod/v4";
 
 export const createNoteSchema = z.object({
   plantId: z.string().min(1, "Plant ID is required."),
-  content: z.string().min(1, "Note cannot be empty."),
+  content: z.string().min(1, "Note cannot be empty.").max(5000, "Note is too long."),
 });
 
 export const updateNoteSchema = z.object({
   noteId: z.string().min(1, "Note ID is required."),
-  content: z.string().min(1, "Note cannot be empty."),
+  content: z.string().min(1, "Note cannot be empty.").max(5000, "Note is too long."),
 });
 
 export const deleteNoteSchema = z.object({
