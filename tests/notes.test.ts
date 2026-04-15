@@ -186,7 +186,7 @@ describe("deleteNote action", () => {
     } as Awaited<ReturnType<typeof auth>>);
     vi.mocked(db.note.findFirst).mockResolvedValueOnce(null);
     const { deleteNote } = await import("@/features/notes/actions");
-    const result = await deleteNote("note-1");
+    const result = await deleteNote({ noteId: "note-1" });
     expect(result).toEqual({ error: "Note not found." });
   });
 
@@ -211,7 +211,7 @@ describe("deleteNote action", () => {
       existingNote as Awaited<ReturnType<typeof db.note.delete>>
     );
     const { deleteNote } = await import("@/features/notes/actions");
-    const result = await deleteNote("note-1");
+    const result = await deleteNote({ noteId: "note-1" });
     expect(result).toEqual({ success: true });
     expect(revalidatePath).toHaveBeenCalledWith("/plants/plant-1");
   });
