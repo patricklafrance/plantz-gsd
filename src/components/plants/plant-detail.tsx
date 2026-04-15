@@ -1,3 +1,5 @@
+"use client";
+
 import { differenceInDays, format } from "date-fns";
 import { Sun, CloudSun, Cloud } from "lucide-react";
 import {
@@ -7,10 +9,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Timeline } from "@/components/timeline/timeline";
 import type { PlantWithRelations } from "@/types/plants";
+import type { TimelineEntry as TimelineEntryType } from "@/types/timeline";
 
 interface PlantDetailProps {
   plant: PlantWithRelations;
+  timelineEntries: TimelineEntryType[];
+  timelineTotal: number;
 }
 
 function getLightIcon(lightRequirement: string | null) {
@@ -39,7 +45,11 @@ function getLightLabel(lightRequirement: string | null) {
   }
 }
 
-export function PlantDetail({ plant }: PlantDetailProps) {
+export function PlantDetail({
+  plant,
+  timelineEntries,
+  timelineTotal,
+}: PlantDetailProps) {
   const now = new Date();
   const nextWatering = plant.nextWateringAt;
 
@@ -143,27 +153,18 @@ export function PlantDetail({ plant }: PlantDetailProps) {
         </CardContent>
       </Card>
 
-      {/* History card */}
+      {/* Timeline card (per D-01: replaces separate Watering history + Notes cards) */}
       <Card>
         <CardHeader>
-          <CardTitle>Watering history</CardTitle>
+          <CardTitle>Timeline</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            No waterings logged yet. Watering history will appear here.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Notes section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Notes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            No notes yet. Notes will be available in a future update.
-          </p>
+          <Timeline
+            plantId={plant.id}
+            plantNickname={plant.nickname}
+            initialEntries={timelineEntries}
+            totalCount={timelineTotal}
+          />
         </CardContent>
       </Card>
     </div>
