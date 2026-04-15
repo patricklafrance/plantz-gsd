@@ -47,6 +47,7 @@ model Plant {
   careProfile      CareProfile?   @relation(fields: [careProfileId], references: [id])
   wateringLogs     WateringLog[]
   healthLogs       HealthLog[]
+  notes            Note[]
   reminders        Reminder[]
   createdAt        DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt        DateTime       @updatedAt @db.Timestamptz(3)
@@ -59,6 +60,17 @@ model WateringLog {
   wateredAt DateTime @db.Timestamptz(3)
   note      String?
   createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  plantId   String
+  plant     Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  content   String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([plantId])
 }
 
 model HealthLog {

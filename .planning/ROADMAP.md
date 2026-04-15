@@ -88,13 +88,8 @@ Plans:
   3. Next watering date recalculates automatically after logging (last watered + interval days) and is correct relative to the user's local timezone
   4. User can view a chronological watering history for each plant and can log a retroactive watering date
   5. User can edit or delete a mistaken watering log; duplicate logs within a short window are prevented
-**Plans:** 3 plans
+**Plans**: TBD
 **UI hint**: yes
-
-Plans:
-- [x] 04-01-PLAN.md — Watering data layer: Zod schemas, urgency classification query, Server Actions (log/edit/delete), types, tests, shadcn installs
-- [x] 04-02-PLAN.md — Dashboard UI: urgency sections, responsive card grid, optimistic water button, timezone sync, loading skeletons
-- [x] 04-03-PLAN.md — Plant detail watering: history list with pagination, log/edit/delete dialogs, date picker, kebab menus
 
 ### Phase 5: Notes, Search, and Filters
 **Goal**: Users can annotate individual plants with timestamped notes and quickly find any plant in their collection
@@ -105,13 +100,8 @@ Plans:
   2. User can edit or delete their own notes
   3. User can search plants by nickname or species name and see results immediately
   4. User can filter plants by room, watering status (overdue, due today, upcoming), and archived state, and can sort by next watering date, name, or recently added
-**Plans:** 3 plans
+**Plans**: TBD
 **UI hint**: yes
-
-Plans:
-- [ ] 05-01-PLAN.md — Note model + schema push, timeline types, Zod schemas, note CRUD Server Actions, timeline query, all test stubs
-- [ ] 05-02-PLAN.md — Unified timeline UI on plant detail page (replaces watering history + notes cards)
-- [ ] 05-03-PLAN.md — Search bar, status filter pills, sort dropdown, extended getPlants query on plants collection page
 
 ### Phase 6: Reminders and Demo Mode
 **Goal**: Signed-in users receive in-app reminders for plants needing attention; unauthenticated visitors can explore the full app experience with sample data
@@ -148,7 +138,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Scaffold and Foundations | 0/3 | Planning complete | - |
 | 2. Authentication and Onboarding | 0/4 | Planning complete | - |
 | 3. Plant Collection and Rooms | 0/6 | Planning complete | - |
-| 4. Dashboard and Watering Core Loop | 0/3 | Planning complete | - |
-| 5. Notes, Search, and Filters | 0/3 | Planning complete | - |
+| 4. Dashboard and Watering Core Loop | 0/? | Not started | - |
+| 5. Notes, Search, and Filters | 0/? | Not started | - |
 | 6. Reminders and Demo Mode | 0/? | Not started | - |
 | 7. Polish and Accessibility | 0/? | Not started | - |
