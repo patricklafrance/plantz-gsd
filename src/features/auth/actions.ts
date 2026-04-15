@@ -65,6 +65,7 @@ export async function completeOnboarding(data: {
   if (!session?.user?.id) {
     return { error: "Session expired. Please sign in again." };
   }
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   // Validate the plant count range
   const parsed = onboardingSchema.safeParse({

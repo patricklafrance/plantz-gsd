@@ -10,7 +10,7 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
-      const publicPaths = ["/login", "/register"];
+      const publicPaths = ["/login", "/register", "/demo"];
       const isPublicRoute = publicPaths.some(
         (path) =>
           nextUrl.pathname === path || nextUrl.pathname.startsWith(path + "/"),
