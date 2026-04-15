@@ -38,9 +38,24 @@ export default async function MainLayout({
     getReminderItems(session.user.id, todayStart, todayEnd),
   ]);
 
+  const isDemo = session.user.isDemo ?? false;
+
   return (
     <div className="min-h-screen bg-background">
       <TimezoneSync />
+      {isDemo && (
+        <div className="sticky top-0 z-50 flex h-9 items-center justify-center border-b border-border bg-surface">
+          <p className="text-sm text-muted-foreground">
+            You&apos;re in demo mode &mdash;{" "}
+            <Link
+              href="/register"
+              className="text-accent hover:underline"
+            >
+              Sign up to save your data
+            </Link>
+          </p>
+        </div>
+      )}
       <header className="border-b border-border">
         <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-md">
           <Link href="/dashboard" className="flex items-center gap-sm">

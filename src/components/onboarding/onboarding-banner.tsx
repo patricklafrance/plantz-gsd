@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Leaf, X } from "lucide-react";
 import { completeOnboarding } from "@/features/auth/actions";
+import { seedStarterPlants } from "@/features/demo/actions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export function OnboardingBanner({ userId }: OnboardingBannerProps) {
   const [isCompleted, setIsCompleted] = useState(false);
   const [shouldRender, setShouldRender] = useState(true);
   const [isCollapsing, setIsCollapsing] = useState(false);
+  const [seedStarters, setSeedStarters] = useState(true);
 
   // When dismissed changes to true, start collapse animation
   useEffect(() => {
@@ -37,13 +39,15 @@ export function OnboardingBanner({ userId }: OnboardingBannerProps) {
     setSelectedRange(range);
     setIsCompleting(true);
 
-    const result = await completeOnboarding({
-      plantCountRange: range,
-    });
+    // Fire both actions concurrently
+    const [onboardingResult] = await Promise.all([
+      completeOnboarding({ plantCountRange: range }),
+      seedStarters ? seedStarterPlants() : Promise.resolve(null),
+    ]);
 
     setIsCompleting(false);
 
-    if (result && "error" in result) {
+    if (onboardingResult && "error" in onboardingResult) {
       toast.error("Something went wrong. Please try again.");
       setSelectedRange(null);
       return;
@@ -77,21 +81,35 @@ export function OnboardingBanner({ userId }: OnboardingBannerProps) {
           {isCompleted ? (
             <p className="text-sm text-muted-foreground">Got it — your tips are personalized.</p>
           ) : (
-            <div className="flex flex-wrap gap-sm">
-              {PLANT_RANGES.map((range) => (
-                <Button
-                  key={range}
-                  variant="outline"
-                  className={cn(
-                    "h-11",
-                    selectedRange === range && "border-accent border-2 text-accent bg-accent/10"
-                  )}
-                  onClick={() => handleRangeSelect(range)}
+            <div className="flex flex-col gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={seedStarters}
+                  onChange={(e) => setSeedStarters(e.target.checked)}
+                  className="h-4 w-4 rounded border-border text-accent focus:ring-accent"
                   disabled={isCompleting}
-                >
-                  {range}
-                </Button>
-              ))}
+                />
+                <span className="text-sm text-muted-foreground">
+                  Start with a few example plants
+                </span>
+              </label>
+              <div className="flex flex-wrap gap-sm">
+                {PLANT_RANGES.map((range) => (
+                  <Button
+                    key={range}
+                    variant="outline"
+                    className={cn(
+                      "h-11",
+                      selectedRange === range && "border-accent border-2 text-accent bg-accent/10"
+                    )}
+                    onClick={() => handleRangeSelect(range)}
+                    disabled={isCompleting}
+                  >
+                    {range}
+                  </Button>
+                ))}
+              </div>
             </div>
           )}
         </div>
