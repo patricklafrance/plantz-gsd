@@ -5,6 +5,9 @@ import { Leaf } from "lucide-react";
 import Link from "next/link";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { TimezoneSync } from "@/components/watering/timezone-sync";
+import { cookies } from "next/headers";
+import { getReminderCount, getReminderItems } from "@/features/reminders/queries";
+import { NotificationBell } from "@/components/reminders/notification-bell";
 
 export default async function MainLayout({
   children,
@@ -18,8 +21,22 @@ export default async function MainLayout({
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { email: true, onboardingCompleted: true },
+    select: { email: true, onboardingCompleted: true, remindersEnabled: true },
   });
+
+  // Compute today boundaries using user's timezone cookie (same pattern as dashboard)
+  const cookieStore = await cookies();
+  const userTz = cookieStore.get("user_tz")?.value ?? "UTC";
+  const now = new Date();
+  const localDateStr = now.toLocaleDateString("en-CA", { timeZone: userTz });
+  const [year, month, day] = localDateStr.split("-").map(Number);
+  const todayStart = new Date(Date.UTC(year, month - 1, day));
+  const todayEnd = new Date(Date.UTC(year, month - 1, day + 1));
+
+  const [reminderCount, reminderItems] = await Promise.all([
+    getReminderCount(session.user.id, todayStart, todayEnd),
+    getReminderItems(session.user.id, todayStart, todayEnd),
+  ]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -45,6 +62,7 @@ export default async function MainLayout({
             </Link>
           </div>
           <div className="flex items-center gap-md">
+            <NotificationBell count={reminderCount} items={reminderItems} />
             {!user?.onboardingCompleted && (
               <Link
                 href="/dashboard#onboarding"
@@ -53,6 +71,12 @@ export default async function MainLayout({
                 Complete setup
               </Link>
             )}
+            <Link
+              href="/preferences"
+              className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+            >
+              Preferences
+            </Link>
             <span className="text-sm text-muted-foreground">{user?.email}</span>
             <LogoutButton />
           </div>
