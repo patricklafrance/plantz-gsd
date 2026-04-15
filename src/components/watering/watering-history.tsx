@@ -55,7 +55,7 @@ export function WateringHistory({
   }
 
   return (
-    <div className="space-y-xs">
+    <div className="space-y-1">
       {logs.map((log) => (
         <WateringHistoryEntry
           key={log.id}
@@ -78,7 +78,7 @@ export function WateringHistory({
           disabled={isLoading}
           className="w-full text-muted-foreground"
         >
-          {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-sm" />}
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
           Load more
         </Button>
       )}

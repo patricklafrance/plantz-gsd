@@ -109,8 +109,8 @@ export function CreateRoomDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-md mt-sm">
-          <div className="space-y-xs">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+          <div className="space-y-1">
             <Label htmlFor="room-name">Room name</Label>
             <Input
               id="room-name"
@@ -125,7 +125,7 @@ export function CreateRoomDialog({
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-sm pt-sm">
+          <div className="flex items-center justify-end gap-2 pt-2">
             <button
               type="button"
               onClick={() => handleOpenChange(false)}

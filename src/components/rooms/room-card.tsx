@@ -57,7 +57,7 @@ export function RoomCard({ room }: RoomCardProps) {
         onOpenChange={setEditOpen}
       />
 
-      <Card className="flex items-center gap-md px-md py-md hover:shadow-sm transition-shadow">
+      <Card className="flex items-center gap-4 px-4 py-4 hover:shadow-sm transition-shadow">
         {/* Clickable area linking to room detail */}
         <Link
           href={`/rooms/${room.id}`}
@@ -74,7 +74,7 @@ export function RoomCard({ room }: RoomCardProps) {
         </Link>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-xs shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <Button
             variant="ghost"
             size="icon-sm"

@@ -38,11 +38,11 @@ export default async function PlantDetailPage({
   ]);
 
   return (
-    <div className="space-y-lg">
-      <div className="flex items-center gap-sm">
+    <div className="space-y-6">
+      <div className="flex items-center gap-2">
         <Link
           href="/plants"
-          className="flex items-center gap-xs text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="h-4 w-4" />
           Plants
@@ -50,7 +50,7 @@ export default async function PlantDetailPage({
       </div>
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">{plant.nickname}</h1>
-        <div className="flex items-center gap-sm">
+        <div className="flex items-center gap-2">
           <EditPlantDialog plant={plant} rooms={rooms} />
           <PlantActions plant={plant} />
         </div>

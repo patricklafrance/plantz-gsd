@@ -14,15 +14,15 @@ import { Suspense } from "react";
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-xl">
+    <div className="space-y-8">
       {[1, 2].map((section) => (
-        <div key={section} className="space-y-sm">
+        <div key={section} className="space-y-2">
           <Skeleton className="h-5 w-24" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-md p-md">
+              <div key={i} className="flex items-center gap-4 p-4">
                 <Skeleton className="h-10 w-10 rounded-md" />
-                <div className="flex-1 space-y-sm">
+                <div className="flex-1 space-y-2">
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="h-3 w-20" />
                 </div>
@@ -40,10 +40,12 @@ async function DashboardContent({
   userId,
   catalog,
   rooms,
+  isDemo,
 }: {
   userId: string;
   catalog: Awaited<ReturnType<typeof getCatalog>>;
   rooms: Awaited<ReturnType<typeof getRoomsForSelect>>;
+  isDemo: boolean;
 }) {
   // Read timezone cookie for date boundaries
   const cookieStore = await cookies();
@@ -78,15 +80,15 @@ async function DashboardContent({
   // No plants: empty state with AddPlantDialog CTA
   if (!hasPlants) {
     return (
-      <div className="flex flex-col items-center justify-center py-3xl text-center">
-        <div className="mb-md rounded-full bg-accent/10 p-lg">
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="mb-4 rounded-full bg-accent/10 p-6">
           <Leaf className="h-8 w-8 text-accent" />
         </div>
         <h2 className="text-xl font-semibold">No plants yet</h2>
-        <p className="mt-sm text-muted-foreground">
+        <p className="mt-2 text-muted-foreground">
           Add your first plant to start tracking your watering schedule.
         </p>
-        <div className="mt-md">
+        <div className="mt-4">
           <AddPlantDialog catalog={catalog} rooms={rooms} />
         </div>
       </div>
@@ -95,16 +97,16 @@ async function DashboardContent({
 
   // Normal dashboard — show "all caught up" banner when nothing needs attention
   return (
-    <div className="space-y-xl">
+    <div className="space-y-8">
       {allCaughtUp && (
-        <div className="flex items-center gap-sm rounded-lg bg-accent/10 px-md py-sm">
+        <div className="flex items-center gap-2 rounded-lg bg-accent/10 px-4 py-2">
           <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />
           <p className="text-sm font-medium">
             All caught up! Check back when the next one is due.
           </p>
         </div>
       )}
-      <DashboardClient groups={groups} />
+      <DashboardClient groups={groups} isDemo={isDemo} />
     </div>
   );
 }
@@ -125,7 +127,7 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <div className="space-y-lg">
+    <div className="space-y-6">
       {!user?.onboardingCompleted && (
         <OnboardingBanner userId={session.user.id} />
       )}
@@ -142,6 +144,7 @@ export default async function DashboardPage() {
           userId={session.user.id}
           catalog={catalog}
           rooms={rooms}
+          isDemo={session.user.isDemo ?? false}
         />
       </Suspense>
     </div>

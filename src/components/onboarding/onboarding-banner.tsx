@@ -70,10 +70,10 @@ export function OnboardingBanner({ userId }: OnboardingBannerProps) {
         className="relative overflow-hidden border border-accent/30 bg-accent/15"
         style={{ borderRadius: "var(--radius-lg)" }}
       >
-        <div className="flex flex-col gap-md p-md sm:flex-row sm:items-center sm:gap-lg sm:p-lg">
+        <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-6 sm:p-6">
           <Leaf className="h-6 w-6 shrink-0 text-accent" />
 
-          <div className="flex-1 space-y-xs">
+          <div className="flex-1 space-y-1">
             <p className="text-base font-medium">Welcome to Plant Minder</p>
             <p className="text-base text-muted-foreground">How many plants are you tracking?</p>
           </div>
@@ -94,7 +94,7 @@ export function OnboardingBanner({ userId }: OnboardingBannerProps) {
                   Start with a few example plants
                 </span>
               </label>
-              <div className="flex flex-wrap gap-sm">
+              <div className="flex flex-wrap gap-2">
                 {PLANT_RANGES.map((range) => (
                   <Button
                     key={range}

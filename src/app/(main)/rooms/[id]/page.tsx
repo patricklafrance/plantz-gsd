@@ -24,7 +24,7 @@ export default async function RoomDetailPage({
   }));
 
   return (
-    <div className="space-y-lg">
+    <div className="space-y-6">
       <div>
         <h1 className="text-xl font-semibold">{room.name}</h1>
         <p className="text-sm text-muted-foreground">
@@ -34,12 +34,12 @@ export default async function RoomDetailPage({
       </div>
 
       {room.plants.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-3xl text-center">
-          <div className="mb-md rounded-full bg-accent/10 p-lg">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="mb-4 rounded-full bg-accent/10 p-6">
             <DoorOpen className="h-8 w-8 text-accent" />
           </div>
           <h2 className="text-xl font-semibold">No plants in this room</h2>
-          <p className="mt-sm text-muted-foreground">
+          <p className="mt-2 text-muted-foreground">
             Assign plants to this room from their detail page.
           </p>
         </div>

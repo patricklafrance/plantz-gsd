@@ -71,9 +71,9 @@ export function WateringHistoryEntry({
 
   return (
     <>
-      <div className="flex items-start justify-between py-sm min-h-[44px]">
+      <div className="flex items-start justify-between py-2 min-h-[44px]">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-sm text-sm">
+          <div className="flex items-center gap-2 text-sm">
             <span className="font-medium">
               {format(new Date(log.wateredAt), "MMMM d, yyyy")}
             </span>
@@ -83,7 +83,7 @@ export function WateringHistoryEntry({
             </span>
           </div>
           {log.note && (
-            <p className="mt-xs text-sm text-muted-foreground truncate">
+            <p className="mt-1 text-sm text-muted-foreground truncate">
               {log.note}
             </p>
           )}
@@ -148,7 +148,7 @@ export function WateringHistoryEntry({
               disabled={isDeleting}
             >
               {isDeleting && (
-                <Loader2 className="h-4 w-4 animate-spin mr-sm" />
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
               )}
               Delete log
             </AlertDialogAction>

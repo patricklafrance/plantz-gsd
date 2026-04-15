@@ -104,7 +104,7 @@ function TimelineEntryComponent({
   if (entry.type === "watering") {
     const wateredAt = new Date(entry.data.wateredAt);
     return (
-      <div className="flex items-start gap-sm py-sm min-h-[44px]">
+      <div className="flex items-start gap-2 py-2 min-h-[44px]">
         {/* Icon */}
         <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
           <Droplets className="h-4 w-4 text-blue-500" />
@@ -138,7 +138,7 @@ function TimelineEntryComponent({
 
   return (
     <>
-      <div className="flex items-start gap-sm py-sm min-h-[44px]">
+      <div className="flex items-start gap-2 py-2 min-h-[44px]">
         {/* Icon */}
         <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
           <Pencil className="h-4 w-4 text-accent" />
@@ -149,7 +149,7 @@ function TimelineEntryComponent({
           {editMode ? (
             <>
               <textarea
-                className="text-sm w-full resize-none border rounded-md p-sm"
+                className="text-sm w-full resize-none border rounded-md p-2"
                 rows={Math.max(2, editContent.split("\n").length)}
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
@@ -164,7 +164,7 @@ function TimelineEntryComponent({
                   }
                 }}
               />
-              <div className="flex gap-sm mt-xs">
+              <div className="flex gap-2 mt-1">
                 <Button
                   size="sm"
                   onClick={handleSave}
@@ -180,7 +180,7 @@ function TimelineEntryComponent({
           ) : (
             <>
               <p className="text-sm">{noteData.content}</p>
-              <div className="flex items-center gap-xs">
+              <div className="flex items-center gap-1">
                 <time
                   dateTime={entry.timestamp.toISOString()}
                   title={format(entry.timestamp, "MMMM d, yyyy")}

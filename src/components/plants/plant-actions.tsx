@@ -74,7 +74,7 @@ export function PlantActions({ plant }: PlantActionsProps) {
   }
 
   return (
-    <div className="flex items-center gap-sm">
+    <div className="flex items-center gap-2">
       {/* Archive button */}
       <Button
         variant="outline"
@@ -82,7 +82,7 @@ export function PlantActions({ plant }: PlantActionsProps) {
         onClick={handleArchive}
         disabled={isArchiving}
       >
-        <Archive className="h-4 w-4 mr-xs" />
+        <Archive className="h-4 w-4 mr-1" />
         Archive
       </Button>
 
@@ -97,7 +97,7 @@ export function PlantActions({ plant }: PlantActionsProps) {
             />
           }
         >
-          <Trash2 className="h-4 w-4 mr-xs" />
+          <Trash2 className="h-4 w-4 mr-1" />
           Delete
         </AlertDialogTrigger>
         <AlertDialogContent>

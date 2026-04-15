@@ -86,17 +86,19 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
   function handleOpenChange(isOpen: boolean) {
     setOpen(isOpen);
     if (!isOpen) {
-      // Reset all state on close
-      setStep("catalog");
-      setSelectedProfile(null);
-      setSearch("");
-      setFormError(undefined);
-      form.reset({
-        nickname: "",
-        species: "",
-        roomId: undefined,
-        wateringInterval: 7,
-      });
+      // Delay reset until after the close animation completes
+      setTimeout(() => {
+        setStep("catalog");
+        setSelectedProfile(null);
+        setSearch("");
+        setFormError(undefined);
+        form.reset({
+          nickname: "",
+          species: "",
+          roomId: undefined,
+          wateringInterval: 7,
+        });
+      }, 200);
     }
   }
 
@@ -152,7 +154,7 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
             </DialogHeader>
 
             {/* Search */}
-            <div className="mt-sm">
+            <div className="mt-2">
               <Input
                 placeholder="Search plants..."
                 value={search}
@@ -162,31 +164,31 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
             </div>
 
             {/* Catalog grid */}
-            <div className="mt-md space-y-md">
+            <div className="mt-4 space-y-4">
               {groupedCatalog.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-lg">
+                <p className="text-sm text-muted-foreground text-center py-6">
                   No plants match your search.
                 </p>
               )}
 
               {groupedCatalog.map(({ category, entries }) => (
                 <div key={category}>
-                  <p className="text-sm font-semibold text-muted-foreground mb-sm">
+                  <p className="text-sm font-semibold text-muted-foreground mb-2">
                     {category}
                   </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-sm">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {entries.map((entry) => (
                       <button
                         key={entry.id}
                         type="button"
                         onClick={() => handleSelectProfile(entry)}
-                        className="flex flex-col items-center p-sm rounded-lg border border-border bg-card text-center hover:border-accent/60 hover:bg-accent/5 transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+                        className="flex flex-col items-center p-2 rounded-lg border border-border bg-card text-center hover:border-accent/60 hover:bg-accent/5 transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
                       >
-                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent/10 mb-xs">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-accent/10 mb-1">
                           <Leaf className="h-4 w-4 text-accent" />
                         </div>
                         <p className="text-sm font-medium leading-tight">{entry.name}</p>
-                        <p className="text-xs text-muted-foreground leading-tight mt-xs">
+                        <p className="text-xs text-muted-foreground leading-tight mt-1">
                           {entry.species}
                         </p>
                       </button>
@@ -197,17 +199,17 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
 
               {/* Custom plant option */}
               <div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-sm">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={handleCustomPlant}
-                    className="flex flex-col items-center p-sm rounded-lg border border-dashed border-border bg-card text-center hover:border-accent/60 hover:bg-accent/5 transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
+                    className="flex flex-col items-center p-2 rounded-lg border border-dashed border-border bg-card text-center hover:border-accent/60 hover:bg-accent/5 transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-1"
                   >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted mb-xs">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted mb-1">
                       <Plus className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <p className="text-sm font-medium leading-tight">Custom plant</p>
-                    <p className="text-xs text-muted-foreground leading-tight mt-xs">
+                    <p className="text-xs text-muted-foreground leading-tight mt-1">
                       Not in the list
                     </p>
                   </button>
@@ -218,11 +220,11 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
         ) : (
           <>
             <DialogHeader>
-              <div className="flex items-center gap-sm">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleBackToCatalog}
-                  className="flex items-center gap-xs text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Back to catalog
@@ -232,7 +234,7 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
             </DialogHeader>
 
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-md mt-sm">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
                 {/* Nickname */}
                 <FormField
                   control={form.control}
@@ -306,7 +308,7 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
                     <FormItem>
                       <FormLabel>Watering interval</FormLabel>
                       <FormControl>
-                        <div className="flex items-center gap-sm">
+                        <div className="flex items-center gap-2">
                           <Input
                             type="number"
                             min={1}
@@ -332,7 +334,7 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
                 )}
 
                 {/* Footer actions */}
-                <div className="flex items-center justify-end gap-sm pt-sm">
+                <div className="flex items-center justify-end gap-2 pt-2">
                   <button
                     type="button"
                     onClick={() => handleOpenChange(false)}

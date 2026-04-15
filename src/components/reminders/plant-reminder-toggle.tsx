@@ -50,15 +50,15 @@ export function PlantReminderToggle({
       <div className="space-y-0.5">
         <label
           htmlFor="plant-reminder-toggle"
-          className="text-sm font-semibold"
+          className="text-sm font-medium"
         >
-          Reminders for this plant
+          Watering reminders
         </label>
-        {!globalRemindersEnabled && (
-          <p className="text-xs text-muted-foreground">
-            Enable reminders globally in Preferences to activate.
-          </p>
-        )}
+        <p className="text-xs text-muted-foreground">
+          {!globalRemindersEnabled
+            ? "Enable reminders globally in Preferences to activate."
+            : "Get notified when this plant needs watering."}
+        </p>
       </div>
       <Switch
         id="plant-reminder-toggle"

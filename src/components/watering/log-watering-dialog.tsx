@@ -108,7 +108,7 @@ export function LogWateringDialog({
         if (result.error === "DUPLICATE") {
           toast("Already logged! Edit from history if needed.");
         } else {
-          toast.error("Couldn't log watering. Try again.");
+          toast.error(result.error ?? "Couldn't log watering. Try again.");
         }
         return;
       }
@@ -132,7 +132,7 @@ export function LogWateringDialog({
       </DialogHeader>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-md mt-sm">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
           {/* Date field */}
           <FormField
             control={form.control}
@@ -153,7 +153,7 @@ export function LogWateringDialog({
                         />
                       }
                     >
-                      <CalendarIcon className="h-4 w-4 mr-sm" />
+                      <CalendarIcon className="h-4 w-4 mr-2" />
                       {field.value
                         ? format(field.value, "MMMM d, yyyy")
                         : "Pick a date"}
@@ -200,7 +200,7 @@ export function LogWateringDialog({
           />
 
           {/* Footer actions */}
-          <div className="flex items-center justify-end gap-sm pt-sm">
+          <div className="flex items-center justify-end gap-2 pt-2">
             <Button
               type="button"
               variant="ghost"
@@ -214,7 +214,7 @@ export function LogWateringDialog({
               className="bg-accent text-accent-foreground hover:bg-accent/90"
             >
               {form.formState.isSubmitting && (
-                <Loader2 className="h-4 w-4 animate-spin mr-sm" />
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
               )}
               {isEditMode ? "Save changes" : "Log watering"}
             </Button>

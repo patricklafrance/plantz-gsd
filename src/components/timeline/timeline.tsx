@@ -68,11 +68,11 @@ export function Timeline({
   return (
     <TooltipProvider>
       <NoteInput plantId={plantId} />
-      <Separator className="my-sm" />
+      <Separator className="my-2" />
 
       {entries.length === 0 ? (
-        <div className="flex flex-col items-center py-lg text-center">
-          <div className="rounded-full bg-accent/10 p-md mb-sm">
+        <div className="flex flex-col items-center py-6 text-center">
+          <div className="rounded-full bg-accent/10 p-4 mb-2">
             <Pencil className="h-6 w-6 text-accent" />
           </div>
           <p className="text-sm text-muted-foreground">
@@ -96,11 +96,11 @@ export function Timeline({
         <Button
           variant="ghost"
           size="sm"
-          className="w-full mt-sm"
+          className="w-full mt-2"
           onClick={handleLoadMore}
           disabled={isLoading}
         >
-          {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-sm" />}
+          {isLoading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
           Load 20 more
         </Button>
       )}

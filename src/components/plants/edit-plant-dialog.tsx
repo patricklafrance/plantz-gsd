@@ -89,7 +89,7 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
       <DialogTrigger
         render={
           <Button variant="outline" size="sm">
-            <Pencil className="h-4 w-4 mr-xs" />
+            <Pencil className="h-4 w-4 mr-1" />
             Edit
           </Button>
         }
@@ -100,7 +100,7 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-md mt-sm">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
             {/* Nickname */}
             <FormField
               control={form.control}
@@ -180,7 +180,7 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
                 <FormItem>
                   <FormLabel>Watering interval</FormLabel>
                   <FormControl>
-                    <div className="flex items-center gap-sm">
+                    <div className="flex items-center gap-2">
                       <Input
                         type="number"
                         min={1}
@@ -206,7 +206,7 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
             )}
 
             {/* Footer actions */}
-            <div className="flex items-center justify-end gap-sm pt-sm">
+            <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => handleOpenChange(false)}

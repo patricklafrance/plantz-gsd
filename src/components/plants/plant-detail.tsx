@@ -1,6 +1,6 @@
 "use client";
 
-import { differenceInDays, format } from "date-fns";
+import { differenceInDays, format, startOfDay } from "date-fns";
 import { Sun, CloudSun, Cloud } from "lucide-react";
 import {
   Card,
@@ -60,6 +60,7 @@ export function PlantDetail({
   isDemo,
 }: PlantDetailProps) {
   const now = new Date();
+  const todayStart = startOfDay(now);
   const nextWatering = plant.nextWateringAt;
 
   let wateringStatus: "not-scheduled" | "overdue" | "due-today" | "upcoming" =
@@ -67,7 +68,7 @@ export function PlantDetail({
   let daysUntilWatering = 0;
 
   if (nextWatering) {
-    daysUntilWatering = differenceInDays(nextWatering, now);
+    daysUntilWatering = differenceInDays(nextWatering, todayStart);
     if (daysUntilWatering < 0) {
       wateringStatus = "overdue";
     } else if (daysUntilWatering === 0) {
@@ -78,7 +79,7 @@ export function PlantDetail({
   }
 
   return (
-    <div className="space-y-lg">
+    <div className="space-y-6">
       {/* Status card */}
       <Card>
         <CardHeader>
@@ -90,11 +91,12 @@ export function PlantDetail({
           )}
           {wateringStatus === "overdue" && (
             <div className="space-y-3">
-              <div className="flex items-center gap-sm">
+              <div className="flex items-center gap-2">
                 <Badge variant="destructive">Overdue</Badge>
                 <span className="text-sm text-destructive">
-                  {Math.abs(daysUntilWatering)} day
-                  {Math.abs(daysUntilWatering) !== 1 ? "s" : ""} overdue
+                  {Math.abs(daysUntilWatering) === 0
+                    ? "Since today"
+                    : `${Math.abs(daysUntilWatering)} day${Math.abs(daysUntilWatering) !== 1 ? "s" : ""} overdue`}
                 </span>
               </div>
               <SnoozePills plantId={plant.id} isDemo={isDemo} />
@@ -102,7 +104,7 @@ export function PlantDetail({
           )}
           {wateringStatus === "due-today" && (
             <div className="space-y-3">
-              <div className="flex items-center gap-sm">
+              <div className="flex items-center gap-2">
                 <Badge variant="default">Due today</Badge>
                 {nextWatering && (
                   <span className="text-sm text-muted-foreground">
@@ -114,7 +116,7 @@ export function PlantDetail({
             </div>
           )}
           {wateringStatus === "upcoming" && (
-            <div className="flex flex-col gap-xs">
+            <div className="flex flex-col gap-1">
               {nextWatering && (
                 <p className="text-sm font-medium">
                   {format(nextWatering, "MMMM d, yyyy")}
@@ -135,7 +137,7 @@ export function PlantDetail({
           <CardTitle>Care info</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl className="space-y-sm">
+          <dl className="space-y-2">
             <div className="flex items-center justify-between">
               <dt className="text-sm text-muted-foreground">Species</dt>
               <dd className="text-sm font-medium">
@@ -153,7 +155,7 @@ export function PlantDetail({
             </div>
             <div className="flex items-center justify-between">
               <dt className="text-sm text-muted-foreground">Light</dt>
-              <dd className="flex items-center gap-xs text-sm font-medium">
+              <dd className="flex items-center gap-1 text-sm font-medium">
                 {getLightIcon(plant.careProfile?.lightRequirement ?? null)}
                 {getLightLabel(plant.careProfile?.lightRequirement ?? null)}
               </dd>

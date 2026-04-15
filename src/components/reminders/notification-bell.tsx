@@ -59,12 +59,12 @@ export function NotificationBell({ count, items }: NotificationBellProps) {
             <DropdownMenuItem
               key={item.plantId}
               onClick={() => router.push(`/plants/${item.plantId}`)}
-              className="flex cursor-pointer flex-col items-start gap-1 py-2"
+              className="group/item flex cursor-pointer flex-col items-start gap-1 py-2"
             >
-              <span className="text-sm font-semibold text-foreground">
+              <span className="text-sm font-semibold text-foreground group-data-[highlighted]/item:text-accent-foreground">
                 {item.nickname}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground group-data-[highlighted]/item:text-accent-foreground/70">
                 {item.roomName ?? "No room"} &middot; {item.statusLabel}
               </span>
             </DropdownMenuItem>

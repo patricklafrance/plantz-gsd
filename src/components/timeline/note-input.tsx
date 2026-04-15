@@ -32,7 +32,7 @@ export function NoteInput({ plantId }: NoteInputProps) {
   }
 
   return (
-    <div className="flex gap-sm">
+    <div className="flex gap-2">
       <Input
         placeholder="Add a note..."
         value={value}

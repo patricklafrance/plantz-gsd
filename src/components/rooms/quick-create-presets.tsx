@@ -32,7 +32,7 @@ export function QuickCreatePresets({
   }
 
   return (
-    <div className="flex flex-wrap gap-sm">
+    <div className="flex flex-wrap gap-2">
       {presets.map((preset) => {
         const exists = existingNames.includes(preset);
         return (

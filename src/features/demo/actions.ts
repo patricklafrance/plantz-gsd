@@ -3,14 +3,71 @@
 import { signIn, auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { DEMO_EMAIL, DEMO_PASSWORD, STARTER_PLANTS } from "./seed-data";
+import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_PLANTS, STARTER_PLANTS } from "./seed-data";
 
 /**
- * Signs in as the demo user, redirecting to /dashboard.
- * Called from the /demo route page on mount.
+ * Ensures the demo user exists in the database, creating it with sample
+ * plants if needed, then signs in and redirects to /dashboard.
+ * Called from the /demo route page — fully self-bootstrapping.
  */
 export async function startDemoSession() {
   try {
+    // Auto-create demo user if it doesn't exist yet
+    const existing = await db.user.findUnique({ where: { email: DEMO_EMAIL } });
+    if (!existing) {
+      const bcryptjs = (await import("bcryptjs")).default;
+      const { subDays, addDays } = await import("date-fns");
+      const passwordHash = await bcryptjs.hash(DEMO_PASSWORD, 12);
+
+      const demoUser = await db.user.create({
+        data: {
+          email: DEMO_EMAIL,
+          passwordHash,
+          name: "Demo User",
+          onboardingCompleted: true,
+          remindersEnabled: true,
+        },
+      });
+
+      const livingRoom = await db.room.create({
+        data: { name: "Living Room", userId: demoUser.id },
+      });
+      const bedroom = await db.room.create({
+        data: { name: "Bedroom", userId: demoUser.id },
+      });
+      const rooms = [livingRoom, bedroom];
+      const now = new Date();
+
+      for (let i = 0; i < DEMO_PLANTS.length; i++) {
+        const dp = DEMO_PLANTS[i];
+        const careProfile = await db.careProfile.findUnique({
+          where: { name: dp.catalogName },
+        });
+        const lastWateredAt = subDays(now, dp.daysAgoWatered);
+        const nextWateringAt = addDays(lastWateredAt, dp.intervalDays);
+
+        const plant = await db.plant.create({
+          data: {
+            nickname: dp.nickname,
+            species: careProfile?.species ?? dp.catalogName,
+            roomId: rooms[i % rooms.length].id,
+            wateringInterval: dp.intervalDays,
+            careProfileId: careProfile?.id ?? null,
+            userId: demoUser.id,
+            lastWateredAt,
+            nextWateringAt,
+            reminders: {
+              create: { userId: demoUser.id, enabled: true },
+            },
+          },
+        });
+
+        await db.wateringLog.create({
+          data: { plantId: plant.id, wateredAt: lastWateredAt },
+        });
+      }
+    }
+
     await signIn("credentials", {
       email: DEMO_EMAIL,
       password: DEMO_PASSWORD,
@@ -18,7 +75,6 @@ export async function startDemoSession() {
     });
   } catch (error) {
     // signIn throws NEXT_REDIRECT on success — re-throw it
-    // (same pattern as registerUser in auth/actions.ts)
     const { isRedirectError } = await import("next/dist/client/components/redirect-error");
     if (isRedirectError(error)) {
       throw error;

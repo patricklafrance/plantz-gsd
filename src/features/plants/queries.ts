@@ -31,13 +31,13 @@ export async function getPlants(
     }
   }
 
-  // Sort mapping — default: next-watering ascending
+  // Sort mapping — default: alphabetical by name
   const orderBy =
-    sort === "name"
-      ? { nickname: "asc" as const }
+    sort === "next-watering"
+      ? { nextWateringAt: "asc" as const }
       : sort === "recently-added"
         ? { createdAt: "desc" as const }
-        : { nextWateringAt: "asc" as const };
+        : { nickname: "asc" as const };
 
   return db.plant.findMany({
     where: {

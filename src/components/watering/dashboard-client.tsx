@@ -17,6 +17,7 @@ type GroupedDashboardPlants = {
 
 interface DashboardClientProps {
   groups: GroupedDashboardPlants;
+  isDemo?: boolean;
 }
 
 function removePlantFromGroups(
@@ -31,7 +32,7 @@ function removePlantFromGroups(
   };
 }
 
-export function DashboardClient({ groups }: DashboardClientProps) {
+export function DashboardClient({ groups, isDemo }: DashboardClientProps) {
   const [optimisticGroups, removeFromGroups] = useOptimistic(
     groups,
     removePlantFromGroups
@@ -42,6 +43,11 @@ export function DashboardClient({ groups }: DashboardClientProps) {
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
 
   function handleWater(plant: DashboardPlant) {
+    if (isDemo) {
+      toast.error("Demo mode — sign up to save your changes.");
+      return;
+    }
+
     // Add to removing set for fade-out animation
     setRemovingIds((prev) => new Set(prev).add(plant.id));
     setWateringPlantIds((prev) => new Set(prev).add(plant.id));
@@ -73,7 +79,7 @@ export function DashboardClient({ groups }: DashboardClientProps) {
         if (result.error === "DUPLICATE") {
           toast("Already logged! Edit from history if needed.");
         } else {
-          toast.error("Couldn't log watering. Try again.");
+          toast.error(result.error ?? "Couldn't log watering. Try again.");
         }
         return;
       }
@@ -88,10 +94,13 @@ export function DashboardClient({ groups }: DashboardClientProps) {
     });
   }
 
+  const upcomingDueToday = optimisticGroups.upcoming.filter((p) => p.daysUntil === 0);
+  const upcomingLater = optimisticGroups.upcoming.filter((p) => p.daysUntil > 0);
+  const needsWater = [...optimisticGroups.overdue, ...optimisticGroups.dueToday, ...upcomingDueToday];
+
   const sections = [
-    { key: "overdue", title: "Overdue", plants: optimisticGroups.overdue },
-    { key: "dueToday", title: "Due Today", plants: optimisticGroups.dueToday },
-    { key: "upcoming", title: "Upcoming", plants: optimisticGroups.upcoming },
+    { key: "needsWater", title: "Needs water", plants: needsWater },
+    { key: "upcoming", title: "Upcoming", plants: upcomingLater },
     {
       key: "recentlyWatered",
       title: "Recently Watered",
@@ -100,7 +109,7 @@ export function DashboardClient({ groups }: DashboardClientProps) {
   ].filter((s) => s.plants.length > 0);
 
   return (
-    <div className="space-y-xl">
+    <div className="space-y-8">
       {sections.map((section, index) => (
         <DashboardSection
           key={section.key}
@@ -114,6 +123,7 @@ export function DashboardClient({ groups }: DashboardClientProps) {
               onWater={() => handleWater(plant)}
               isWatering={wateringPlantIds.has(plant.id)}
               isRemoving={removingIds.has(plant.id)}
+              isDemo={isDemo}
             />
           )}
         />

@@ -127,10 +127,10 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 06-01-PLAN.md — Foundation: Prisma schema changes (remindersEnabled, @@unique), Zod schemas, types, seed data, next-auth type augmentation, Switch install, test stubs, schema push, Reminder backfill
-- [ ] 06-02-PLAN.md — Data layer: Reminder queries (count, items, per-plant) and actions (snooze, toggle), demo seed script, auth isDemo integration, proxy update, mutation guards
-- [ ] 06-03-PLAN.md — Reminder UI: Notification bell with badge in nav, snooze pills on plant detail, per-plant reminder toggle, preferences page with global toggle and account settings
-- [ ] 06-04-PLAN.md — Demo UX: /demo entry route, login page CTA, sticky demo banner in layout, onboarding starter plant seeding checkbox
+- [x] 06-01-PLAN.md — Foundation: Prisma schema changes (remindersEnabled, @@unique), Zod schemas, types, seed data, next-auth type augmentation, Switch install, test stubs, schema push, Reminder backfill
+- [x] 06-02-PLAN.md — Data layer: Reminder queries (count, items, per-plant) and actions (snooze, toggle), demo seed script, auth isDemo integration, proxy update, mutation guards
+- [x] 06-03-PLAN.md — Reminder UI: Notification bell with badge in nav, snooze pills on plant detail, per-plant reminder toggle, preferences page with global toggle and account settings
+- [x] 06-04-PLAN.md — Demo UX: /demo entry route, login page CTA, sticky demo banner in layout, onboarding starter plant seeding checkbox
 
 ### Phase 7: Polish and Accessibility
 **Goal**: The app is responsive and touch-friendly on mobile, meets WCAG AA accessibility standards, and handles all known edge cases gracefully

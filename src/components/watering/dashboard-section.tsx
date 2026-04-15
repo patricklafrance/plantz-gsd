@@ -18,15 +18,15 @@ export function DashboardSection({
 
   return (
     <section>
-      {showSeparator && <Separator className="my-xl" />}
-      <div className="space-y-sm">
+      {showSeparator && <Separator className="my-8" />}
+      <div className="space-y-2">
         <h2 className="text-base font-semibold">
           {title}{" "}
           <span className="text-muted-foreground font-normal">
             ({plants.length})
           </span>
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {plants.map((plant) => renderCard(plant))}
         </div>
       </div>

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { Leaf } from "lucide-react";
 import Link from "next/link";
-import { LogoutButton } from "@/components/auth/logout-button";
+import { UserMenu } from "@/components/auth/user-menu";
 import { TimezoneSync } from "@/components/watering/timezone-sync";
 import { cookies } from "next/headers";
 import { getReminderCount, getReminderItems } from "@/features/reminders/queries";
@@ -21,7 +21,7 @@ export default async function MainLayout({
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { email: true, onboardingCompleted: true, remindersEnabled: true },
+    select: { email: true, name: true, onboardingCompleted: true, remindersEnabled: true },
   });
 
   // Compute today boundaries using user's timezone cookie (same pattern as dashboard)
@@ -57,12 +57,12 @@ export default async function MainLayout({
         </div>
       )}
       <header className="border-b border-border">
-        <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-md">
-          <Link href="/dashboard" className="flex items-center gap-sm">
+        <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <Leaf className="h-5 w-5 text-accent" />
             <span className="text-base font-semibold">Plant Minder</span>
           </Link>
-          <div className="flex items-center gap-md">
+          <div className="flex items-center gap-4">
             <Link
               href="/plants"
               className="text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -76,7 +76,7 @@ export default async function MainLayout({
               Rooms
             </Link>
           </div>
-          <div className="flex items-center gap-md">
+          <div className="flex items-center gap-4">
             <NotificationBell count={reminderCount} items={reminderItems} />
             {!user?.onboardingCompleted && (
               <Link
@@ -86,18 +86,11 @@ export default async function MainLayout({
                 Complete setup
               </Link>
             )}
-            <Link
-              href="/preferences"
-              className="text-sm font-semibold text-muted-foreground hover:text-foreground"
-            >
-              Preferences
-            </Link>
-            <span className="text-sm text-muted-foreground">{user?.email}</span>
-            <LogoutButton />
+            <UserMenu email={user?.email ?? ""} name={user?.name} />
           </div>
         </nav>
       </header>
-      <main className="mx-auto max-w-5xl px-md py-lg">
+      <main className="mx-auto max-w-5xl px-4 py-6">
         {children}
       </main>
     </div>
