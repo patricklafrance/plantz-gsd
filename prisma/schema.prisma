@@ -16,6 +16,7 @@ model User {
   updatedAt             DateTime      @updatedAt @db.Timestamptz(3)
   onboardingCompleted   Boolean       @default(false)
   plantCountRange       String?
+  remindersEnabled      Boolean       @default(true)
   plants        Plant[]
   rooms         Room[]
   reminders     Reminder[]
@@ -104,4 +105,6 @@ model Reminder {
   snoozedUntil DateTime? @db.Timestamptz(3)
   createdAt    DateTime  @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@unique([plantId, userId])
 }
