@@ -123,8 +123,14 @@ Plans:
   3. User can snooze a reminder by 1 day, 2 days, or a custom duration
   4. A visitor can navigate to the app and immediately explore with pre-loaded sample plants without creating an account; all write actions are blocked for the demo session
   5. During onboarding, a new user can optionally seed their collection with common starter plants
-**Plans**: TBD
+**Plans:** 4 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 06-01-PLAN.md — Foundation: Prisma schema changes (remindersEnabled, @@unique), Zod schemas, types, seed data, next-auth type augmentation, Switch install, test stubs, schema push, Reminder backfill
+- [ ] 06-02-PLAN.md — Data layer: Reminder queries (count, items, per-plant) and actions (snooze, toggle), demo seed script, auth isDemo integration, proxy update, mutation guards
+- [ ] 06-03-PLAN.md — Reminder UI: Notification bell with badge in nav, snooze pills on plant detail, per-plant reminder toggle, preferences page with global toggle and account settings
+- [ ] 06-04-PLAN.md — Demo UX: /demo entry route, login page CTA, sticky demo banner in layout, onboarding starter plant seeding checkbox
 
 ### Phase 7: Polish and Accessibility
 **Goal**: The app is responsive and touch-friendly on mobile, meets WCAG AA accessibility standards, and handles all known edge cases gracefully
@@ -150,5 +156,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. Plant Collection and Rooms | 0/6 | Planning complete | - |
 | 4. Dashboard and Watering Core Loop | 0/3 | Planning complete | - |
 | 5. Notes, Search, and Filters | 0/3 | Planning complete | - |
-| 6. Reminders and Demo Mode | 0/? | Not started | - |
+| 6. Reminders and Demo Mode | 0/4 | Planning complete | - |
 | 7. Polish and Accessibility | 0/? | Not started | - |
