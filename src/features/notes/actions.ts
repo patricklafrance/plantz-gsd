@@ -3,6 +3,7 @@
 import { auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { z } from "zod/v4";
 import { createNoteSchema, updateNoteSchema, deleteNoteSchema } from "./schemas";
 import { getTimeline } from "./queries";
 
@@ -81,8 +82,17 @@ export async function deleteNote(data: unknown) {
   return { success: true };
 }
 
-export async function loadMoreTimeline(plantId: string, skip: number) {
+const loadMoreTimelineSchema = z.object({
+  plantId: z.string().min(1),
+  skip: z.number().int().min(0),
+});
+
+export async function loadMoreTimeline(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
-  return getTimeline(plantId, session.user.id, skip, 20);
+
+  const parsed = loadMoreTimelineSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  return getTimeline(parsed.data.plantId, session.user.id, parsed.data.skip, 20);
 }

@@ -41,7 +41,7 @@ export function Timeline({
 
   async function handleLoadMore() {
     setIsLoading(true);
-    const result = await loadMoreTimeline(plantId, entries.length);
+    const result = await loadMoreTimeline({ plantId, skip: entries.length });
     setIsLoading(false);
 
     if ("error" in result) {
@@ -54,7 +54,7 @@ export function Timeline({
   }
 
   async function handleRefetch() {
-    const result = await loadMoreTimeline(plantId, 0);
+    const result = await loadMoreTimeline({ plantId, skip: 0 });
 
     if ("error" in result) {
       return;
