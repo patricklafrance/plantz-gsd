@@ -21,9 +21,9 @@ export function PlantCard({ plant }: { plant: PlantWithRelations }) {
           <p className="text-sm text-muted-foreground truncate">
             {plant.species ?? "Unknown species"}
           </p>
-          <p className="text-xs text-muted-foreground">
-            {plant.room?.name ?? "\u00A0"}
-          </p>
+          {plant.room && (
+            <p className="text-xs text-muted-foreground">{plant.room.name}</p>
+          )}
         </div>
         <Badge variant="outline" className="shrink-0 text-xs">
           {statusText}

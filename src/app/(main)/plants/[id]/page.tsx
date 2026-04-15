@@ -2,7 +2,6 @@ import { auth } from "../../../../../auth";
 import { redirect, notFound } from "next/navigation";
 import { getPlant } from "@/features/plants/queries";
 import { getRoomsForSelect } from "@/features/rooms/queries";
-import { getWateringHistory } from "@/features/watering/queries";
 import { PlantDetail } from "@/components/plants/plant-detail";
 import { EditPlantDialog } from "@/components/plants/edit-plant-dialog";
 import { PlantActions } from "@/components/plants/plant-actions";
@@ -18,10 +17,9 @@ export default async function PlantDetailPage({
   if (!session?.user?.id) redirect("/login");
 
   const { id } = await params;
-  const [plant, rooms, { logs: wateringLogs, total: wateringLogCount }] = await Promise.all([
+  const [plant, rooms] = await Promise.all([
     getPlant(id, session.user.id),
     getRoomsForSelect(session.user.id),
-    getWateringHistory(id, session.user.id),
   ]);
 
   if (!plant) notFound();
@@ -44,7 +42,7 @@ export default async function PlantDetailPage({
           <PlantActions plant={plant} />
         </div>
       </div>
-      <PlantDetail plant={plant} wateringLogs={wateringLogs} wateringLogCount={wateringLogCount} />
+      <PlantDetail plant={plant} />
     </div>
   );
 }

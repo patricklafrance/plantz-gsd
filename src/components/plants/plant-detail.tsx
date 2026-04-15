@@ -1,6 +1,3 @@
-"use client";
-
-import { useState, useCallback } from "react";
 import { differenceInDays, format } from "date-fns";
 import { Sun, CloudSun, Cloud } from "lucide-react";
 import {
@@ -10,16 +7,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { WateringHistory } from "@/components/watering/watering-history";
-import { LogWateringDialog } from "@/components/watering/log-watering-dialog";
-import { loadMoreWateringHistory } from "@/features/watering/actions";
 import type { PlantWithRelations } from "@/types/plants";
-import type { WateringLog } from "@/generated/prisma/client";
 
 interface PlantDetailProps {
   plant: PlantWithRelations;
-  wateringLogs: WateringLog[];
-  wateringLogCount: number;
 }
 
 function getLightIcon(lightRequirement: string | null) {
@@ -48,18 +39,7 @@ function getLightLabel(lightRequirement: string | null) {
   }
 }
 
-export function PlantDetail({ plant, wateringLogs, wateringLogCount }: PlantDetailProps) {
-  const [logs, setLogs] = useState<WateringLog[]>(wateringLogs);
-  const [logCount, setLogCount] = useState(wateringLogCount);
-
-  const refetchLogs = useCallback(async () => {
-    const result = await loadMoreWateringHistory(plant.id, 0);
-    if (!("error" in result)) {
-      setLogs(result.logs);
-      setLogCount(result.total);
-    }
-  }, [plant.id]);
-
+export function PlantDetail({ plant }: PlantDetailProps) {
   const now = new Date();
   const nextWatering = plant.nextWateringAt;
 
@@ -82,9 +62,8 @@ export function PlantDetail({ plant, wateringLogs, wateringLogCount }: PlantDeta
     <div className="space-y-lg">
       {/* Status card */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>Next watering</CardTitle>
-          <LogWateringDialog plantId={plant.id} plantNickname={plant.nickname} onLogged={refetchLogs} />
         </CardHeader>
         <CardContent>
           {wateringStatus === "not-scheduled" && (
@@ -170,13 +149,9 @@ export function PlantDetail({ plant, wateringLogs, wateringLogCount }: PlantDeta
           <CardTitle>Watering history</CardTitle>
         </CardHeader>
         <CardContent>
-          <WateringHistory
-            plantId={plant.id}
-            plantNickname={plant.nickname}
-            initialLogs={logs}
-            totalCount={logCount}
-            onMutated={refetchLogs}
-          />
+          <p className="text-sm text-muted-foreground">
+            No waterings logged yet. Watering history will appear here.
+          </p>
         </CardContent>
       </Card>
 
