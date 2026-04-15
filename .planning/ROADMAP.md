@@ -105,8 +105,13 @@ Plans:
   2. User can edit or delete their own notes
   3. User can search plants by nickname or species name and see results immediately
   4. User can filter plants by room, watering status (overdue, due today, upcoming), and archived state, and can sort by next watering date, name, or recently added
-**Plans**: TBD
+**Plans:** 3 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 05-01-PLAN.md — Note model + schema push, timeline types, Zod schemas, note CRUD Server Actions, timeline query, all test stubs
+- [ ] 05-02-PLAN.md — Unified timeline UI on plant detail page (replaces watering history + notes cards)
+- [ ] 05-03-PLAN.md — Search bar, status filter pills, sort dropdown, extended getPlants query on plants collection page
 
 ### Phase 6: Reminders and Demo Mode
 **Goal**: Signed-in users receive in-app reminders for plants needing attention; unauthenticated visitors can explore the full app experience with sample data
@@ -144,6 +149,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Authentication and Onboarding | 0/4 | Planning complete | - |
 | 3. Plant Collection and Rooms | 0/6 | Planning complete | - |
 | 4. Dashboard and Watering Core Loop | 0/3 | Planning complete | - |
-| 5. Notes, Search, and Filters | 0/? | Not started | - |
+| 5. Notes, Search, and Filters | 0/3 | Planning complete | - |
 | 6. Reminders and Demo Mode | 0/? | Not started | - |
 | 7. Polish and Accessibility | 0/? | Not started | - |
