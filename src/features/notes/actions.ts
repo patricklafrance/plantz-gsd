@@ -10,6 +10,7 @@ import { getTimeline } from "./queries";
 export async function createNote(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   const parsed = createNoteSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
@@ -35,6 +36,7 @@ export async function createNote(data: unknown) {
 export async function updateNote(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   const parsed = updateNoteSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
@@ -62,6 +64,7 @@ export async function updateNote(data: unknown) {
 export async function deleteNote(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   const parsed = deleteNoteSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };

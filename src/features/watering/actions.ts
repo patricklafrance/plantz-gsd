@@ -10,6 +10,7 @@ import { getWateringHistory } from "./queries";
 export async function logWatering(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   const parsed = logWateringSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
@@ -73,6 +74,7 @@ export async function logWatering(data: unknown) {
 export async function editWateringLog(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   const parsed = editWateringLogSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
@@ -125,6 +127,7 @@ export async function editWateringLog(data: unknown) {
 export async function deleteWateringLog(logId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   // Ownership check through plant relation
   const log = await db.wateringLog.findFirst({

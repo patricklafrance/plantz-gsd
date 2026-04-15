@@ -9,6 +9,7 @@ import { addDays } from "date-fns";
 export async function createPlant(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   const parsed = createPlantSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
@@ -43,6 +44,7 @@ export async function createPlant(data: unknown) {
 export async function updatePlant(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   const parsed = editPlantSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
@@ -85,6 +87,7 @@ export async function updatePlant(data: unknown) {
 export async function archivePlant(plantId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   const plant = await db.plant.findFirst({
     where: { id: plantId, userId: session.user.id },
@@ -104,6 +107,7 @@ export async function archivePlant(plantId: string) {
 export async function unarchivePlant(plantId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   const plant = await db.plant.findFirst({
     where: { id: plantId, userId: session.user.id },
@@ -123,6 +127,7 @@ export async function unarchivePlant(plantId: string) {
 export async function deletePlant(plantId: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
   const plant = await db.plant.findFirst({
     where: { id: plantId, userId: session.user.id },

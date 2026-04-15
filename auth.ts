@@ -4,6 +4,7 @@ import bcryptjs from "bcryptjs";
 import { z } from "zod/v4";
 import { authConfig } from "./auth.config";
 import { db } from "@/lib/db";
+import { DEMO_EMAIL } from "@/features/demo/seed-data";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -12,12 +13,19 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        // Check if this is the demo user by email lookup
+        const dbUser = await db.user.findUnique({
+          where: { id: user.id },
+          select: { email: true },
+        });
+        token.isDemo = dbUser?.email === DEMO_EMAIL;
       }
       return token;
     },
     async session({ session, token }) {
       if (token.id) {
         session.user.id = token.id as string;
+        session.user.isDemo = token.isDemo === true;
       }
       return session;
     },
