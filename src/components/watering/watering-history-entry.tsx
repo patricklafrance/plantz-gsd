@@ -108,7 +108,7 @@ export function WateringHistoryEntry({
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => setDeleteOpen(true)}
-              variant="destructive"
+              className="text-destructive hover:text-destructive"
             >
               Delete
             </DropdownMenuItem>
