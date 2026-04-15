@@ -21,7 +21,7 @@ Users can see at a glance which plants need watering today and log it in one act
 - [ ] Users can log watering in one quick action from the dashboard
 - [ ] Users can see due today, overdue, upcoming, and recently watered plants (urgency-first dashboard)
 - [ ] Users can view watering history for each plant
-- [ ] Users can add timestamped notes and basic health observations
+- [x] Users can add timestamped notes and basic health observations — Validated in Phase 5: Notes, Search, and Filters
 - [ ] Users can configure in-app reminder preferences
 - [ ] Users can browse a seeded plant care catalog (~30-50 common houseplants)
 - [ ] Users can view plant detail pages with care info, status, and history
@@ -120,4 +120,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-14 after Phase 1 completion — scaffold and foundations built, auth configured, test harness operational*
+*Last updated: 2026-04-15 after Phase 5 completion — notes CRUD, unified timeline, search/filter/sort on plant collection*
