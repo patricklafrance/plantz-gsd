@@ -4,6 +4,7 @@ import { auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { createNoteSchema, updateNoteSchema } from "./schemas";
+import { getTimeline } from "./queries";
 
 export async function createNote(data: unknown) {
   const session = await auth();
@@ -75,4 +76,10 @@ export async function deleteNote(noteId: string) {
   revalidatePath("/plants/" + note.plantId);
 
   return { success: true };
+}
+
+export async function loadMoreTimeline(plantId: string, skip: number) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+  return getTimeline(plantId, session.user.id, skip, 20);
 }

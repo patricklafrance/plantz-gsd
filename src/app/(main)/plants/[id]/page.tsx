@@ -2,6 +2,7 @@ import { auth } from "../../../../../auth";
 import { redirect, notFound } from "next/navigation";
 import { getPlant } from "@/features/plants/queries";
 import { getRoomsForSelect } from "@/features/rooms/queries";
+import { getTimeline } from "@/features/notes/queries";
 import { PlantDetail } from "@/components/plants/plant-detail";
 import { EditPlantDialog } from "@/components/plants/edit-plant-dialog";
 import { PlantActions } from "@/components/plants/plant-actions";
@@ -17,10 +18,12 @@ export default async function PlantDetailPage({
   if (!session?.user?.id) redirect("/login");
 
   const { id } = await params;
-  const [plant, rooms] = await Promise.all([
-    getPlant(id, session.user.id),
-    getRoomsForSelect(session.user.id),
-  ]);
+  const [plant, rooms, { entries: timelineEntries, total: timelineTotal }] =
+    await Promise.all([
+      getPlant(id, session.user.id),
+      getRoomsForSelect(session.user.id),
+      getTimeline(id, session.user.id),
+    ]);
 
   if (!plant) notFound();
 
@@ -42,7 +45,11 @@ export default async function PlantDetailPage({
           <PlantActions plant={plant} />
         </div>
       </div>
-      <PlantDetail plant={plant} />
+      <PlantDetail
+        plant={plant}
+        timelineEntries={timelineEntries}
+        timelineTotal={timelineTotal}
+      />
     </div>
   );
 }
