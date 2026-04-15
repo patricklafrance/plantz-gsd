@@ -3,6 +3,8 @@ import { redirect, notFound } from "next/navigation";
 import { getPlant } from "@/features/plants/queries";
 import { getRoomsForSelect } from "@/features/rooms/queries";
 import { getTimeline } from "@/features/notes/queries";
+import { getPlantReminder } from "@/features/reminders/queries";
+import { db } from "@/lib/db";
 import { PlantDetail } from "@/components/plants/plant-detail";
 import { EditPlantDialog } from "@/components/plants/edit-plant-dialog";
 import { PlantActions } from "@/components/plants/plant-actions";
@@ -27,6 +29,14 @@ export default async function PlantDetailPage({
 
   if (!plant) notFound();
 
+  const [reminder, user] = await Promise.all([
+    getPlantReminder(plant.id, session.user.id),
+    db.user.findUnique({
+      where: { id: session.user.id },
+      select: { remindersEnabled: true },
+    }),
+  ]);
+
   return (
     <div className="space-y-lg">
       <div className="flex items-center gap-sm">
@@ -49,6 +59,9 @@ export default async function PlantDetailPage({
         plant={plant}
         timelineEntries={timelineEntries}
         timelineTotal={timelineTotal}
+        reminderEnabled={reminder?.enabled ?? true}
+        globalRemindersEnabled={user?.remindersEnabled ?? true}
+        isDemo={session.user.isDemo ?? false}
       />
     </div>
   );

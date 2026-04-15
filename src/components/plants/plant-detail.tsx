@@ -11,6 +11,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Timeline } from "@/components/timeline/timeline";
 import { LogWateringDialog } from "@/components/watering/log-watering-dialog";
+import { SnoozePills } from "@/components/reminders/snooze-pills";
+import { PlantReminderToggle } from "@/components/reminders/plant-reminder-toggle";
 import type { PlantWithRelations } from "@/types/plants";
 import type { TimelineEntry as TimelineEntryType } from "@/types/timeline";
 
@@ -18,6 +20,9 @@ interface PlantDetailProps {
   plant: PlantWithRelations;
   timelineEntries: TimelineEntryType[];
   timelineTotal: number;
+  reminderEnabled: boolean;
+  globalRemindersEnabled: boolean;
+  isDemo?: boolean;
 }
 
 function getLightIcon(lightRequirement: string | null) {
@@ -50,6 +55,9 @@ export function PlantDetail({
   plant,
   timelineEntries,
   timelineTotal,
+  reminderEnabled,
+  globalRemindersEnabled,
+  isDemo,
 }: PlantDetailProps) {
   const now = new Date();
   const nextWatering = plant.nextWateringAt;
@@ -81,22 +89,28 @@ export function PlantDetail({
             <p className="text-muted-foreground text-sm">Not yet scheduled</p>
           )}
           {wateringStatus === "overdue" && (
-            <div className="flex items-center gap-sm">
-              <Badge variant="destructive">Overdue</Badge>
-              <span className="text-sm text-destructive">
-                {Math.abs(daysUntilWatering)} day
-                {Math.abs(daysUntilWatering) !== 1 ? "s" : ""} overdue
-              </span>
+            <div className="space-y-3">
+              <div className="flex items-center gap-sm">
+                <Badge variant="destructive">Overdue</Badge>
+                <span className="text-sm text-destructive">
+                  {Math.abs(daysUntilWatering)} day
+                  {Math.abs(daysUntilWatering) !== 1 ? "s" : ""} overdue
+                </span>
+              </div>
+              <SnoozePills plantId={plant.id} isDemo={isDemo} />
             </div>
           )}
           {wateringStatus === "due-today" && (
-            <div className="flex items-center gap-sm">
-              <Badge variant="default">Due today</Badge>
-              {nextWatering && (
-                <span className="text-sm text-muted-foreground">
-                  {format(nextWatering, "MMMM d, yyyy")}
-                </span>
-              )}
+            <div className="space-y-3">
+              <div className="flex items-center gap-sm">
+                <Badge variant="default">Due today</Badge>
+                {nextWatering && (
+                  <span className="text-sm text-muted-foreground">
+                    {format(nextWatering, "MMMM d, yyyy")}
+                  </span>
+                )}
+              </div>
+              <SnoozePills plantId={plant.id} isDemo={isDemo} />
             </div>
           )}
           {wateringStatus === "upcoming" && (
@@ -151,6 +165,21 @@ export function PlantDetail({
               </dd>
             </div>
           </dl>
+        </CardContent>
+      </Card>
+
+      {/* Reminder settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Reminder settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PlantReminderToggle
+            plantId={plant.id}
+            initialEnabled={reminderEnabled}
+            globalRemindersEnabled={globalRemindersEnabled}
+            isDemo={isDemo}
+          />
         </CardContent>
       </Card>
 
