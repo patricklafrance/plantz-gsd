@@ -26,6 +26,12 @@ export async function createPlant(data: unknown) {
       userId: session.user.id,
       lastWateredAt: now,
       nextWateringAt: nextWateringAt,
+      reminders: {
+        create: {
+          userId: session.user.id,
+          enabled: true,
+        },
+      },
     },
   });
 
