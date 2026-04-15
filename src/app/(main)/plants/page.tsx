@@ -7,11 +7,8 @@ import { getPlants, getCatalog } from "@/features/plants/queries";
 import { getRoomsForSelect } from "@/features/rooms/queries";
 import { PlantGrid } from "@/components/plants/plant-grid";
 import { AddPlantDialog } from "@/components/plants/add-plant-dialog";
-import { RoomFilter } from "@/components/plants/room-filter";
 import { SearchBar } from "@/components/plants/search-bar";
-import { StatusFilter } from "@/components/plants/status-filter";
-import { SortDropdown } from "@/components/plants/sort-dropdown";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { FilterChips } from "@/components/plants/filter-chips";
 import { Button } from "@/components/ui/button";
 import { Leaf, Search as SearchIcon } from "lucide-react";
 
@@ -66,21 +63,15 @@ export default async function PlantsPage({
       </div>
 
       {/* Search, filter, sort block */}
-      <TooltipProvider>
-        <div className="space-y-2">
-          <SearchBar defaultValue={params.search} />
-
-          {rooms.length > 0 && (
-            <RoomFilter rooms={rooms} activeRoomId={params.room} />
-          )}
-
-          <StatusFilter activeStatus={params.status} />
-
-          <div className="flex justify-end">
-            <SortDropdown activeSort={params.sort} />
-          </div>
-        </div>
-      </TooltipProvider>
+      <div className="space-y-2">
+        <SearchBar defaultValue={params.search} />
+        <FilterChips
+          rooms={rooms}
+          activeRoomId={params.room}
+          activeStatus={params.status}
+          activeSort={params.sort}
+        />
+      </div>
 
       {/* Plant grid or empty state */}
       {plants.length === 0 ? (
