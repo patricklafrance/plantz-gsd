@@ -46,7 +46,7 @@ export async function getTimeline(
   skip = 0,
   take = 20
 ): Promise<{ entries: TimelineEntry[]; total: number }> {
-  const [wateringLogs, notes, wCount, nCount] = await Promise.all([
+  const [wateringLogs, notes] = await Promise.all([
     db.wateringLog.findMany({
       where: { plantId, plant: { userId } },
       orderBy: { wateredAt: "desc" },
@@ -55,35 +55,9 @@ export async function getTimeline(
       where: { plantId, plant: { userId } },
       orderBy: { createdAt: "desc" },
     }),
-    db.wateringLog.count({ where: { plantId, plant: { userId } } }),
-    db.note.count({ where: { plantId, plant: { userId } } }),
   ]);
 
-  const merged: TimelineEntry[] = [
-    ...wateringLogs.map((l) => ({
-      type: "watering" as const,
-      id: l.id,
-      timestamp: l.wateredAt,
-      data: l,
-    })),
-    ...notes.map((n) => ({
-      type: "note" as const,
-      id: n.id,
-      timestamp: n.createdAt,
-      data: {
-        id: n.id,
-        plantId: n.plantId,
-        content: n.content,
-        createdAt: n.createdAt,
-        updatedAt: n.updatedAt,
-      },
-    })),
-  ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-
-  return {
-    entries: merged.slice(skip, skip + take),
-    total: wCount + nCount,
-  };
+  return mergeTimeline(wateringLogs, notes, skip, take);
 }
 
 export async function loadMoreTimeline(
