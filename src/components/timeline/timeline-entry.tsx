@@ -87,7 +87,7 @@ function TimelineEntryComponent({
     if (entry.type !== "note") return;
 
     setIsDeleting(true);
-    const result = await deleteNote(entry.id);
+    const result = await deleteNote({ noteId: entry.id });
     setIsDeleting(false);
 
     if ("error" in result) {

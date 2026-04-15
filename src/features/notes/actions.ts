@@ -3,7 +3,7 @@
 import { auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { createNoteSchema, updateNoteSchema } from "./schemas";
+import { createNoteSchema, updateNoteSchema, deleteNoteSchema } from "./schemas";
 import { getTimeline } from "./queries";
 
 export async function createNote(data: unknown) {
@@ -58,20 +58,23 @@ export async function updateNote(data: unknown) {
   return { success: true, note: updated };
 }
 
-export async function deleteNote(noteId: string) {
+export async function deleteNote(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
+
+  const parsed = deleteNoteSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
 
   // Ownership check through plant relation (per RESEARCH pitfall 3)
   const note = await db.note.findFirst({
     where: {
-      id: noteId,
+      id: parsed.data.noteId,
       plant: { userId: session.user.id },
     },
   });
   if (!note) return { error: "Note not found." };
 
-  await db.note.delete({ where: { id: noteId } });
+  await db.note.delete({ where: { id: parsed.data.noteId } });
 
   revalidatePath("/plants/" + note.plantId);
 
