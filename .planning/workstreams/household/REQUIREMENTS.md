@@ -14,7 +14,7 @@ Requirements for milestone `household`. Each maps to a roadmap phase.
 - [ ] **HSLD-01**: User's solo household is auto-created on signup; user is its owner
 - [ ] **HSLD-02**: User can create additional households from settings (becomes owner of each)
 - [ ] **HSLD-03**: User can view a list of all households they belong to, with their role in each
-- [ ] **HSLD-04**: Existing v1 users are auto-migrated on first login after deployment: their plants, rooms, watering logs, notes, and reminders reparent to an auto-created solo household; user becomes its owner
+- [ ] ~~**HSLD-04**: Existing v1 users are auto-migrated on first login after deployment: their plants, rooms, watering logs, notes, and reminders reparent to an auto-created solo household; user becomes its owner~~ — **Deferred / N/A — superseded by DB flush decision 2026-04-16 (Phase 1 D-07)**
 - [ ] **HSLD-05**: Each household has configurable fields — name, timezone (defaults from creator), default cycle duration (default 7 days), rotation strategy (sequential only in v1)
 - [ ] **HSLD-06**: Plants, rooms, watering logs, notes, and reminders are scoped to household — all members of a household share the same collection; cross-household data is never visible
 
@@ -114,7 +114,7 @@ Tracked but not in this roadmap.
 | HSLD-01 | Phase 1 | Pending |
 | HSLD-02 | Phase 2 | Pending |
 | HSLD-03 | Phase 2 | Pending |
-| HSLD-04 | Phase 1 | Pending |
+| HSLD-04 | Phase 1 | Deferred / N/A — superseded by DB flush decision 2026-04-16 |
 | HSLD-05 | Phase 1 | Pending |
 | HSLD-06 | Phase 1 | Pending |
 | INVT-01 | Phase 4 | Pending |
@@ -149,7 +149,7 @@ Tracked but not in this roadmap.
 
 **Coverage:**
 - Milestone requirements: 35 total
-- Mapped to phases: 35
+- Mapped to phases: 34 (HSLD-04 de-scoped per Phase 1 D-07, 2026-04-16)
 - Unmapped: 0 ✓
 
 ---
