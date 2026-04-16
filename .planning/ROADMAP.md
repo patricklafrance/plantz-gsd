@@ -145,11 +145,11 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 07-01-PLAN.md — Mobile navigation (bottom tab bar, skip link), responsive card grids, touch target audit
+- [x] 07-01-PLAN.md — Mobile navigation (bottom tab bar, skip link), responsive card grids, touch target audit
 - [x] 07-02-PLAN.md — Responsive dialogs (Drawer primitive, ResponsiveDialog wrapper, dialog-to-sheet on mobile)
 - [x] 07-03-PLAN.md — Accessibility: focus-after-navigation, heading hierarchy, landmark roles, status badge icons, contrast audit, watering retry toast
 - [x] 07-04-PLAN.md — Edge case hardening: server-side pagination, character limits, shared EmptyState component, timezone warning
-- [ ] 07-05-PLAN.md — Gap closure: loading skeleton pages, focus-visible rings on BottomTabBar/FilterChips, WCAG contrast audit docs
+- [x] 07-05-PLAN.md — Gap closure: loading skeleton pages, focus-visible rings on BottomTabBar/FilterChips, WCAG contrast audit docs
 
 ## Progress
 
