@@ -1,4 +1,24 @@
-import { expect, test, describe } from "vitest";
+import { expect, test, describe, vi, beforeEach } from "vitest";
+
+// Mock Prisma client and db before any imports (Plan 04 guard/resolver tests)
+vi.mock("@/generated/prisma/client", () => ({
+  PrismaClient: vi.fn(),
+}));
+
+vi.mock("@prisma/adapter-pg", () => ({
+  PrismaPg: vi.fn(),
+}));
+
+vi.mock("@/lib/db", () => ({
+  db: {
+    householdMember: { findFirst: vi.fn() },
+    household: { findUnique: vi.fn() },
+  },
+}));
+
+vi.mock("../auth", () => ({
+  auth: vi.fn(),
+}));
 
 // --- Schema shape assertions (Plan 02 fills in via fs.readFileSync of prisma/schema.prisma) ---
 
@@ -199,20 +219,151 @@ describe("registerUser transactional household creation (HSLD-01, D-08)", () => 
   });
 });
 
-// --- requireHouseholdAccess guard (Plan 04 fills in) ---
-
-describe("requireHouseholdAccess guard (HSLD-06, D-16..D-20)", () => {
-  test.todo("returns { household, member, role } for valid member");
-  test.todo("throws ForbiddenError when session has no user.id");
-  test.todo("throws ForbiddenError when user is not a member of the household");
-  test.todo("returned role is 'OWNER' for owner member rows");
-  test.todo("returned role is 'MEMBER' for non-owner member rows");
-});
+// --- requireHouseholdAccess guard (Plan 04) ---
 
 describe("ForbiddenError class (D-19)", () => {
-  test.todo("instanceof Error returns true");
-  test.todo("error.name === 'ForbiddenError'");
-  test.todo("error.statusCode === 403");
+  test("instanceof Error returns true", async () => {
+    const { ForbiddenError } = await import("@/features/household/guards");
+    const err = new ForbiddenError();
+    expect(err).toBeInstanceOf(Error);
+  });
+
+  test("instanceof ForbiddenError returns true (Object.setPrototypeOf works)", async () => {
+    const { ForbiddenError } = await import("@/features/household/guards");
+    const err = new ForbiddenError();
+    expect(err).toBeInstanceOf(ForbiddenError);
+  });
+
+  test("error.name is ForbiddenError", async () => {
+    const { ForbiddenError } = await import("@/features/household/guards");
+    const err = new ForbiddenError("denied");
+    expect(err.name).toBe("ForbiddenError");
+  });
+
+  test("error.statusCode is 403", async () => {
+    const { ForbiddenError } = await import("@/features/household/guards");
+    const err = new ForbiddenError();
+    expect(err.statusCode).toBe(403);
+  });
+
+  test("error message defaults to Access denied but accepts override", async () => {
+    const { ForbiddenError } = await import("@/features/household/guards");
+    expect(new ForbiddenError().message).toBe("Access denied");
+    expect(new ForbiddenError("custom").message).toBe("custom");
+  });
+});
+
+describe("requireHouseholdAccess guard (HSLD-06, D-16..D-20)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("throws ForbiddenError when session has no user.id", async () => {
+    const { auth } = await import("../auth");
+    const { requireHouseholdAccess, ForbiddenError } = await import(
+      "@/features/household/guards"
+    );
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    await expect(requireHouseholdAccess("hh_1")).rejects.toBeInstanceOf(
+      ForbiddenError
+    );
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    await expect(requireHouseholdAccess("hh_1")).rejects.toThrow(
+      "Not authenticated"
+    );
+  });
+
+  test("throws ForbiddenError when user is not a member of the household", async () => {
+    const { auth } = await import("../auth");
+    const { db } = await import("@/lib/db");
+    const { requireHouseholdAccess, ForbiddenError } = await import(
+      "@/features/household/guards"
+    );
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValue({
+      user: { id: "user_1", isDemo: false },
+    });
+    (db.householdMember.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(
+      null
+    );
+    await expect(requireHouseholdAccess("hh_1")).rejects.toBeInstanceOf(
+      ForbiddenError
+    );
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValue({
+      user: { id: "user_1", isDemo: false },
+    });
+    (db.householdMember.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(
+      null
+    );
+    await expect(requireHouseholdAccess("hh_1")).rejects.toThrow(
+      "Not a member of this household"
+    );
+  });
+
+  test("returns household, member, role for valid member", async () => {
+    const { auth } = await import("../auth");
+    const { db } = await import("@/lib/db");
+    const { requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    const fakeHousehold = { id: "hh_1", name: "My Plants", slug: "abc12345" };
+    const fakeMember = {
+      id: "m_1",
+      householdId: "hh_1",
+      userId: "user_1",
+      role: "MEMBER",
+      household: fakeHousehold,
+    };
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValue({
+      user: { id: "user_1", isDemo: false },
+    });
+    (db.householdMember.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(
+      fakeMember
+    );
+    const result = await requireHouseholdAccess("hh_1");
+    expect(result.household).toEqual(fakeHousehold);
+    expect(result.member).toEqual(fakeMember);
+    expect(result.role).toBe("MEMBER");
+  });
+
+  test("returned role is OWNER for owner member rows", async () => {
+    const { auth } = await import("../auth");
+    const { db } = await import("@/lib/db");
+    const { requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValue({
+      user: { id: "user_1", isDemo: false },
+    });
+    (db.householdMember.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "m_1",
+      householdId: "hh_1",
+      userId: "user_1",
+      role: "OWNER",
+      household: { id: "hh_1", name: "x", slug: "y" },
+    });
+    const result = await requireHouseholdAccess("hh_1");
+    expect(result.role).toBe("OWNER");
+  });
+
+  test("returned role is MEMBER for non-owner member rows", async () => {
+    const { auth } = await import("../auth");
+    const { db } = await import("@/lib/db");
+    const { requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    (auth as ReturnType<typeof vi.fn>).mockResolvedValue({
+      user: { id: "user_2", isDemo: false },
+    });
+    (db.householdMember.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "m_2",
+      householdId: "hh_1",
+      userId: "user_2",
+      role: "MEMBER",
+      household: { id: "hh_1", name: "x", slug: "y" },
+    });
+    const result = await requireHouseholdAccess("hh_1");
+    expect(result.role).toBe("MEMBER");
+  });
 });
 
 // --- resolveHouseholdBySlug (Plan 04 fills in) ---
