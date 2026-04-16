@@ -10,6 +10,7 @@ export const registerSchema = z
     email: z.email("Please enter a valid email address."),
     password: z.string().min(6, "Password must be at least 6 characters."),
     confirmPassword: z.string(),
+    timezone: z.string().max(100).optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match.",

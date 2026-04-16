@@ -35,10 +35,19 @@ export function RegisterForm() {
   });
 
   async function onSubmit(values: RegisterInput) {
+    // D-12: pass browser-detected timezone to seed the auto-created household
+    let detectedTimezone: string | undefined;
+    try {
+      detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      detectedTimezone = undefined; // server defaults to UTC
+    }
+
     const result = await registerUser({
       email: values.email,
       password: values.password,
       confirmPassword: values.confirmPassword,
+      timezone: detectedTimezone,
     });
 
     // If registerUser returns (didn't throw redirect), it means there was an error
