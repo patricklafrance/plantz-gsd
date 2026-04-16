@@ -4,7 +4,7 @@ export const createPlantSchema = z.object({
   nickname: z
     .string()
     .min(1, "Nickname is required.")
-    .max(100, "Nickname must be 100 characters or fewer."),
+    .max(40, "Nickname must be 40 characters or fewer."),
   species: z.string().optional(),
   roomId: z.string().optional(),
   wateringInterval: z
@@ -20,7 +20,7 @@ export const editPlantSchema = z.object({
   nickname: z
     .string()
     .min(1, "Nickname is required.")
-    .max(100, "Nickname must be 100 characters or fewer."),
+    .max(40, "Nickname must be 40 characters or fewer."),
   species: z.string().optional(),
   roomId: z.string().nullable().optional(),
   wateringInterval: z

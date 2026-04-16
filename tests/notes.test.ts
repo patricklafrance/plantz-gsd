@@ -47,20 +47,20 @@ describe("createNoteSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  test("accepts content up to 5000 characters (D-06)", async () => {
+  test("accepts content up to 1000 characters (D-14)", async () => {
     const { createNoteSchema } = await import("@/features/notes/schemas");
     const result = createNoteSchema.safeParse({
       plantId: "plant-1",
-      content: "x".repeat(5000),
+      content: "x".repeat(1000),
     });
     expect(result.success).toBe(true);
   });
 
-  test("rejects content exceeding 5000 characters", async () => {
+  test("rejects content exceeding 1000 characters (D-14)", async () => {
     const { createNoteSchema } = await import("@/features/notes/schemas");
     const result = createNoteSchema.safeParse({
       plantId: "plant-1",
-      content: "x".repeat(5001),
+      content: "x".repeat(1001),
     });
     expect(result.success).toBe(false);
   });

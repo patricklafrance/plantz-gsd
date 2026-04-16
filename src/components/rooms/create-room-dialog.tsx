@@ -62,8 +62,8 @@ export function CreateRoomDialog({
       setError("Room name is required.");
       return;
     }
-    if (trimmed.length > 50) {
-      setError("Room name must be 50 characters or fewer.");
+    if (trimmed.length > 40) {
+      setError("Room name must be 40 characters or fewer.");
       return;
     }
 
@@ -117,9 +117,14 @@ export function CreateRoomDialog({
               placeholder="e.g. Living Room"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              maxLength={50}
+              maxLength={40}
               autoFocus
             />
+            {name.length > 20 && (
+              <p className="text-xs text-muted-foreground text-right">
+                {name.length}/40
+              </p>
+            )}
             {error && (
               <p className="text-sm text-destructive">{error}</p>
             )}

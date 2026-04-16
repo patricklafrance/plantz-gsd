@@ -2,7 +2,8 @@ import { auth } from "../../../../../auth";
 import { redirect, notFound } from "next/navigation";
 import { getRoom } from "@/features/rooms/queries";
 import { PlantGrid } from "@/components/plants/plant-grid";
-import { DoorOpen } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Leaf } from "lucide-react";
 import type { PlantWithRelations } from "@/types/plants";
 
 export default async function RoomDetailPage({
@@ -34,15 +35,12 @@ export default async function RoomDetailPage({
       </div>
 
       {room.plants.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="mb-4 rounded-full bg-accent/10 p-6">
-            <DoorOpen className="h-8 w-8 text-accent" />
-          </div>
-          <h2 className="text-xl font-semibold">No plants in this room</h2>
-          <p className="mt-2 text-muted-foreground">
-            Assign plants to this room from their detail page.
-          </p>
-        </div>
+        <EmptyState
+          icon={Leaf}
+          iconVariant="muted"
+          heading="No plants in this room"
+          body="Assign a plant to this room when adding or editing it."
+        />
       ) : (
         <PlantGrid plants={plantsWithRoom} />
       )}

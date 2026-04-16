@@ -32,29 +32,37 @@ export function NoteInput({ plantId }: NoteInputProps) {
   }
 
   return (
-    <div className="flex gap-2">
-      <Input
-        placeholder="Add a note..."
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            handleSubmit();
-          }
-        }}
-        aria-label="Note text"
-        className="text-sm"
-        disabled={isPending}
-      />
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={handleSubmit}
-        disabled={isPending || !value.trim()}
-      >
-        Add
-      </Button>
+    <div className="space-y-1">
+      <div className="flex gap-2">
+        <Input
+          placeholder="Add a note..."
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleSubmit();
+            }
+          }}
+          aria-label="Note text"
+          className="text-sm"
+          disabled={isPending}
+          maxLength={1000}
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleSubmit}
+          disabled={isPending || !value.trim()}
+        >
+          Add
+        </Button>
+      </div>
+      {value.length > 980 && (
+        <p className="text-xs text-muted-foreground text-right">
+          {value.length}/1000
+        </p>
+      )}
     </div>
   );
 }

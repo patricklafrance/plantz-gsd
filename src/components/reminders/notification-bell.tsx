@@ -52,7 +52,7 @@ export function NotificationBell({ count, items }: NotificationBellProps) {
       <DropdownMenuContent align="end" className="w-72 max-h-[320px] overflow-y-auto">
         {items.length === 0 ? (
           <p className="px-4 py-2 text-sm text-muted-foreground">
-            All caught up!
+            No reminders &mdash; Plants that need attention will appear here.
           </p>
         ) : (
           items.map((item) => (

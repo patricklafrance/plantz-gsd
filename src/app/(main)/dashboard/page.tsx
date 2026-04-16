@@ -8,6 +8,8 @@ import { getCatalog } from "@/features/plants/queries";
 import { getRoomsForSelect } from "@/features/rooms/queries";
 import { getDashboardPlants } from "@/features/watering/queries";
 import { DashboardClient } from "@/components/watering/dashboard-client";
+import { EmptyState } from "@/components/shared/empty-state";
+import { TimezoneWarning } from "@/components/shared/timezone-warning";
 import { Leaf, CheckCircle2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Suspense } from "react";
@@ -80,18 +82,13 @@ async function DashboardContent({
   // No plants: empty state with AddPlantDialog CTA
   if (!hasPlants) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="mb-4 rounded-full bg-accent/10 p-6">
-          <Leaf className="h-8 w-8 text-accent" />
-        </div>
-        <h2 className="text-xl font-semibold">No plants yet</h2>
-        <p className="mt-2 text-muted-foreground">
-          Add your first plant to start tracking your watering schedule.
-        </p>
-        <div className="mt-4">
-          <AddPlantDialog catalog={catalog} rooms={rooms} />
-        </div>
-      </div>
+      <EmptyState
+        icon={Leaf}
+        iconVariant="accent"
+        heading="No plants yet"
+        body="Add your first plant to start tracking watering."
+        action={<AddPlantDialog catalog={catalog} rooms={rooms} />}
+      />
     );
   }
 
@@ -131,6 +128,8 @@ export default async function DashboardPage() {
       {!user?.onboardingCompleted && (
         <OnboardingBanner userId={session.user.id} />
       )}
+
+      <TimezoneWarning />
 
       {/* Dashboard header */}
       <div className="flex items-center justify-between">

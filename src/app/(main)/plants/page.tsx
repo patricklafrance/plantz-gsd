@@ -10,6 +10,7 @@ import { AddPlantDialog } from "@/components/plants/add-plant-dialog";
 import { SearchBar } from "@/components/plants/search-bar";
 import { FilterChips } from "@/components/plants/filter-chips";
 import { Pagination } from "@/components/shared/pagination";
+import { EmptyState } from "@/components/shared/empty-state";
 import { Button } from "@/components/ui/button";
 import { Leaf, Search as SearchIcon } from "lucide-react";
 
@@ -93,19 +94,13 @@ export default async function PlantsPage({
       {/* Plant grid or empty state */}
       {plants.length === 0 ? (
         totalPlantCount === 0 && !hasActiveFilters ? (
-          // Original "No plants yet" empty state
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="mb-4 rounded-full bg-accent/10 p-6">
-              <Leaf className="h-8 w-8 text-accent" />
-            </div>
-            <h2 className="text-xl font-semibold">No plants yet</h2>
-            <p className="mt-2 text-muted-foreground">
-              Add your first plant to start tracking your watering schedule.
-            </p>
-            <div className="mt-6">
-              <AddPlantDialog catalog={catalog} rooms={rooms} />
-            </div>
-          </div>
+          <EmptyState
+            icon={Leaf}
+            iconVariant="muted"
+            heading="Your collection is empty"
+            body="Add a plant to begin building your collection."
+            action={<AddPlantDialog catalog={catalog} rooms={rooms} />}
+          />
         ) : (
           // Context-aware empty state when filters yield no results
           <EmptyFilterState
@@ -201,19 +196,18 @@ function EmptyFilterState({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-4 rounded-full bg-accent/10 p-6">
-        <SearchIcon className="h-8 w-8 text-accent" />
-      </div>
-      <h2 className="text-xl font-semibold">{heading}</h2>
-      {body && <p className="mt-2 text-muted-foreground">{body}</p>}
-      {ctaLabel && (
+    <EmptyState
+      icon={SearchIcon}
+      iconVariant="muted"
+      heading={heading}
+      body={body || "Try a different search term or clear your filters."}
+      action={ctaLabel ? (
         <Link href={clearUrl}>
-          <Button variant="outline" size="sm" className="mt-6">
+          <Button variant="outline" size="sm">
             {ctaLabel}
           </Button>
         </Link>
-      )}
-    </div>
+      ) : undefined}
+    />
   );
 }

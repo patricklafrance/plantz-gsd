@@ -109,8 +109,13 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
                 <FormItem>
                   <FormLabel>Nickname</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Kitchen Pothos" {...field} />
+                    <Input placeholder="e.g. Kitchen Pothos" maxLength={40} {...field} />
                   </FormControl>
+                  {(field.value?.length ?? 0) > 20 && (
+                    <p className="text-xs text-muted-foreground text-right">
+                      {field.value?.length ?? 0}/40
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
