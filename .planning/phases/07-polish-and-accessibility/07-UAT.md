@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 07-polish-and-accessibility
 source: [07-01-SUMMARY.md, 07-02-SUMMARY.md, 07-03-SUMMARY.md, 07-04-SUMMARY.md, 07-05-SUMMARY.md]
 started: 2026-04-15T12:00:00Z
@@ -99,9 +99,15 @@ blocked: 0
   reason: "User reported: Yes, but the buttons are touching the bottom of the screens"
   severity: cosmetic
   test: 6
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "edit-plant-dialog.tsx uses raw <div> for footer instead of ResponsiveDialogFooter, and DrawerFooter in drawer.tsx negates parent safe-area padding with -mb-4 without adding its own"
+  artifacts:
+    - path: "src/components/plants/edit-plant-dialog.tsx"
+      issue: "Line 214: raw <div> instead of ResponsiveDialogFooter"
+    - path: "src/components/ui/drawer.tsx"
+      issue: "Line 94: DrawerFooter -mb-4 negates safe-area padding, needs pb-[calc(1rem+env(safe-area-inset-bottom))]"
+  missing:
+    - "Replace raw div with ResponsiveDialogFooter in edit-plant-dialog.tsx"
+    - "Add safe-area-inset-bottom padding to DrawerFooter in drawer.tsx"
   debug_session: ""
 
 - truth: "Timezone mismatch warning banner appears on dashboard when browser timezone differs from stored preference"
@@ -109,9 +115,14 @@ blocked: 0
   reason: "User reported: I don't see any warning banner"
   severity: major
   test: 14
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "TimezoneSync writes browser timezone to user_tz cookie on every load; TimezoneWarning compares browser timezone against that same cookie — they always match, so the warning never triggers"
+  artifacts:
+    - path: "src/components/watering/timezone-sync.tsx"
+      issue: "Line 7-8: overwrites cookie with browser timezone on every render"
+    - path: "src/components/shared/timezone-warning.tsx"
+      issue: "Line 15-21: compares browser TZ against cookie that always matches"
+  missing:
+    - "Store user timezone preference in database, compare browser TZ against that stored preference instead of the cookie that TimezoneSync overwrites"
   debug_session: ""
 
 - truth: "Focus automatically moves to h1 heading after client-side navigation"
@@ -119,7 +130,10 @@ blocked: 0
   reason: "User reported: The focus remains on the link I click"
   severity: major
   test: 8
-  root_cause: ""
-  artifacts: []
-  missing: []
+  root_cause: "useFocusHeading uses fixed 50ms setTimeout which races against Next.js 16 streaming/Suspense — the new page h1 may not be in the DOM yet when querySelector runs, returning null and silently failing"
+  artifacts:
+    - path: "src/hooks/use-focus-heading.ts"
+      issue: "Lines 9-11: 50ms setTimeout races against streamed page content"
+  missing:
+    - "Replace fixed timeout with MutationObserver or requestAnimationFrame polling that waits for h1[tabindex='-1'] to appear in DOM before focusing"
   debug_session: ""
