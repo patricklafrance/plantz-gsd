@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Leaf, BellOff } from "lucide-react";
+import { Leaf, BellOff, AlertTriangle, Droplets, Clock, CheckCircle2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { WaterButton } from "./water-button";
@@ -25,27 +25,31 @@ function getStatusBadge(plant: DashboardPlant) {
     case "overdue": {
       const overdueDays = Math.abs(plant.daysUntil);
       return (
-        <Badge className="bg-destructive/10 text-destructive border-destructive/20">
+        <Badge className="bg-destructive/10 text-destructive border-destructive/20 gap-1.5 items-center">
+          <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />
           {overdueDays === 0 ? "Overdue" : `${overdueDays}d overdue`}
         </Badge>
       );
     }
     case "dueToday":
       return (
-        <Badge className="bg-accent/15 text-accent border-accent/25">
+        <Badge className="bg-accent/15 text-accent border-accent/20 gap-1.5 items-center">
+          <Droplets className="h-3 w-3 shrink-0" aria-hidden="true" />
           Due today
         </Badge>
       );
     case "upcoming":
       if (plant.daysUntil === 0) {
         return (
-          <Badge className="bg-accent/15 text-accent border-accent/25">
+          <Badge className="bg-accent/15 text-accent border-accent/20 gap-1.5 items-center">
+            <Droplets className="h-3 w-3 shrink-0" aria-hidden="true" />
             Due today
           </Badge>
         );
       }
       return (
-        <Badge variant="outline">
+        <Badge variant="outline" className="gap-1.5 items-center">
+          <Clock className="h-3 w-3 shrink-0" aria-hidden="true" />
           In {plant.daysUntil}d
         </Badge>
       );
@@ -54,7 +58,8 @@ function getStatusBadge(plant: DashboardPlant) {
         ? `Watered ${formatDistanceToNow(new Date(plant.latestLog.wateredAt), { addSuffix: false })} ago`
         : "Recently watered";
       return (
-        <Badge className="bg-accent/8 text-muted-foreground border-border">
+        <Badge variant="secondary" className="gap-1.5 items-center">
+          <CheckCircle2 className="h-3 w-3 shrink-0" aria-hidden="true" />
           {wateredText}
         </Badge>
       );

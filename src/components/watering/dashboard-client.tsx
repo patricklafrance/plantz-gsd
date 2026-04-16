@@ -71,7 +71,12 @@ export function DashboardClient({ groups, isDemo }: DashboardClientProps) {
       });
 
       if (!result) {
-        toast.error("Couldn't log watering. Try again.");
+        toast.error("Couldn't log watering. Check your connection and try again.", {
+          action: {
+            label: "Retry",
+            onClick: () => handleWater(plant),
+          },
+        });
         return;
       }
 
@@ -79,7 +84,12 @@ export function DashboardClient({ groups, isDemo }: DashboardClientProps) {
         if (result.error === "DUPLICATE") {
           toast("Already logged! Edit from history if needed.");
         } else {
-          toast.error(result.error ?? "Couldn't log watering. Try again.");
+          toast.error(result.error ?? "Couldn't log watering. Check your connection and try again.", {
+            action: {
+              label: "Retry",
+              onClick: () => handleWater(plant),
+            },
+          });
         }
         return;
       }
