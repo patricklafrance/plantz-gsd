@@ -366,11 +366,64 @@ describe("requireHouseholdAccess guard (HSLD-06, D-16..D-20)", () => {
   });
 });
 
-// --- resolveHouseholdBySlug (Plan 04 fills in) ---
+// --- resolveHouseholdBySlug (Plan 04) ---
 
 describe("resolveHouseholdBySlug (D-17)", () => {
-  test.todo("returns { id, name } for an existing slug");
-  test.todo("returns null for an unknown slug");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("returns id+name for an existing slug", async () => {
+    const { db } = await import("@/lib/db");
+    const { resolveHouseholdBySlug } = await import(
+      "@/features/household/queries"
+    );
+    (db.household.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "hh_1",
+      name: "My Plants",
+    });
+    const result = await resolveHouseholdBySlug("abc12345");
+    expect(result).toEqual({ id: "hh_1", name: "My Plants" });
+    expect(db.household.findUnique).toHaveBeenCalledWith({
+      where: { slug: "abc12345" },
+      select: { id: true, name: true },
+    });
+  });
+
+  test("returns null for an unknown slug", async () => {
+    const { db } = await import("@/lib/db");
+    const { resolveHouseholdBySlug } = await import(
+      "@/features/household/queries"
+    );
+    (db.household.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    const result = await resolveHouseholdBySlug("zzzzzzzz");
+    expect(result).toBeNull();
+  });
+});
+
+describe("household schema enums", () => {
+  test("householdRoleSchema accepts OWNER and MEMBER, rejects others", async () => {
+    const { householdRoleSchema } = await import(
+      "@/features/household/schema"
+    );
+    expect(householdRoleSchema.safeParse("OWNER").success).toBe(true);
+    expect(householdRoleSchema.safeParse("MEMBER").success).toBe(true);
+    expect(householdRoleSchema.safeParse("ADMIN").success).toBe(false);
+  });
+
+  test("rotationStrategySchema accepts only sequential in v1 (D-12)", async () => {
+    const { rotationStrategySchema } = await import(
+      "@/features/household/schema"
+    );
+    expect(rotationStrategySchema.safeParse("sequential").success).toBe(true);
+    expect(rotationStrategySchema.safeParse("priority").success).toBe(false);
+  });
+
+  test("schema.ts uses zod/v4 import path (project hard rule)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/features/household/schema.ts", "utf8");
+    expect(src).toMatch(/from\s+["']zod\/v4["']/);
+  });
 });
 
 // --- JWT/session extension (Plan 03 fills in) ---
