@@ -113,9 +113,21 @@ describe("Prisma schema — composite indexes (D-03, Pitfall 3)", () => {
 });
 
 describe("WateringLog functional unique index (D-03, Pitfall 15)", () => {
-  test.todo(
-    "migration.sql contains CREATE UNIQUE INDEX on (plantId, date_trunc('day', wateredAt))"
-  );
+  test("migration.sql contains CREATE UNIQUE INDEX on (plantId, date_trunc('day', wateredAt))", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const migrationsDir = "prisma/migrations";
+    const dirs = fs.readdirSync(migrationsDir).filter((d) =>
+      fs.statSync(path.join(migrationsDir, d)).isDirectory()
+    );
+    expect(dirs.length).toBeGreaterThan(0);
+    // Concatenate all migration.sql files (only one for Phase 1, but be defensive)
+    const sql = dirs
+      .map((d) => fs.readFileSync(path.join(migrationsDir, d, "migration.sql"), "utf8"))
+      .join("\n");
+    expect(sql).toContain('CREATE UNIQUE INDEX "WateringLog_plantId_day_key"');
+    expect(sql).toMatch(/date_trunc\(\s*'day'\s*,\s*"wateredAt"/);
+  });
 });
 
 // --- Signup transaction (Plan 03 fills in) ---
