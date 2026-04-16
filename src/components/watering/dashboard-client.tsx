@@ -20,22 +20,52 @@ interface DashboardClientProps {
   isDemo?: boolean;
 }
 
-function removePlantFromGroups(
+function movePlantToRecentlyWatered(
   current: GroupedDashboardPlants,
   plantId: string
 ): GroupedDashboardPlants {
+  // Find the plant in overdue/dueToday/upcoming before filtering them out
+  const plantInActive =
+    current.overdue.find((p) => p.id === plantId) ??
+    current.dueToday.find((p) => p.id === plantId) ??
+    current.upcoming.find((p) => p.id === plantId);
+
+  // Remove from overdue, dueToday, and upcoming
+  const nextOverdue = current.overdue.filter((p) => p.id !== plantId);
+  const nextDueToday = current.dueToday.filter((p) => p.id !== plantId);
+  const nextUpcoming = current.upcoming.filter((p) => p.id !== plantId);
+
+  // For recentlyWatered: keep plant in place if already there; otherwise prepend it
+  const alreadyInRecent = current.recentlyWatered.some((p) => p.id === plantId);
+  let nextRecentlyWatered: typeof current.recentlyWatered;
+
+  if (alreadyInRecent) {
+    // Plant is already in recentlyWatered — keep as-is (no flicker)
+    nextRecentlyWatered = current.recentlyWatered;
+  } else if (plantInActive) {
+    // Move from active group to top of recentlyWatered
+    const optimisticPlant = {
+      ...plantInActive,
+      urgency: "recentlyWatered" as const,
+      daysUntil: 0,
+    };
+    nextRecentlyWatered = [optimisticPlant, ...current.recentlyWatered];
+  } else {
+    nextRecentlyWatered = current.recentlyWatered;
+  }
+
   return {
-    overdue: current.overdue.filter((p) => p.id !== plantId),
-    dueToday: current.dueToday.filter((p) => p.id !== plantId),
-    upcoming: current.upcoming.filter((p) => p.id !== plantId),
-    recentlyWatered: current.recentlyWatered.filter((p) => p.id !== plantId),
+    overdue: nextOverdue,
+    dueToday: nextDueToday,
+    upcoming: nextUpcoming,
+    recentlyWatered: nextRecentlyWatered,
   };
 }
 
 export function DashboardClient({ groups, isDemo }: DashboardClientProps) {
-  const [optimisticGroups, removeFromGroups] = useOptimistic(
+  const [optimisticGroups, updateGroups] = useOptimistic(
     groups,
-    removePlantFromGroups
+    movePlantToRecentlyWatered
   );
   const [wateringPlantIds, setWateringPlantIds] = useState<Set<string>>(
     new Set()
@@ -53,8 +83,8 @@ export function DashboardClient({ groups, isDemo }: DashboardClientProps) {
     setWateringPlantIds((prev) => new Set(prev).add(plant.id));
 
     startTransition(async () => {
-      // Optimistically remove from groups — stays applied until transition ends
-      removeFromGroups(plant.id);
+      // Optimistically move plant to recentlyWatered — stays applied until transition ends
+      updateGroups(plant.id);
 
       const result = await logWatering({ plantId: plant.id });
 
