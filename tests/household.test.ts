@@ -3,32 +3,113 @@ import { expect, test, describe } from "vitest";
 // --- Schema shape assertions (Plan 02 fills in via fs.readFileSync of prisma/schema.prisma) ---
 
 describe("Prisma schema — household models (D-01)", () => {
-  test.todo("schema.prisma contains 'model Household {'");
-  test.todo("schema.prisma contains 'model HouseholdMember {'");
-  test.todo("schema.prisma contains 'model Cycle {'");
-  test.todo("schema.prisma contains 'model Availability {'");
-  test.todo("schema.prisma contains 'model Invitation {'");
+  test("schema.prisma contains 'model Household {'", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toContain("model Household {");
+  });
+
+  test("schema.prisma contains 'model HouseholdMember {'", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toContain("model HouseholdMember {");
+  });
+
+  test("schema.prisma contains 'model Cycle {'", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toContain("model Cycle {");
+  });
+
+  test("schema.prisma contains 'model Availability {'", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toContain("model Availability {");
+  });
+
+  test("schema.prisma contains 'model Invitation {'", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toContain("model Invitation {");
+  });
 });
 
 describe("Prisma schema — Plant/Room reparenting (D-04, AUDT-02)", () => {
-  test.todo("Plant model has 'householdId String' field");
-  test.todo("Plant model has 'createdByUserId String?' (nullable audit column)");
-  test.todo("Plant.createdBy relation uses onDelete: SetNull");
-  test.todo("Plant.household relation uses onDelete: Cascade");
-  test.todo("Room model has 'householdId String' field");
-  test.todo("Room model has 'createdByUserId String?' (nullable audit column)");
+  test("Plant model has 'householdId String' field", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toMatch(/model Plant \{[\s\S]*?householdId\s+String\b/);
+  });
+
+  test("Plant model has 'createdByUserId String?' (nullable audit column)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toMatch(/model Plant \{[\s\S]*?createdByUserId\s+String\?/);
+  });
+
+  test("Plant.createdBy relation uses onDelete: SetNull", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toMatch(/createdBy\s+User\?\s+@relation\("PlantCreatedBy"[\s\S]*?onDelete:\s*SetNull/);
+  });
+
+  test("Plant.household relation uses onDelete: Cascade", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toMatch(/model Plant \{[\s\S]*?household\s+Household\s+@relation\([\s\S]*?onDelete:\s*Cascade/);
+  });
+
+  test("Room model has 'householdId String' field", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toMatch(/model Room \{[\s\S]*?householdId\s+String\b/);
+  });
+
+  test("Room model has 'createdByUserId String?' (nullable audit column)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toMatch(/model Room \{[\s\S]*?createdByUserId\s+String\?/);
+  });
 });
 
 describe("Prisma schema — audit columns (AUDT-01)", () => {
-  test.todo("WateringLog has 'performedByUserId String?'");
-  test.todo("Note has 'performedByUserId String?'");
+  test("WateringLog has 'performedByUserId String?'", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toMatch(/model WateringLog \{[\s\S]*?performedByUserId\s+String\?/);
+  });
+
+  test("Note has 'performedByUserId String?'", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toMatch(/model Note \{[\s\S]*?performedByUserId\s+String\?/);
+  });
 });
 
 describe("Prisma schema — composite indexes (D-03, Pitfall 3)", () => {
-  test.todo("Plant has @@index([householdId, archivedAt])");
-  test.todo("Cycle has @@index([householdId, status])");
-  test.todo("Room has @@index([householdId])");
-  test.todo("HouseholdMember has @@unique([householdId, userId]) (Pitfall 5)");
+  test("Plant has @@index([householdId, archivedAt])", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toContain("@@index([householdId, archivedAt])");
+  });
+
+  test("Cycle has @@index([householdId, status])", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toContain("@@index([householdId, status])");
+  });
+
+  test("Room has @@index([householdId])", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toContain("@@index([householdId])");
+  });
+
+  test("HouseholdMember has @@unique([householdId, userId]) (Pitfall 5)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("prisma/schema.prisma", "utf8");
+    expect(src).toContain("@@unique([householdId, userId])");
+  });
 });
 
 describe("WateringLog functional unique index (D-03, Pitfall 15)", () => {
