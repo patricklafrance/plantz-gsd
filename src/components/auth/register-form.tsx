@@ -100,7 +100,7 @@ export function RegisterForm() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="absolute right-0 top-0 h-11 w-11"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 h-11 w-11"
                         onClick={() => setShowPassword((prev) => !prev)}
                         aria-label={showPassword ? "Hide password" : "Show password"}
                         disabled={isSubmitting}
@@ -135,7 +135,7 @@ export function RegisterForm() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="absolute right-0 top-0 h-11 w-11"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 h-11 w-11"
                         onClick={() => setShowConfirmPassword((prev) => !prev)}
                         aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                         disabled={isSubmitting}
