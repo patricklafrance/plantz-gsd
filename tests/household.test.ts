@@ -168,8 +168,29 @@ describe("resolveHouseholdBySlug (D-17)", () => {
 // --- JWT/session extension (Plan 03 fills in) ---
 
 describe("JWT activeHouseholdId extension (D-13, D-15)", () => {
-  test.todo("auth.ts jwt callback queries householdMember when user is present");
-  test.todo("auth.ts session callback copies token.activeHouseholdId to session.user.activeHouseholdId");
-  test.todo("src/types/next-auth.d.ts Session.user has activeHouseholdId?: string");
-  test.todo("src/types/next-auth.d.ts JWT has activeHouseholdId?: string | null");
+  test("auth.ts jwt callback queries householdMember when user is present", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("auth.ts", "utf8");
+    // db.householdMember.findFirst must be inside the if (user) block of jwt callback
+    expect(src).toMatch(/if \(user\)[\s\S]*?db\.householdMember\.findFirst/);
+    expect(src).toContain("token.activeHouseholdId");
+  });
+
+  test("auth.ts session callback copies token.activeHouseholdId to session.user.activeHouseholdId", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("auth.ts", "utf8");
+    expect(src).toMatch(/session\.user\.activeHouseholdId\s*=\s*token\.activeHouseholdId/);
+  });
+
+  test("src/types/next-auth.d.ts Session.user has activeHouseholdId?: string", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/types/next-auth.d.ts", "utf8");
+    expect(src).toMatch(/activeHouseholdId\?\s*:\s*string\b/);
+  });
+
+  test("src/types/next-auth.d.ts JWT has activeHouseholdId?: string | null", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/types/next-auth.d.ts", "utf8");
+    expect(src).toMatch(/activeHouseholdId\?\s*:\s*string\s*\|\s*null/);
+  });
 });
