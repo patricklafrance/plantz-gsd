@@ -142,8 +142,10 @@ describe("registerUser transactional household creation (HSLD-01, D-08)", () => 
   test("source creates User, Household, HouseholdMember inside the transaction", async () => {
     const fs = await import("fs");
     const src = fs.readFileSync("src/features/auth/actions.ts", "utf8");
-    // Extract the transaction block
-    const txMatch = src.match(/db\.\$transaction\(\s*async[\s\S]*?\}\);\s*\n/);
+    // Extract the transaction block greedily — stops at the LAST '});' before
+    // the trailing '// 5. Auto-login' comment / signIn call. Non-greedy would
+    // stop at the first inner `});` (e.g. tx.user.create's closing).
+    const txMatch = src.match(/db\.\$transaction\(\s*async[\s\S]*?\}\);\s*\n\s*\n\s*\/\/\s*5\./);
     expect(txMatch).not.toBeNull();
     const txBody = txMatch![0];
     expect(txBody).toContain("tx.user.create");

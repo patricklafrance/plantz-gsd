@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import bcryptjs from "bcryptjs";
 import { registerSchema } from "./schemas";
 import { onboardingSchema } from "./schemas";
+import { generateHouseholdSlug } from "@/lib/slug";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { revalidatePath } from "next/cache";
 
@@ -12,6 +13,7 @@ export async function registerUser(data: {
   email: string;
   password: string;
   confirmPassword: string;
+  timezone?: string;
 }) {
   // 1. Validate input
   const parsed = registerSchema.safeParse(data);
@@ -20,7 +22,7 @@ export async function registerUser(data: {
   }
 
   try {
-    // 2. Check email uniqueness
+    // 2. Check email uniqueness (UX optimization; DB unique constraint is the authority)
     const existingUser = await db.user.findUnique({
       where: { email: parsed.data.email },
     });
@@ -33,17 +35,58 @@ export async function registerUser(data: {
 
     // 3. Hash password with bcryptjs (12 rounds)
     const passwordHash = await bcryptjs.hash(parsed.data.password, 12);
+    const detectedTimezone = parsed.data.timezone ?? "UTC";
 
-    // 4. Create user in database
-    await db.user.create({
-      data: {
-        email: parsed.data.email,
-        passwordHash,
-      },
+    // 4. D-08: transactional User + Household + HouseholdMember creation.
+    // Any failure rolls back ALL three writes (Prisma $transaction guarantee).
+    // Per RESEARCH §Pattern 1, the interactive form is required because
+    // HouseholdMember needs both user.id and household.id.
+    await db.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email: parsed.data.email,
+          passwordHash,
+        },
+      });
+
+      // Slug collision loop (D-10). Statistically near-impossible to collide
+      // with 54^8 ≈ 72 trillion possible slugs, but defend anyway.
+      let slug: string;
+      let attempts = 0;
+      do {
+        slug = generateHouseholdSlug();
+        const existing = await tx.household.findUnique({
+          where: { slug },
+          select: { id: true },
+        });
+        if (!existing) break;
+        if (++attempts > 10) {
+          throw new Error("Slug generation failed after 10 attempts");
+        }
+      } while (true);
+
+      const household = await tx.household.create({
+        data: {
+          name: "My Plants",                 // D-09
+          slug,                              // D-10
+          timezone: detectedTimezone,        // D-12
+          cycleDuration: 7,                  // D-12
+          rotationStrategy: "sequential",    // D-12
+        },
+      });
+
+      await tx.householdMember.create({
+        data: {
+          userId: user.id,
+          householdId: household.id,
+          role: "OWNER",                     // D-08
+          rotationOrder: 0,                  // RESEARCH Open Question §2: declare now
+        },
+      });
     });
 
-    // 5. Auto-login and redirect to dashboard (per D-03)
-    // signIn throws NEXT_REDIRECT on success — this is expected behavior
+    // 5. Auto-login (preserve existing pattern verbatim — signIn throws
+    // NEXT_REDIRECT on success which the catch below MUST re-throw).
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
