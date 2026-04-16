@@ -18,15 +18,15 @@ Users can see at a glance which plants need watering today and log it in one act
 ### Active
 - [ ] Users can add, edit, archive, and delete plants with confirmation
 - [ ] Users can organize plants by room (custom names + common presets)
-- [ ] Users can log watering in one quick action from the dashboard
-- [ ] Users can see due today, overdue, upcoming, and recently watered plants (urgency-first dashboard)
-- [ ] Users can view watering history for each plant
+- [x] Users can log watering in one quick action from the dashboard — Validated in Phase 4: Dashboard and Watering Core Loop
+- [x] Users can see due today, overdue, upcoming, and recently watered plants (urgency-first dashboard) — Validated in Phase 4: Dashboard and Watering Core Loop
+- [x] Users can view watering history for each plant — Validated in Phase 4: Dashboard and Watering Core Loop
 - [x] Users can add timestamped notes and basic health observations — Validated in Phase 5: Notes, Search, and Filters
 - [ ] Users can configure in-app reminder preferences
 - [ ] Users can browse a seeded plant care catalog (~30-50 common houseplants)
 - [ ] Users can view plant detail pages with care info, status, and history
-- [ ] Watering logic uses firm interval countdown with overdue alerts
-- [ ] Next watering date recalculates automatically after logging
+- [x] Watering logic uses firm interval countdown with overdue alerts — Validated in Phase 4: Dashboard and Watering Core Loop
+- [x] Next watering date recalculates automatically after logging — Validated in Phase 4: Dashboard and Watering Core Loop
 - [ ] Guest/demo mode lets visitors explore with pre-loaded sample plants
 - [x] App is responsive and polished on mobile and desktop — Validated in Phase 7: Polish and Accessibility
 - [x] App is accessible (keyboard nav, contrast, screen reader friendly) — Validated in Phase 7: Polish and Accessibility
@@ -95,7 +95,7 @@ Users can see at a glance which plants need watering today and log it in one act
 | Demo mode with seed data | Lets visitors explore before committing to sign up | — Pending |
 | Placeholder icons, no photo upload | Avoids file storage infra; keeps v1 focused on core loop | — Pending |
 | Interval-based watering (firm countdown) | Simpler than confidence-based; clear overdue alerts | — Pending |
-| Urgency-first dashboard | Answers "what needs care now?" immediately | — Pending |
+| Urgency-first dashboard | Answers "what needs care now?" immediately | Validated in Phase 4 |
 | shadcn/ui + Tailwind | Copy-paste components, full control, great DX with Tailwind | — Pending |
 | Minimal onboarding | Low friction — plant count + reminder pref, then first plant | — Pending |
 | Custom rooms + presets | Flexibility with common defaults (Living room, Kitchen, etc.) | — Pending |
@@ -120,4 +120,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after Phase 7 completion — app is responsive, accessible (WCAG AA), and edge-case hardened*
+*Last updated: 2026-04-16 after Phase 4 completion — dashboard and watering core loop verified, one-tap watering operational*
