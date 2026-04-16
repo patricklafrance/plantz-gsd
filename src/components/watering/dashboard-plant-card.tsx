@@ -133,7 +133,7 @@ export function DashboardPlantCard({
           <Leaf className="h-5 w-5 text-accent" />
         </div>
         <div className="flex-1 min-w-0 text-center">
-          <p className="text-base font-semibold truncate break-all">{plant.nickname}</p>
+          <p className="text-base font-semibold truncate">{plant.nickname}</p>
           <p className="text-sm text-muted-foreground truncate">
             {plant.species ?? "Unknown species"}
           </p>
