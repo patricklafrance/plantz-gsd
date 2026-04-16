@@ -133,13 +133,68 @@ describe("WateringLog functional unique index (D-03, Pitfall 15)", () => {
 // --- Signup transaction (Plan 03 fills in) ---
 
 describe("registerUser transactional household creation (HSLD-01, D-08)", () => {
-  test.todo("creates User + Household + HouseholdMember(OWNER) atomically");
-  test.todo("rolls back the user when household creation fails");
-  test.todo("HouseholdMember.role is 'OWNER' for the signing-up user");
-  test.todo("created Household has name 'My Plants' (D-09)");
-  test.todo("created Household has rotationStrategy 'sequential' (D-12)");
-  test.todo("created Household has cycleDuration 7 (D-12)");
-  test.todo("created Household uses passed timezone, falls back to UTC (D-12)");
+  test("source uses db.$transaction interactive form (Pattern 1)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/features/auth/actions.ts", "utf8");
+    expect(src).toMatch(/db\.\$transaction\(\s*async\s*\(\s*tx\s*\)/);
+  });
+
+  test("source creates User, Household, HouseholdMember inside the transaction", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/features/auth/actions.ts", "utf8");
+    // Extract the transaction block
+    const txMatch = src.match(/db\.\$transaction\(\s*async[\s\S]*?\}\);\s*\n/);
+    expect(txMatch).not.toBeNull();
+    const txBody = txMatch![0];
+    expect(txBody).toContain("tx.user.create");
+    expect(txBody).toContain("tx.household.create");
+    expect(txBody).toContain("tx.householdMember.create");
+  });
+
+  test("auto-created household uses name 'My Plants' (D-09)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/features/auth/actions.ts", "utf8");
+    expect(src).toMatch(/name:\s*"My Plants"/);
+  });
+
+  test("auto-created household uses cycleDuration 7 (D-12)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/features/auth/actions.ts", "utf8");
+    expect(src).toMatch(/cycleDuration:\s*7/);
+  });
+
+  test("auto-created household uses rotationStrategy 'sequential' (D-12)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/features/auth/actions.ts", "utf8");
+    expect(src).toMatch(/rotationStrategy:\s*"sequential"/);
+  });
+
+  test("timezone defaults to UTC when not provided (D-12)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/features/auth/actions.ts", "utf8");
+    expect(src).toMatch(/parsed\.data\.timezone\s*\?\?\s*"UTC"/);
+  });
+
+  test("HouseholdMember.role is 'OWNER' for the signing-up user (D-08)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/features/auth/actions.ts", "utf8");
+    expect(src).toMatch(/role:\s*"OWNER"/);
+  });
+
+  test("uses generateHouseholdSlug from @/lib/slug (D-10)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/features/auth/actions.ts", "utf8");
+    expect(src).toContain("generateHouseholdSlug");
+    expect(src).toMatch(/from\s+["']@\/lib\/slug["']/);
+  });
+
+  test("preserves isRedirectError re-throw and signIn call (regression guard)", async () => {
+    const fs = await import("fs");
+    const src = fs.readFileSync("src/features/auth/actions.ts", "utf8");
+    expect(src).toContain("isRedirectError(error)");
+    expect(src).toContain('signIn("credentials"');
+    expect(src).toContain('redirectTo: "/dashboard"');
+  });
 });
 
 // --- requireHouseholdAccess guard (Plan 04 fills in) ---
