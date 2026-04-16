@@ -8,69 +8,126 @@ datasource db {
 }
 
 model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
-  passwordHash  String
-  name          String?
-  createdAt             DateTime      @default(now()) @db.Timestamptz(3)
-  updatedAt             DateTime      @updatedAt @db.Timestamptz(3)
-  onboardingCompleted   Boolean       @default(false)
-  plantCountRange       String?
-  remindersEnabled      Boolean       @default(true)
-  timezone              String?
-  plants        Plant[]
-  rooms         Room[]
-  reminders     Reminder[]
+  id                  String     @id @default(cuid())
+  email               String     @unique
+  passwordHash        String
+  name                String?
+  createdAt           DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime   @updatedAt @db.Timestamptz(3)
+  onboardingCompleted Boolean    @default(false)
+  plantCountRange     String?
+  remindersEnabled    Boolean    @default(true)
+  timezone            String?
+
+  // Existing back-relations (kept for ownership of Reminder which is per-user)
+  reminders           Reminder[]
+
+  // Audit-only back-relations (D-05; SetNull on delete)
+  createdPlants       Plant[]    @relation("PlantCreatedBy")
+  createdRooms        Room[]     @relation("RoomCreatedBy")
+  performedWaterings  WateringLog[] @relation("WateringPerformedBy")
+  performedNotes      Note[]     @relation("NotePerformedBy")
+
+  // Household milestone back-relations
+  memberships         HouseholdMember[]
+  assignedCycles      Cycle[]    @relation("CycleAssignee")
+  availabilityPeriods Availability[]
+  sentInvitations     Invitation[] @relation("InvitedBy")
+  acceptedInvitations Invitation[] @relation("AcceptedBy")
+}
+
+model Household {
+  id               String           @id @default(cuid())
+  name             String
+  slug             String           @unique
+  timezone         String           @default("UTC")
+  cycleDuration    Int              @default(7)
+  rotationStrategy String           @default("sequential")
+  createdAt        DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime         @updatedAt @db.Timestamptz(3)
+
+  members          HouseholdMember[]
+  plants           Plant[]
+  rooms            Room[]
+  cycles           Cycle[]
+  availabilityPeriods Availability[]
+  invitations      Invitation[]
+}
+
+model HouseholdMember {
+  id            String    @id @default(cuid())
+  householdId   String
+  household     Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role          String    @default("MEMBER") // 'OWNER' | 'MEMBER'
+  rotationOrder Int       @default(0)
+  createdAt     DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@unique([householdId, userId])
+  @@index([userId])
 }
 
 model Room {
-  id        String    @id @default(cuid())
-  name      String
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plants    Plant[]
-  createdAt DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt DateTime  @updatedAt @db.Timestamptz(3)
+  id              String   @id @default(cuid())
+  name            String
+  householdId     String
+  household       Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdByUserId String?
+  createdBy       User?    @relation("RoomCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  plants          Plant[]
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([householdId])
 }
 
 model Plant {
-  id               String         @id @default(cuid())
+  id               String        @id @default(cuid())
   nickname         String
   species          String?
   roomId           String?
-  room             Room?          @relation(fields: [roomId], references: [id], onDelete: SetNull)
-  userId           String
-  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room             Room?         @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  householdId      String
+  household        Household     @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdByUserId  String?
+  createdBy        User?         @relation("PlantCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   wateringInterval Int
-  lastWateredAt    DateTime?      @db.Timestamptz(3)
-  nextWateringAt   DateTime?      @db.Timestamptz(3)
-  archivedAt       DateTime?      @db.Timestamptz(3)
+  lastWateredAt    DateTime?     @db.Timestamptz(3)
+  nextWateringAt   DateTime?     @db.Timestamptz(3)
+  archivedAt       DateTime?     @db.Timestamptz(3)
   careProfileId    String?
-  careProfile      CareProfile?   @relation(fields: [careProfileId], references: [id])
+  careProfile      CareProfile?  @relation(fields: [careProfileId], references: [id])
   wateringLogs     WateringLog[]
   healthLogs       HealthLog[]
   notes            Note[]
   reminders        Reminder[]
-  createdAt        DateTime       @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime       @updatedAt @db.Timestamptz(3)
+  createdAt        DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime      @updatedAt @db.Timestamptz(3)
+
+  @@index([householdId, archivedAt])
 }
 
 model WateringLog {
-  id        String   @id @default(cuid())
-  plantId   String
-  plant     Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
-  wateredAt DateTime @db.Timestamptz(3)
-  note      String?
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  id                String   @id @default(cuid())
+  plantId           String
+  plant             Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  wateredAt         DateTime @db.Timestamptz(3)
+  note              String?
+  performedByUserId String?
+  performedBy       User?    @relation("WateringPerformedBy", fields: [performedByUserId], references: [id], onDelete: SetNull)
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
 }
 
 model Note {
-  id        String   @id @default(cuid())
-  plantId   String
-  plant     Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
-  content   String
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  id                String   @id @default(cuid())
+  plantId           String
+  plant             Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  content           String
+  performedByUserId String?
+  performedBy       User?    @relation("NotePerformedBy", fields: [performedByUserId], references: [id], onDelete: SetNull)
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(3)
 
   @@index([plantId])
 }
@@ -108,4 +165,57 @@ model Reminder {
   updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
 
   @@unique([plantId, userId])
+}
+
+model Cycle {
+  id                  String    @id @default(cuid())
+  householdId         String
+  household           Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  cycleNumber         Int
+  anchorDate          DateTime  @db.Timestamptz(3)
+  cycleDuration       Int
+  startDate           DateTime  @db.Timestamptz(3)
+  endDate             DateTime  @db.Timestamptz(3)
+  status              String    @default("active") // 'active' | 'skipped' | 'paused' | 'completed'
+  assignedUserId      String?
+  assignedUser        User?     @relation("CycleAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  memberOrderSnapshot Json
+  createdAt           DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@unique([householdId, cycleNumber])
+  @@index([householdId, status])
+}
+
+model Availability {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  startDate   DateTime  @db.Timestamptz(3)
+  endDate     DateTime  @db.Timestamptz(3)
+  reason      String?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@index([userId, startDate, endDate])
+  @@index([householdId])
+}
+
+model Invitation {
+  id                String    @id @default(cuid())
+  householdId       String
+  household         Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  tokenHash         String    @unique
+  invitedByUserId   String?
+  invitedBy         User?     @relation("InvitedBy", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+  invitedEmail      String?
+  revokedAt         DateTime? @db.Timestamptz(3)
+  acceptedAt        DateTime? @db.Timestamptz(3)
+  acceptedByUserId  String?
+  acceptedBy        User?     @relation("AcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@index([householdId])
 }
