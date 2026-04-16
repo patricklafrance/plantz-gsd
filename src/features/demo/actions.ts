@@ -86,11 +86,20 @@ export async function startDemoSession() {
 /**
  * Seeds the current user's collection with common starter plants from the CareProfile catalog.
  * Called during onboarding (DEMO-03). Rejects demo users.
+ * @param plantCountRange - Optional range string from onboarding (e.g. "30+ plants")
  */
-export async function seedStarterPlants() {
+export async function seedStarterPlants(plantCountRange?: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
   if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
+
+  const TARGET_COUNTS: Record<string, number> = {
+    "1-5 plants": 5,
+    "6-15 plants": 10,
+    "16-30 plants": 20,
+    "30+ plants": 35,
+  };
+  const targetCount = TARGET_COUNTS[plantCountRange ?? "1-5 plants"] ?? 5;
 
   const { addDays } = await import("date-fns");
   const now = new Date();
@@ -100,9 +109,23 @@ export async function seedStarterPlants() {
     where: { name: { in: [...STARTER_PLANTS] } },
   });
 
+  // If targetCount exceeds the base STARTER_PLANTS set, fetch additional profiles
+  let allProfiles = [...careProfiles];
+
+  if (targetCount > allProfiles.length) {
+    const additionalNeeded = targetCount - allProfiles.length;
+    const existingNames = allProfiles.map((p) => p.name);
+    const additionalProfiles = await db.careProfile.findMany({
+      where: { name: { notIn: existingNames } },
+      take: additionalNeeded,
+      orderBy: { name: "asc" },
+    });
+    allProfiles = [...allProfiles, ...additionalProfiles];
+  }
+
   const createdPlants: string[] = [];
 
-  for (const profile of careProfiles) {
+  for (const profile of allProfiles) {
     const nextWateringAt = addDays(now, profile.wateringInterval);
 
     const plant = await db.plant.create({

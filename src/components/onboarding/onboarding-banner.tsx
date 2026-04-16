@@ -42,7 +42,7 @@ export function OnboardingBanner({ userId }: OnboardingBannerProps) {
     // Fire both actions concurrently
     const [onboardingResult] = await Promise.all([
       completeOnboarding({ plantCountRange: range }),
-      seedStarters ? seedStarterPlants() : Promise.resolve(null),
+      seedStarters ? seedStarterPlants(range) : Promise.resolve(null),
     ]);
 
     setIsCompleting(false);
