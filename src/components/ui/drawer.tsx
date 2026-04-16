@@ -50,7 +50,7 @@ function DrawerContent({
       <DrawerPrimitive.Popup
         data-slot="drawer-content"
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-50 flex max-h-[90vh] flex-col overflow-y-auto rounded-t-xl bg-popover p-4 pb-[env(safe-area-inset-bottom)] text-sm text-popover-foreground ring-1 ring-foreground/10 outline-none",
+          "fixed bottom-0 left-0 right-0 z-50 flex max-h-[90vh] flex-col overflow-y-auto rounded-t-xl bg-popover p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] text-sm text-popover-foreground ring-1 ring-foreground/10 outline-none",
           className
         )}
         {...props}
