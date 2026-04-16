@@ -152,6 +152,6 @@ Plans:
 - [x] 07-05-PLAN.md — Gap closure: loading skeleton pages, focus-visible rings on BottomTabBar/FilterChips, WCAG contrast audit docs
 - [x] 07-06-PLAN.md — UAT gap closure: drawer button safe-area padding, focus-after-navigation MutationObserver fix, timezone warning DB-backed comparison
 - [x] 07-07-PLAN.md — Human testing gap closure: password toggle centering, watering flicker fix, seed count range, long name overflow
-- [ ] 07-08-PLAN.md — UAT gap closure: remove dead break-all CSS, fix card height consistency for long nicknames
+- [x] 07-08-PLAN.md — UAT gap closure: remove dead break-all CSS, fix card height consistency for long nicknames
 </content>
 </invoke>

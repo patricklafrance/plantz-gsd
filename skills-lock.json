@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "resend": {
+      "source": "resend/resend-skills",
+      "sourceType": "github",
+      "computedHash": "f5129ed02c71605544822d42a8c71c9ea1214fd42eb7342c8f1ed8fc36d301f4"
+    },
     "vercel-cli": {
       "source": "vercel/vercel",
       "sourceType": "github",
