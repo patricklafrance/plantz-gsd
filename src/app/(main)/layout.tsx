@@ -96,7 +96,7 @@ export default async function MainLayout({
       <main id="main-content" className="mx-auto max-w-5xl px-4 py-6 pb-20 sm:pb-6">
         {children}
       </main>
-      <BottomTabBar notificationCount={reminderCount} />
+      <BottomTabBar notificationCount={reminderCount} reminderItems={reminderItems} />
     </div>
   );
 }
