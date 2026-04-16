@@ -36,7 +36,7 @@ export function BottomTabBar({ notificationCount }: BottomTabBarProps) {
               href={href === "/notifications" ? "/dashboard" : href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex flex-1 flex-col items-center justify-center gap-0.5 text-xs min-h-[44px]",
+                "flex flex-1 flex-col items-center justify-center gap-0.5 text-xs min-h-[44px] rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-1",
                 isActive ? "text-accent" : "text-muted-foreground"
               )}
             >

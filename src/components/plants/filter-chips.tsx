@@ -48,7 +48,7 @@ function Chip({
       <DropdownMenuTrigger
         render={
           <button
-            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors min-h-[44px] ${
+            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 ${
               active
                 ? "border-accent/40 bg-accent/10 text-accent"
                 : "border-border bg-background text-muted-foreground hover:bg-muted"
