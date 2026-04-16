@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Droplets, MoreHorizontal } from "lucide-react";
+import { Pencil, Droplets, MoreHorizontal, Loader2 } from "lucide-react";
 import {
   format,
   formatDistanceToNow,
@@ -30,6 +30,8 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { updateNote, deleteNote } from "@/features/notes/actions";
+import { deleteWateringLog } from "@/features/watering/actions";
+import { LogWateringDialog } from "@/components/watering/log-watering-dialog";
 import type { TimelineEntry } from "@/types/timeline";
 
 interface TimelineEntryProps {
@@ -58,6 +60,7 @@ function TimelineEntryComponent({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [editWateringOpen, setEditWateringOpen] = useState(false);
 
   async function handleSave() {
     if (entry.type !== "note") return;
@@ -84,19 +87,24 @@ function TimelineEntryComponent({
   }
 
   async function handleDelete() {
-    if (entry.type !== "note") return;
-
     setIsDeleting(true);
-    const result = await deleteNote({ noteId: entry.id });
+    const result =
+      entry.type === "note"
+        ? await deleteNote({ noteId: entry.id })
+        : await deleteWateringLog(entry.id);
     setIsDeleting(false);
 
     if ("error" in result) {
-      toast.error("Couldn't delete note. Try again.");
+      toast.error(
+        entry.type === "note"
+          ? "Couldn't delete note. Try again."
+          : result.error
+      );
       setDeleteOpen(false);
       return;
     }
 
-    toast("Note deleted.");
+    toast(entry.type === "note" ? "Note deleted." : "Watering log deleted.");
     setDeleteOpen(false);
     onMutated?.();
   }
@@ -104,31 +112,101 @@ function TimelineEntryComponent({
   if (entry.type === "watering") {
     const wateredAt = new Date(entry.data.wateredAt);
     return (
-      <div className="flex items-start gap-2 py-2 min-h-[44px]">
-        {/* Icon */}
-        <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
-          <Droplets className="h-4 w-4 text-blue-500" />
+      <>
+        <div className="flex items-start gap-2 py-2 min-h-[44px]">
+          {/* Icon */}
+          <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+            <Droplets className="h-4 w-4 text-blue-500" />
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-medium">
+              {format(wateredAt, "MMMM d, yyyy")}
+            </span>
+            <div>
+              <time
+                dateTime={wateredAt.toISOString()}
+                title={format(wateredAt, "MMMM d, yyyy")}
+                className="text-xs text-muted-foreground"
+              >
+                {formatRelativeTime(wateredAt)}
+              </time>
+            </div>
+            {entry.data.note && (
+              <p className="text-sm text-muted-foreground">{entry.data.note}</p>
+            )}
+          </div>
+
+          {/* Kebab menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  aria-label="Watering log options"
+                />
+              }
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setEditWateringOpen(true)}>
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <span className="text-sm font-medium">
-            {format(wateredAt, "MMMM d, yyyy")}
-          </span>
-          <div>
-            <time
-              dateTime={wateredAt.toISOString()}
-              title={format(wateredAt, "MMMM d, yyyy")}
-              className="text-xs text-muted-foreground"
-            >
-              {formatRelativeTime(wateredAt)}
-            </time>
-          </div>
-          {entry.data.note && (
-            <p className="text-sm text-muted-foreground">{entry.data.note}</p>
-          )}
-        </div>
-      </div>
+        {/* Edit dialog */}
+        <LogWateringDialog
+          plantId={entry.data.plantId}
+          plantNickname={plantNickname}
+          editLog={{
+            id: entry.id,
+            wateredAt,
+            note: entry.data.note,
+          }}
+          open={editWateringOpen}
+          onOpenChange={setEditWateringOpen}
+          onEdited={onMutated}
+        />
+
+        {/* Delete confirmation */}
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete watering log?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will remove the log from {plantNickname}&apos;s history and
+                recalculate the next watering date.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel variant="ghost">Keep log</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting && (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                )}
+                Delete log
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
     );
   }
 
