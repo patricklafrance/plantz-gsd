@@ -9,6 +9,7 @@ import { Pencil } from "lucide-react";
 import {
   ResponsiveDialog as Dialog,
   ResponsiveDialogContent as DialogContent,
+  ResponsiveDialogFooter as DialogFooter,
   ResponsiveDialogHeader as DialogHeader,
   ResponsiveDialogTitle as DialogTitle,
   ResponsiveDialogTrigger as DialogTrigger,
@@ -211,14 +212,14 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
             )}
 
             {/* Footer actions */}
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
+            <DialogFooter className="flex-row justify-end gap-2">
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => handleOpenChange(false)}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Cancel
-              </button>
+              </Button>
               <Button
                 type="submit"
                 disabled={form.formState.isSubmitting}
@@ -226,7 +227,7 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
               >
                 Save changes
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </Form>
       </DialogContent>
