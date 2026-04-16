@@ -19,6 +19,16 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           select: { email: true },
         });
         token.isDemo = dbUser?.email === DEMO_EMAIL;
+        // D-13: Resolve activeHouseholdId at sign-in only.
+        // Per Pitfall 4, this query MUST stay inside `if (user)` so it runs once per
+        // sign-in, not on every request. Per D-14 the value is a landing-target hint
+        // only — Plan 04's requireHouseholdAccess() guard is the authorization source.
+        const membership = await db.householdMember.findFirst({
+          where: { userId: user.id },
+          select: { householdId: true },
+          orderBy: { createdAt: "asc" },
+        });
+        token.activeHouseholdId = membership?.householdId ?? null;
       }
       return token;
     },
@@ -26,6 +36,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (token.id) {
         session.user.id = token.id as string;
         session.user.isDemo = token.isDemo === true;
+        session.user.activeHouseholdId = token.activeHouseholdId as string | undefined;
       }
       return session;
     },
