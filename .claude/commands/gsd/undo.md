@@ -20,9 +20,9 @@ Three modes:
 </objective>
 
 <execution_context>
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/undo.md
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/references/ui-brand.md
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/references/gate-prompts.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/undo.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/references/ui-brand.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/references/gate-prompts.md
 </execution_context>
 
 <context>
@@ -30,5 +30,5 @@ $ARGUMENTS
 </context>
 
 <process>
-Execute the undo workflow from @c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/undo.md end-to-end.
+Execute the undo workflow from @C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/undo.md end-to-end.
 </process>

@@ -19,7 +19,7 @@ Output: MILESTONE_SUMMARY written to `.planning/reports/`, presented inline, opt
 </objective>
 
 <execution_context>
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/milestone-summary.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/milestone-summary.md
 </execution_context>
 
 <context>
@@ -37,7 +37,7 @@ Output: MILESTONE_SUMMARY written to `.planning/reports/`, presented inline, opt
 </context>
 
 <process>
-Read and execute the milestone-summary workflow from @c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/milestone-summary.md end-to-end.
+Read and execute the milestone-summary workflow from @C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/milestone-summary.md end-to-end.
 </process>
 
 <success_criteria>

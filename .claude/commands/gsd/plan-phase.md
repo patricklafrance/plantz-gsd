@@ -1,7 +1,7 @@
 ---
 name: gsd:plan-phase
 description: Create detailed phase plan (PLAN.md) with verification loop
-argument-hint: "[phase] [--auto] [--research] [--skip-research] [--gaps] [--skip-verify] [--prd <file>] [--reviews] [--text]"
+argument-hint: "[phase] [--auto] [--research] [--skip-research] [--gaps] [--skip-verify] [--prd <file>] [--reviews] [--text] [--tdd]"
 agent: gsd-planner
 allowed-tools:
   - Read
@@ -23,8 +23,8 @@ Create executable phase prompts (PLAN.md files) for a roadmap phase with integra
 </objective>
 
 <execution_context>
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/plan-phase.md
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/references/ui-brand.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/plan-phase.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <runtime_note>
@@ -47,6 +47,6 @@ Normalize phase input in step 2 before any directory lookups.
 </context>
 
 <process>
-Execute the plan-phase workflow from @c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/plan-phase.md end-to-end.
+Execute the plan-phase workflow from @C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/plan-phase.md end-to-end.
 Preserve all workflow gates (validation, research, planning, verification loop, routing).
 </process>

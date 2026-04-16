@@ -17,9 +17,9 @@ changes that are irrelevant to code review.
 </objective>
 
 <execution_context>
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/pr-branch.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/pr-branch.md
 </execution_context>
 
 <process>
-Execute the pr-branch workflow from @c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/pr-branch.md end-to-end.
+Execute the pr-branch workflow from @C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/pr-branch.md end-to-end.
 </process>

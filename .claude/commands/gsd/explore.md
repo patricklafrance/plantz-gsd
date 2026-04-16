@@ -19,9 +19,9 @@ Accepts an optional topic argument: `/gsd-explore authentication strategy`
 </objective>
 
 <execution_context>
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/explore.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/explore.md
 </execution_context>
 
 <process>
-Execute the explore workflow from @c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/explore.md end-to-end.
+Execute the explore workflow from @C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/explore.md end-to-end.
 </process>

@@ -20,8 +20,8 @@ Flow: Validate → Research UI → Verify UI-SPEC → Done
 </objective>
 
 <execution_context>
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/ui-phase.md
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/references/ui-brand.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/ui-phase.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/references/ui-brand.md
 </execution_context>
 
 <context>
@@ -29,6 +29,6 @@ Phase number: $ARGUMENTS — optional, auto-detects next unplanned phase if omit
 </context>
 
 <process>
-Execute @c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/ui-phase.md end-to-end.
+Execute @C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/ui-phase.md end-to-end.
 Preserve all workflow gates.
 </process>

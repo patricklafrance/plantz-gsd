@@ -25,9 +25,9 @@ Flags:
 </objective>
 
 <execution_context>
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/audit-fix.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/audit-fix.md
 </execution_context>
 
 <process>
-Execute the audit-fix workflow from @c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/audit-fix.md end-to-end.
+Execute the audit-fix workflow from @C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/audit-fix.md end-to-end.
 </process>

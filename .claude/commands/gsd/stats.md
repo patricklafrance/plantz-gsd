@@ -10,9 +10,9 @@ Display comprehensive project statistics including phase progress, plan executio
 </objective>
 
 <execution_context>
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/stats.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/stats.md
 </execution_context>
 
 <process>
-Execute the stats workflow from @c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/stats.md end-to-end.
+Execute the stats workflow from @C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/stats.md end-to-end.
 </process>

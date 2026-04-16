@@ -22,7 +22,7 @@ Output: updated SECURITY.md.
 </objective>
 
 <execution_context>
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/secure-phase.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/secure-phase.md
 </execution_context>
 
 <context>
@@ -30,6 +30,6 @@ Phase: $ARGUMENTS — optional, defaults to last completed phase.
 </context>
 
 <process>
-Execute @c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/secure-phase.md.
+Execute @C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/secure-phase.md.
 Preserve all workflow gates.
 </process>

@@ -20,7 +20,7 @@ Output: .planning/codebase/ folder with 7 structured documents about the codebas
 </objective>
 
 <execution_context>
-@c:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/map-codebase.md
+@C:/Dev/poc/plantz-gsd/.claude/get-shit-done/workflows/map-codebase.md
 </execution_context>
 
 <context>
