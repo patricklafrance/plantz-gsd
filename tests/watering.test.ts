@@ -352,6 +352,20 @@ describe("classifyAndSort", () => {
     expect(est15Result.overdue).toHaveLength(1);
     expect(est15Result.overdue[0].daysUntil).toBeLessThan(0);
   });
+
+  test("upcoming plant watered within 48h is classified as recentlyWatered", async () => {
+    const { classifyAndSort } = await import("@/features/watering/queries");
+    const plant = mockPlant({
+      id: "p-recent-upcoming",
+      lastWateredAt: todayStart, // watered today (within 48h)
+      nextWateringAt: addDays(todayStart, 5), // next in 5 days (would be "upcoming")
+    });
+
+    const result = classifyAndSort([plant as never], todayStart, todayEnd);
+    expect(result.recentlyWatered).toHaveLength(1);
+    expect(result.upcoming).toHaveLength(0);
+    expect(result.recentlyWatered[0].urgency).toBe("recentlyWatered");
+  });
 });
 
 // ============================================================
@@ -476,6 +490,43 @@ describe("Server Actions", () => {
       expect(result).toHaveProperty("success", true);
       expect((result as { nextWateringAt: Date }).nextWateringAt.getTime()).toBe(
         expectedNext.getTime()
+      );
+    });
+
+    test("retroactive log does not change nextWateringAt when a newer log exists", async () => {
+      const yesterday = subDays(new Date(), 1);
+      const threeDaysAgo = subDays(new Date(), 3);
+
+      authMock.mockResolvedValue({ user: { id: "u1" } });
+      db.plant.findFirst.mockResolvedValue({
+        id: "p1",
+        userId: "u1",
+        wateringInterval: 7,
+        nickname: "Monstera",
+      });
+      // Duplicate check: no duplicate for 3 days ago
+      // Most recent log query: returns yesterday's log (newer than the retroactive one)
+      db.wateringLog.findFirst
+        .mockResolvedValueOnce(null) // duplicate check
+        .mockResolvedValueOnce({ id: "wl-existing", plantId: "p1", wateredAt: yesterday }); // most recent
+      db.wateringLog.create.mockResolvedValue({ id: "wl-new" });
+      db.plant.update.mockResolvedValue({});
+
+      const { logWatering } = await import("@/features/watering/actions");
+      const result = await logWatering({
+        plantId: "p1",
+        wateredAt: threeDaysAgo.toISOString(),
+      });
+
+      expect(result).toHaveProperty("success", true);
+      // nextWateringAt should be based on yesterday (the most recent log), NOT threeDaysAgo
+      expect(db.plant.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            lastWateredAt: yesterday,
+            nextWateringAt: addDays(yesterday, 7),
+          }),
+        })
       );
     });
   });
