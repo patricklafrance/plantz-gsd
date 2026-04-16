@@ -9,8 +9,11 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-beforeEach(() => {
+beforeEach(async () => {
   vi.clearAllMocks();
+  // getPlants now uses Promise.all([findMany, count]) for pagination
+  const { db } = await import("@/lib/db");
+  vi.mocked(db.plant.count).mockResolvedValue(0);
 });
 
 describe("getPlants with search", () => {
@@ -191,7 +194,7 @@ describe("getPlants with sort", () => {
     );
   });
 
-  test("default sort is nextWateringAt ascending (SRCH-03)", async () => {
+  test("default sort is nickname ascending (SRCH-03)", async () => {
     const { db } = await import("@/lib/db");
     const { getPlants } = await import("@/features/plants/queries");
 
@@ -201,7 +204,7 @@ describe("getPlants with sort", () => {
 
     expect(db.plant.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        orderBy: { nextWateringAt: "asc" },
+        orderBy: { nickname: "asc" },
       })
     );
   });

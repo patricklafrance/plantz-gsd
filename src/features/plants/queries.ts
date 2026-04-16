@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
 
+export const PAGE_SIZE = 20;
+
 export async function getPlants(
   userId: string,
   options: {
@@ -9,9 +11,10 @@ export async function getPlants(
     sort?: "next-watering" | "name" | "recently-added";
     todayStart?: Date;
     todayEnd?: Date;
+    page?: number;
   } = {}
 ) {
-  const { roomId, search, status, sort, todayStart, todayEnd } = options;
+  const { roomId, search, status, sort, todayStart, todayEnd, page = 1 } = options;
 
   // Archival visibility (default: exclude archived; status=archived: show only archived)
   const archivedFilter =
@@ -39,24 +42,40 @@ export async function getPlants(
         ? { createdAt: "desc" as const }
         : { nickname: "asc" as const };
 
-  return db.plant.findMany({
-    where: {
-      userId,
-      ...archivedFilter,
-      ...(roomId ? { roomId } : {}),
-      ...(search
-        ? {
-            OR: [
-              { nickname: { contains: search, mode: "insensitive" as const } },
-              { species: { contains: search, mode: "insensitive" as const } },
-            ],
-          }
-        : {}),
-      ...statusFilter,
-    },
-    include: { room: true, careProfile: true },
-    orderBy,
-  });
+  const where = {
+    userId,
+    ...archivedFilter,
+    ...(roomId ? { roomId } : {}),
+    ...(search
+      ? {
+          OR: [
+            { nickname: { contains: search, mode: "insensitive" as const } },
+            { species: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+    ...statusFilter,
+  };
+
+  const skip = (page - 1) * PAGE_SIZE;
+
+  const [plants, totalCount] = await Promise.all([
+    db.plant.findMany({
+      where,
+      include: { room: true, careProfile: true },
+      orderBy,
+      skip,
+      take: PAGE_SIZE,
+    }),
+    db.plant.count({ where }),
+  ]);
+
+  return {
+    plants,
+    totalCount,
+    totalPages: Math.ceil(totalCount / PAGE_SIZE),
+    currentPage: page,
+  };
 }
 
 export async function getPlant(plantId: string, userId: string) {

@@ -9,6 +9,7 @@ import { PlantGrid } from "@/components/plants/plant-grid";
 import { AddPlantDialog } from "@/components/plants/add-plant-dialog";
 import { SearchBar } from "@/components/plants/search-bar";
 import { FilterChips } from "@/components/plants/filter-chips";
+import { Pagination } from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
 import { Leaf, Search as SearchIcon } from "lucide-react";
 
@@ -20,6 +21,7 @@ export default async function PlantsPage({
     search?: string;
     status?: "overdue" | "due-today" | "upcoming" | "archived";
     sort?: "next-watering" | "name" | "recently-added";
+    page?: string;
   }>;
 }) {
   const session = await auth();
@@ -35,8 +37,9 @@ export default async function PlantsPage({
   const todayEnd = new Date(Date.UTC(year, month - 1, day + 1));
 
   const params = await searchParams;
+  const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
 
-  const [plants, catalog, rooms, totalPlantCount] = await Promise.all([
+  const [plantsResult, catalog, rooms, totalPlantCount] = await Promise.all([
     getPlants(session.user.id, {
       roomId: params.room,
       search: params.search,
@@ -44,11 +47,25 @@ export default async function PlantsPage({
       sort: params.sort,
       todayStart,
       todayEnd,
+      page: currentPage,
     }),
     getCatalog(),
     getRoomsForSelect(session.user.id),
     db.plant.count({ where: { userId: session.user.id, archivedAt: null } }),
   ]);
+
+  // Redirect to page 1 if requested page is out of range
+  if (currentPage > plantsResult.totalPages && plantsResult.totalPages > 0) {
+    const redirectParams = new URLSearchParams();
+    if (params.room) redirectParams.set("room", params.room);
+    if (params.search) redirectParams.set("search", params.search);
+    if (params.status) redirectParams.set("status", params.status);
+    if (params.sort) redirectParams.set("sort", params.sort);
+    const qs = redirectParams.toString();
+    redirect(qs ? `/plants?${qs}` : "/plants");
+  }
+
+  const { plants, totalPages, currentPage: page } = plantsResult;
 
   const hasActiveFilters = !!(params.search || params.status || params.room);
   const activeRoom = params.room
@@ -98,7 +115,20 @@ export default async function PlantsPage({
           />
         )
       ) : (
-        <PlantGrid plants={plants} />
+        <>
+          <PlantGrid plants={plants} />
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            basePath="/plants"
+            searchParams={{
+              room: params.room,
+              search: params.search,
+              status: params.status,
+              sort: params.sort,
+            }}
+          />
+        </>
       )}
     </div>
   );
