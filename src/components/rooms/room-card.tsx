@@ -79,6 +79,7 @@ export function RoomCard({ room }: RoomCardProps) {
             variant="ghost"
             size="icon-sm"
             aria-label={`Edit ${room.name}`}
+            className="min-h-[44px] min-w-[44px]"
             onClick={(e) => {
               e.preventDefault();
               setEditOpen(true);
@@ -94,7 +95,7 @@ export function RoomCard({ room }: RoomCardProps) {
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Delete ${room.name}`}
-                  className="text-destructive hover:bg-destructive/10"
+                  className="text-destructive hover:bg-destructive/10 min-h-[44px] min-w-[44px]"
                 />
               }
             >

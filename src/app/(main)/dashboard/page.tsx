@@ -20,7 +20,7 @@ function DashboardSkeleton() {
       {[1, 2].map((section) => (
         <div key={section} className="space-y-2">
           <Skeleton className="h-5 w-24" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex items-center gap-4 p-4">
                 <Skeleton className="h-10 w-10 rounded-md" />

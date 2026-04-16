@@ -102,7 +102,7 @@ function InlineSnoozePills({ plantId, isDemo }: { plantId: string; isDemo?: bool
           type="button"
           onClick={(e) => handleSnooze(e, days, msg)}
           disabled={isPending}
-          className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground bg-muted/60 hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
+          className="rounded-md px-3 py-1.5 text-xs font-medium text-muted-foreground bg-muted/60 hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50 min-h-[44px]"
         >
           {label}
         </button>
