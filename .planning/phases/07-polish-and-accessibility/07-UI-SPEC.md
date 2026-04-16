@@ -52,7 +52,7 @@ Declared values (multiples of 4 only):
 | Bottom tab bar tab hit area | 44px minimum | Each tab item must meet 44px touch target |
 | Main content bottom padding (mobile) | 64px (pb-16) | Prevents content hiding behind fixed bottom tab bar |
 | iOS safe-area padding | env(safe-area-inset-bottom) | Bottom tab bar on iPhone with home bar |
-| Focus ring offset | 2px | Matches shadcn/ui `ring-ring/50` focus-visible pattern |
+| Focus ring offset | 4px (ring-offset-1) | Tight professional offset; multiple of 4; matches shadcn/ui `ring-ring/50` focus-visible pattern |
 
 *Source: D-03 (touch targets), D-01 (bottom tab bar), 07-RESEARCH.md Pattern 2*
 
@@ -65,7 +65,7 @@ Existing project font is Geist via `--font-sans`. Sizes and weights are pre-popu
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | Display | 28px (text-2xl) | 600 (semibold) | 1.2 | Page `<h1>` — one per page, must have `tabIndex={-1}` |
-| Heading | 20px (text-xl) | 600 (semibold) | 1.2 | Section `<h2>` — urgency sections, dialog titles |
+| Heading | 20px (text-xl) | 600 (semibold) | 1.2 | Section `<h2>` — urgency sections, dialog titles, empty state headings |
 | Body | 16px (text-base) | 400 (regular) | 1.5 | Primary content, form labels, card text |
 | Label | 14px (text-sm) | 400 (regular) | 1.5 | Supporting text, metadata, timestamps, badge labels |
 
@@ -73,7 +73,7 @@ Existing project font is Geist via `--font-sans`. Sizes and weights are pre-popu
 
 **Heading hierarchy rule (D-11):** Each page has exactly one `<h1>`. Sections use `<h2>`. Subsections use `<h3>`. No skipped levels. The `<h1>` must include `tabIndex={-1}` to support programmatic focus after client-side navigation (D-12).
 
-**Empty state heading distinction (from 07-RESEARCH.md Pitfall 4):** Empty state headings are `<h2>` elements. Use `text-lg font-semibold` (18px/600) — NOT `text-xl font-semibold` — to create visual distinction from the page `<h1>`.
+**Empty state headings:** Empty state headings are `<h2>` elements styled `text-xl font-semibold` (20px/600). Visual distinction from the page `<h1>` is achieved through layout context (indented within the content area, below the page title) — not through an intermediate font size. Using the same Heading size (20px) is intentional and keeps the type scale at 4 sizes.
 
 *Source: shadcn base-nova preset defaults, 07-RESEARCH.md Pattern 5*
 
@@ -102,6 +102,8 @@ All values are OKLCH from `src/app/globals.css`. The design system uses semantic
 - Overdue status (uses `--destructive`)
 - General links (use `--foreground` or `--muted-foreground`)
 - Upcoming / recently-watered badges (use `--muted` / `--outline`)
+
+**Primary visual anchor:** The urgency section listing overdue and due-today plants is the primary visual anchor — it sits at the top of the main content area above all other sections. Its accent and destructive badge colors draw the eye immediately on load.
 
 **Status indicator color + icon map (D-07 — no color-only status):**
 
@@ -142,7 +144,7 @@ All interactive elements must meet 44x44px minimum hit area. Visual size may be 
 |---------|---------|-------------|
 | `Button size="default"` | h-8 (32px) | Add `min-h-[44px]` on mobile-critical CTAs, or use `-my-1.5 py-1.5` |
 | `Button size="icon"` | size-8 (32px) | Add `-m-1.5 p-1.5` to expand hit area |
-| `Button size="icon-sm"` | size-7 (28px) | Add `-m-[10px] p-[10px]` to reach 44px |
+| `Button size="icon-sm"` | size-7 (28px) | Add `-m-2 p-2` to reach 44px (28px + 8px×2 = 44px, meeting WCAG 2.5.5 minimum) |
 | Filter chip pills | h-7 (28px) | Add `-my-2 py-2` expansion |
 | Snooze pills (1d, 2d, 1w) | ~28px | Add `-my-2 py-2` expansion |
 | UserMenu trigger | h-8 w-8 (32px) | Add `p-1.5` inside trigger |
@@ -288,7 +290,7 @@ Display remaining character count when the user is within 20 characters of the l
 
 ### Empty States
 
-Each empty state provides an icon, a heading, a one-sentence body, and an action. Heading uses `<h2>` at 18px/600.
+Each empty state provides an icon, a heading, a one-sentence body, and an action. Heading is `<h2>` at `text-xl font-semibold` (20px/600).
 
 | Location | Icon | Heading | Body | Action |
 |----------|------|---------|------|--------|
