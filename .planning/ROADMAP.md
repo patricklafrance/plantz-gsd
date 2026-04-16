@@ -141,14 +141,15 @@ Plans:
   2. App passes WCAG AA contrast checks and full keyboard navigation is possible throughout; all forms have proper labels and status is conveyed beyond color alone
   3. Screen reader users can navigate all major flows without encountering unlabeled interactive elements
   4. Empty states (no plants, no history, no rooms, no search results) show helpful guidance rather than blank screens
-**Plans:** 4 plans
+**Plans:** 5 plans
 **UI hint**: yes
 
 Plans:
 - [ ] 07-01-PLAN.md — Mobile navigation (bottom tab bar, skip link), responsive card grids, touch target audit
-- [ ] 07-02-PLAN.md — Responsive dialogs (Drawer primitive, ResponsiveDialog wrapper, dialog-to-sheet on mobile)
-- [ ] 07-03-PLAN.md — Accessibility: focus-after-navigation, heading hierarchy, landmark roles, status badge icons, contrast audit, watering retry toast
-- [ ] 07-04-PLAN.md — Edge case hardening: server-side pagination, character limits, shared EmptyState component, timezone warning
+- [x] 07-02-PLAN.md — Responsive dialogs (Drawer primitive, ResponsiveDialog wrapper, dialog-to-sheet on mobile)
+- [x] 07-03-PLAN.md — Accessibility: focus-after-navigation, heading hierarchy, landmark roles, status badge icons, contrast audit, watering retry toast
+- [x] 07-04-PLAN.md — Edge case hardening: server-side pagination, character limits, shared EmptyState component, timezone warning
+- [ ] 07-05-PLAN.md — Gap closure: loading skeleton pages, focus-visible rings on BottomTabBar/FilterChips, WCAG contrast audit docs
 
 ## Progress
 
@@ -163,4 +164,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. Dashboard and Watering Core Loop | 0/3 | Planning complete | - |
 | 5. Notes, Search, and Filters | 0/3 | Planning complete | - |
 | 6. Reminders and Demo Mode | 0/4 | Planning complete | - |
-| 7. Polish and Accessibility | 0/4 | Planning complete | - |
+| 7. Polish and Accessibility | 0/5 | Planning complete | - |
