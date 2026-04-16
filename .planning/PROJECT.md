@@ -8,6 +8,30 @@ A responsive web app that helps indoor plant owners track their houseplants, kno
 
 Users can see at a glance which plants need watering today and log it in one action — eliminating guesswork and overwatering.
 
+## Current Milestone: Household and Rotation
+
+**Version:** `household` (workstream: `household`)
+
+**Goal:** Enable multiple people to share plant care within one or more households, with rotation-based responsibility, availability-aware assignment, and in-app notifications scoped to the current assignee.
+
+**Target features:**
+
+- **Multi-household model** — user can belong to 1..N households, one marked default; auto-created solo household on signup; v1 users auto-migrate (plants reparent from `userId` → `householdId`)
+- **Membership & invitations** — owner role; shareable join-link invitations (no app-sent email; token-based, expirable, resendable); non-destructive leave
+- **Rotation engine** — configurable cycle duration (default 7 days), sequential rotation, deterministic + timezone-aware transitions, exactly-one active assignee per household
+- **Skip & availability** — manual cycle skip; availability periods with auto-skip and reassignment; all-unavailable fallback
+- **Assignee-scoped in-app notifications** — daily due/overdue alerts routed to current assignee only; cycle-start and reassignment banners
+- **Audit trail** — plant actions attributed via `lastActionByUserId` / `createdByUserId`; timeline shows which member acted
+- **Included Nice-to-haves** — reorder rotation members; next-cycle UI preview
+
+**Deferred to later milestones:**
+
+- Email notification infrastructure (Resend/SendGrid) and all email notifications
+- Weekly summary, per-user email preferences
+- Observer role, per-room/per-plant assignment, advanced scheduling, push notifications
+
+**Data model additions:** `Household`, `HouseholdMember`, `Cycle`, `Availability`, `Invitation` — plus plant reparenting to household scope.
+
 ## Requirements
 
 ### Validated
@@ -37,7 +61,7 @@ Users can see at a glance which plants need watering today and log it in one act
 
 ### Active
 
-(No active requirements — next milestone not yet planned)
+See `.planning/workstreams/household/REQUIREMENTS.md` for the milestone `household` requirement list (defined after this step).
 
 ### Out of Scope
 
@@ -127,4 +151,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-16 after v1.0 milestone completion*
+*Last updated: 2026-04-16 — milestone `household` started (workstream: `household`)*
