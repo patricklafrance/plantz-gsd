@@ -1,5 +1,5 @@
 ---
-status: partial
+status: diagnosed
 phase: 07-polish-and-accessibility
 source: [07-01-SUMMARY.md, 07-02-SUMMARY.md, 07-03-SUMMARY.md, 07-04-SUMMARY.md, 07-05-SUMMARY.md, 07-06-SUMMARY.md, 07-07-SUMMARY.md]
 started: 2026-04-16T12:00:00Z
@@ -94,5 +94,13 @@ blocked: 0
   reason: "User reported: Plant with name 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' — the card height is not as high as a regular plant"
   severity: cosmetic
   test: 8
-  artifacts: []
-  missing: []
+  root_cause: "Conflicting CSS classes: 'truncate break-all' on nickname <p> element. truncate (white-space:nowrap) overrides break-all, making it dead code. The real height difference likely comes from the nickname being truncated to a shorter rendered width, affecting the flex layout's content sizing when the text-center + flex-1 min-w-0 container reflows differently for short ellipsized text vs normal-length names."
+  artifacts:
+    - path: "src/components/watering/dashboard-plant-card.tsx"
+      issue: "Line 136: 'truncate break-all' — conflicting classes, break-all is dead code"
+    - path: "src/components/plants/plant-card.tsx"
+      issue: "Line 54: same 'truncate break-all' conflict"
+  missing:
+    - "Remove break-all from both files (truncate already handles overflow)"
+    - "Investigate whether card needs min-h to ensure consistent height across all content variations"
+  debug_session: ""
