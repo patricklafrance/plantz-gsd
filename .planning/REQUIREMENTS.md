@@ -78,10 +78,10 @@
 
 ### UI and Accessibility
 
-- [ ] **UIAX-01**: App is responsive and touch-friendly on mobile, optimized on desktop
-- [ ] **UIAX-02**: App meets WCAG AA contrast and keyboard navigation requirements
-- [ ] **UIAX-03**: Forms have proper labels; status uses more than just color
-- [ ] **UIAX-04**: Empty states provide helpful guidance (no plants, no history, no rooms)
+- [x] **UIAX-01**: App is responsive and touch-friendly on mobile, optimized on desktop
+- [x] **UIAX-02**: App meets WCAG AA contrast and keyboard navigation requirements
+- [x] **UIAX-03**: Forms have proper labels; status uses more than just color
+- [x] **UIAX-04**: Empty states provide helpful guidance (no plants, no history, no rooms)
 - [ ] **UIAX-05**: Watering log uses optimistic UI for instant feedback
 
 ## v2 Requirements
@@ -171,10 +171,10 @@
 | DEMO-01 | Phase 6 | Pending |
 | DEMO-02 | Phase 6 | Pending |
 | DEMO-03 | Phase 6 | Pending |
-| UIAX-01 | Phase 7 | Pending |
-| UIAX-02 | Phase 7 | Pending |
-| UIAX-03 | Phase 7 | Pending |
-| UIAX-04 | Phase 7 | Pending |
+| UIAX-01 | Phase 7 | Complete |
+| UIAX-02 | Phase 7 | Complete |
+| UIAX-03 | Phase 7 | Complete |
+| UIAX-04 | Phase 7 | Complete |
 
 **Coverage:**
 - v1 requirements: 46 total
