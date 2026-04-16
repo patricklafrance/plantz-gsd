@@ -41,3 +41,6 @@ next-env.d.ts
 # Prisma generated client
 app/generated/
 /src/generated/
+
+# Claude code
+.claude/worktrees/
