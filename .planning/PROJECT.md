@@ -28,8 +28,8 @@ Users can see at a glance which plants need watering today and log it in one act
 - [ ] Watering logic uses firm interval countdown with overdue alerts
 - [ ] Next watering date recalculates automatically after logging
 - [ ] Guest/demo mode lets visitors explore with pre-loaded sample plants
-- [ ] App is responsive and polished on mobile and desktop
-- [ ] App is accessible (keyboard nav, contrast, screen reader friendly)
+- [x] App is responsive and polished on mobile and desktop — Validated in Phase 7: Polish and Accessibility
+- [x] App is accessible (keyboard nav, contrast, screen reader friendly) — Validated in Phase 7: Polish and Accessibility
 
 ### Out of Scope
 
@@ -120,4 +120,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-15 after Phase 5 completion — notes CRUD, unified timeline, search/filter/sort on plant collection*
+*Last updated: 2026-04-16 after Phase 7 completion — app is responsive, accessible (WCAG AA), and edge-case hardened*
