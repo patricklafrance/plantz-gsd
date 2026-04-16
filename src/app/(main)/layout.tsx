@@ -9,6 +9,7 @@ import { cookies } from "next/headers";
 import { getReminderCount, getReminderItems } from "@/features/reminders/queries";
 import { NotificationBell } from "@/components/reminders/notification-bell";
 import { FocusHeading } from "@/components/shared/focus-heading";
+import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 
 export default async function MainLayout({
   children,
@@ -43,6 +44,12 @@ export default async function MainLayout({
 
   return (
     <div className="min-h-screen bg-background">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-md focus:ring-2 focus:ring-ring"
+      >
+        Skip to content
+      </a>
       <TimezoneSync />
       <FocusHeading />
       {isDemo && (
@@ -64,7 +71,7 @@ export default async function MainLayout({
             <Leaf className="h-5 w-5 text-accent" />
             <span className="text-base font-semibold">Plant Minder</span>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="hidden items-center gap-4 sm:flex">
             <Link
               href="/plants"
               className="text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -79,14 +86,17 @@ export default async function MainLayout({
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <NotificationBell count={reminderCount} items={reminderItems} />
+            <div className="hidden sm:block">
+              <NotificationBell count={reminderCount} items={reminderItems} />
+            </div>
             <UserMenu email={user?.email ?? ""} name={user?.name} />
           </div>
         </nav>
       </header>
-      <main id="main-content" className="mx-auto max-w-5xl px-4 py-6">
+      <main id="main-content" className="mx-auto max-w-5xl px-4 py-6 pb-20 sm:pb-6">
         {children}
       </main>
+      <BottomTabBar notificationCount={reminderCount} />
     </div>
   );
 }
