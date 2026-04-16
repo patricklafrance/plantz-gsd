@@ -109,16 +109,49 @@ Tracked but not in this roadmap.
 
 ## Traceability
 
-(Empty — populated during roadmap creation.)
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| HSLD-01 | Phase 1 | Pending |
+| HSLD-02 | Phase 2 | Pending |
+| HSLD-03 | Phase 2 | Pending |
+| HSLD-04 | Phase 1 | Pending |
+| HSLD-05 | Phase 1 | Pending |
+| HSLD-06 | Phase 1 | Pending |
+| INVT-01 | Phase 4 | Pending |
+| INVT-02 | Phase 4 | Pending |
+| INVT-03 | Phase 4 | Pending |
+| INVT-04 | Phase 4 | Pending |
+| INVT-05 | Phase 4 | Pending |
+| INVT-06 | Phase 4 | Pending |
+| ROTA-01 | Phase 6 | Pending |
+| ROTA-02 | Phase 3 | Pending |
+| ROTA-03 | Phase 3 | Pending |
+| ROTA-04 | Phase 3 | Pending |
+| ROTA-05 | Phase 3 | Pending |
+| ROTA-06 | Phase 3 | Pending |
+| ROTA-07 | Phase 3 | Pending |
+| AVLB-01 | Phase 3 | Pending |
+| AVLB-02 | Phase 3 | Pending |
+| AVLB-03 | Phase 3 | Pending |
+| AVLB-04 | Phase 3 | Pending |
+| AVLB-05 | Phase 3 | Pending |
+| HNTF-01 | Phase 5 | Pending |
+| HNTF-02 | Phase 5 | Pending |
+| HNTF-03 | Phase 5 | Pending |
+| HNTF-04 | Phase 5 | Pending |
+| AUDT-01 | Phase 1 | Pending |
+| AUDT-02 | Phase 1 | Pending |
+| HSET-01 | Phase 6 | Pending |
+| HSET-02 | Phase 6 | Pending |
+| HSET-03 | Phase 6 | Pending |
+| HDMO-01 | Phase 7 | Pending |
+| HDMO-02 | Phase 7 | Pending |
 
 **Coverage:**
 - Milestone requirements: 35 total
-- Mapped to phases: 0
-- Unmapped: 35 ⚠️ (pending roadmap)
+- Mapped to phases: 35
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-04-16*
-*Last updated: 2026-04-16 after initial definition for milestone `household`*
+*Last updated: 2026-04-16 — traceability populated after roadmap creation*

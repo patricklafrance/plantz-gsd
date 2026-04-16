@@ -6,7 +6,7 @@ status: in_progress
 last_updated: "2026-04-16T00:00:00.000Z"
 last_activity: 2026-04-16
 progress:
-  total_phases: 0
+  total_phases: 7
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -19,24 +19,37 @@ progress:
 
 See: .planning/PROJECT.md (updated 2026-04-16)
 
-**Core value:** Users can see at a glance which plants need watering today and log it in one action
-**Current focus:** Defining requirements for milestone `household` (Household and Rotation)
+**Core value:** Users can see at a glance which plants need watering today and log it in one action — extended to multi-user households with rotating responsibility
+**Current focus:** Phase 1 — Schema Foundation + Data Migration (ready to plan)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-04-16 — Milestone `household` started
+Phase: 1 of 7 (Schema Foundation + Data Migration)
+Plan: — of —
+Status: Ready to plan
+Last activity: 2026-04-16 — Roadmap created, all 35 requirements mapped across 7 phases
+
+Progress: [░░░░░░░░░░] 0%
+
+## Performance Metrics
+
+**Velocity:**
+- Total plans completed: 0
+- Average duration: —
+- Total execution time: —
+
+*Updated after each plan completion*
 
 ## Accumulated Context
 
 ### Decisions
 
-- Multi-household per user (user can belong to N households, one marked default) — simpler long-term than single-household retrofit; bounded ~15-20% complexity increase
-- Shareable join-link invitations (no app-sent email) — delivers invite UX without email infrastructure
-- Email notifications deferred — kept in PROJECT.md Out of Scope; household uses existing in-app notification center scoped to current assignee
-- Version string "household" (not `vX.Y`) — workstream-scoped naming; archive compatibility requires loosening `init.cjs:16` regex if/when this milestone is completed via `milestone complete`
+- URL-scoped routing: `/h/[householdSlug]/...` for all authenticated routes — implemented in Phase 1, propagated through Phase 6 (Pitfall 17 prevention)
+- Cron: pure external cron via cron-job.org hitting `/api/cron/advance-cycles` — no Vercel Cron, no lazy/request-time transitions
+- Invitation tokens: CSPRNG (`crypto.randomBytes(32).toString('hex')`), no expiry, owner-revocable, store SHA-256 hash
+- `@date-fns/tz` (TZDate) mandatory for DST-safe cycle arithmetic — `date-fns-tz` (marnusw) is incompatible with date-fns v4
+- `HouseholdNotification` is a separate model from `Reminder` — cycle events must not merge with per-plant daily reminders
+- Three-step migration ritual is a hard gate: nullable add → backfill SQL → NOT NULL; single-step forbidden
 
 ### Pending Todos
 
@@ -44,10 +57,11 @@ None.
 
 ### Blockers/Concerns
 
-None at start.
+- Phase 1 is highest-recovery-cost phase in the milestone: migration order, cascade behavior, and `householdId` index design must all be correct before any feature work ships
+- v1 tech debt to fix in Phase 5: `NotificationBell` hidden on mobile; `BottomTabBar` Alerts links to `/dashboard` instead of notifications
 
 ## Session Continuity
 
 Last session: 2026-04-16
-Stopped at: Milestone `household` initialized; requirements not yet defined
-Next step: Research decision → define REQUIREMENTS.md → roadmap
+Stopped at: Roadmap created, STATE.md and REQUIREMENTS.md traceability updated
+Next step: `/gsd-plan-phase 1` — Schema Foundation + Data Migration
