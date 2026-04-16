@@ -58,6 +58,27 @@ export async function registerUser(data: {
   }
 }
 
+export async function updateTimezone(timezone: string) {
+  const session = await auth();
+  if (!session?.user?.id) return;
+  if (session.user.isDemo) return; // Demo mode — skip DB write
+
+  // Validate timezone is a non-empty string (IANA format — only used for display comparison)
+  if (!timezone || typeof timezone !== "string" || timezone.length > 100) return;
+
+  // Only set timezone if not already stored (preserves "home" timezone for travel detection)
+  const existing = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { timezone: true },
+  });
+  if (existing?.timezone) return; // Already stored — do not overwrite
+
+  await db.user.update({
+    where: { id: session.user.id },
+    data: { timezone },
+  });
+}
+
 export async function completeOnboarding(data: {
   plantCountRange: string;
 }) {

@@ -17,6 +17,7 @@ model User {
   onboardingCompleted   Boolean       @default(false)
   plantCountRange       String?
   remindersEnabled      Boolean       @default(true)
+  timezone              String?
   plants        Plant[]
   rooms         Room[]
   reminders     Reminder[]

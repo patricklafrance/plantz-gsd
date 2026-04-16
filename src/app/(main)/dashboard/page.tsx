@@ -117,7 +117,7 @@ export default async function DashboardPage() {
   const [user, catalog, rooms] = await Promise.all([
     db.user.findUnique({
       where: { id: session.user.id },
-      select: { onboardingCompleted: true },
+      select: { onboardingCompleted: true, timezone: true },
     }),
     getCatalog(),
     getRoomsForSelect(session.user.id),
@@ -129,7 +129,7 @@ export default async function DashboardPage() {
         <OnboardingBanner userId={session.user.id} />
       )}
 
-      <TimezoneWarning />
+      <TimezoneWarning storedTimezone={user?.timezone ?? null} />
 
       {/* Dashboard header */}
       <div className="flex items-center justify-between">

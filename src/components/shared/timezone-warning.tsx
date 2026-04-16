@@ -4,24 +4,24 @@ import { useState, useEffect } from "react";
 import { AlertTriangle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function TimezoneWarning() {
+interface TimezoneWarningProps {
+  storedTimezone: string | null;
+}
+
+export function TimezoneWarning({ storedTimezone }: TimezoneWarningProps) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    if (!storedTimezone) return; // No stored TZ yet — skip warning
+
     const dismissed = sessionStorage.getItem("tz-warning-dismissed");
     if (dismissed) return;
 
-    // Compare browser IANA timezone with the cookie value
     const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const cookieTz = document.cookie
-      .split("; ")
-      .find((c) => c.startsWith("user_tz="))
-      ?.split("=")[1];
-
-    if (cookieTz && browserTz !== decodeURIComponent(cookieTz)) {
+    if (browserTz !== storedTimezone) {
       setShow(true);
     }
-  }, []);
+  }, [storedTimezone]);
 
   if (!show) return null;
 
