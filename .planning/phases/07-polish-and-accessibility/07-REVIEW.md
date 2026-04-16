@@ -1,8 +1,8 @@
 ---
 phase: 07-polish-and-accessibility
-reviewed: 2026-04-16T00:00:00Z
+reviewed: 2026-04-16T04:56:22Z
 depth: standard
-files_reviewed: 20
+files_reviewed: 21
 files_reviewed_list:
   - prisma/schema.prisma
   - src/app/(main)/dashboard/loading.tsx
@@ -26,269 +26,160 @@ files_reviewed_list:
   - src/features/demo/actions.ts
   - src/hooks/use-focus-heading.ts
 findings:
-  critical: 1
-  warning: 6
-  info: 6
-  total: 13
+  critical: 0
+  warning: 5
+  info: 3
+  total: 8
 status: issues_found
 ---
 
-# Phase 07: Code Review Report
+# Phase 7: Code Review Report
 
-**Reviewed:** 2026-04-16
+**Reviewed:** 2026-04-16T04:56:22Z
 **Depth:** standard
-**Files Reviewed:** 20
+**Files Reviewed:** 21
 **Status:** issues_found
 
 ## Summary
 
-Reviewed all 20 files from the phase 07 polish and accessibility pass. The codebase is well-structured with good practices throughout: Zod validation on server actions, proper auth guards, a thorough WCAG AA colour audit documented in `globals.css`, accessible focus management via MutationObserver, `aria-hidden` on decorative icons, `role="alert"` on the timezone warning, and `aria-label` on icon-only buttons.
+Reviewed 21 files covering the Prisma schema, dashboard pages, auth forms, layout components, plant cards, watering actions, onboarding, timezone handling, and accessibility hooks. The codebase is generally well-structured with good server/client separation, proper Zod validation on server actions, and solid auth checks. Phase 7 polish work (WCAG contrast fixes, focus management, touch targets) is well-documented and applied consistently.
 
-One critical issue was found: the `updateTimezone` server action lacks IANA timezone format validation, allowing arbitrary strings up to 100 chars to be written to the database and then used in a `toLocaleDateString()` call that will throw a `RangeError` on the dashboard server component, producing a 500. Six warnings cover navigation logic bugs, missing accessible labels, unhandled async errors, a cookie-setting race condition, and an unreachable code branch. Six info items note minor quality improvements.
-
----
-
-## Critical Issues
-
-### CR-01: Insufficient timezone validation — invalid value crashes dashboard with 500
-
-**File:** `src/features/auth/actions.ts:67`
-**Issue:** The `updateTimezone` action validates only that `timezone` is a non-empty string under 100 characters. It does not verify the value is a valid IANA timezone identifier. A crafted direct call to the server action endpoint (Server Actions are exposed as POST endpoints and can be called with arbitrary payloads) could persist an invalid string like `"notATimezone"` to the database. This value flows from `db.user` into `TimezoneWarning` (JSX-rendered, so no XSS risk) but also — more critically — is compared against `Intl.DateTimeFormat().resolvedOptions().timeZone` in `timezone-warning.tsx` and stored as `storedTimezone`.
-
-Separately, the `user_tz` cookie is set client-side from `Intl.DateTimeFormat` (always valid), but the cookie value flows into `toLocaleDateString("en-CA", { timeZone: userTz })` on line 58 of `dashboard/page.tsx`. A tampered cookie (e.g., via a malicious browser extension) or the persisted DB value reaching that path via future refactoring would cause `toLocaleDateString` to throw a `RangeError: Invalid time zone specified`, crashing the dashboard server component.
-
-**Fix:**
-
-In `src/features/auth/actions.ts`, add IANA format validation:
-```typescript
-function isValidTimezone(tz: string): boolean {
-  try {
-    Intl.DateTimeFormat(undefined, { timeZone: tz });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// In updateTimezone, after the existing string checks on line 67:
-if (!isValidTimezone(timezone)) return;
-```
-
-In `src/app/(main)/dashboard/page.tsx:54`, add defensive cookie validation:
-```typescript
-const rawTz = cookieStore.get("user_tz")?.value ?? "UTC";
-let userTz = "UTC";
-try {
-  Intl.DateTimeFormat(undefined, { timeZone: rawTz });
-  userTz = rawTz;
-} catch {
-  // Invalid timezone in cookie — fall back to UTC
-}
-```
-
----
+Five warnings were identified: missing error handling that could leave UI in stuck states, a silently-ignored seed failure during onboarding, a navigation tab that can never appear active, inconsistent error handling between login and registration forms, and an unreachable code branch in the plant card status badge logic. Three informational items were also noted.
 
 ## Warnings
 
-### WR-01: Alerts tab navigates to `/dashboard` instead of `/notifications` and can never appear active
+### WR-01: Missing try/catch in handleWater leaves UI stuck on network error
 
-**File:** `src/components/layout/bottom-tab-bar.tsx:36`
-**Issue:** Line 36 overrides the navigation destination for the Alerts tab to `/dashboard`:
-```tsx
-href={href === "/notifications" ? "/dashboard" : href}
-```
-This means tapping Alerts navigates to `/dashboard`, not `/notifications`. The `isActive` check on lines 29-31 still reads from the original `href` (`/notifications`), so `pathname` will never match and the Alerts tab will never show the active visual state. The Dashboard tab appears active instead when the user taps Alerts — creating a confusing double-active state appearance.
-
-**Fix:** Remove the redirect override and either create a stub `/notifications` route, or remove the Alerts tab from `TABS` entirely until the route exists:
-```tsx
-<Link
-  key={href}
-  href={href}
-  aria-current={isActive ? "page" : undefined}
-  ...
->
-```
-
----
-
-### WR-02: Notification badge count not accessible to screen readers
-
-**File:** `src/components/layout/bottom-tab-bar.tsx:43-51`
-**Issue:** The notification count badge (lines 47-49) is purely visual. Screen reader users hear "Alerts" from the label text but receive no information about the pending notification count. The badge `<span>` has no accessible text, and the parent `<Link>` has no `aria-label` that includes the count.
-
-**Fix:**
-```tsx
-{notificationCount > 0 && (
-  <>
-    <span
-      className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white"
-      aria-hidden="true"
-    >
-      {notificationCount > 9 ? "9+" : notificationCount}
-    </span>
-    <span className="sr-only">
-      {notificationCount} {notificationCount === 1 ? "notification" : "notifications"}
-    </span>
-  </>
-)}
-```
-
----
-
-### WR-03: Unhandled promise rejection in `EditPlantDialog` form submission
-
-**File:** `src/components/plants/edit-plant-dialog.tsx:75-86`
-**Issue:** The `onSubmit` function is `async` and calls `await updatePlant(data)` on line 77. If `updatePlant` throws an unexpected error (network disconnection, middleware error), the rejection propagates unhandled because `react-hook-form`'s `handleSubmit` does not catch async errors thrown inside the callback — it only handles sync throws and returned values. The user sees no feedback.
-
-**Fix:**
+**File:** `src/components/watering/dashboard-client.tsx:85-134`
+**Issue:** The async callback inside `startTransition` has no try/catch. If `logWatering` throws an unexpected error (network failure, serialization error), the cleanup code on lines 92-101 never runs. This leaves `wateringPlantIds` and `removingIds` with stale entries, causing the water button to show a perpetual loading spinner and the card to remain in a faded/scaled-down state with no way to recover.
+**Fix:** Wrap the `startTransition` body in try/catch/finally:
 ```typescript
-async function onSubmit(data: EditPlantInput) {
-  setFormError(undefined);
+startTransition(async () => {
+  updateGroups(plant.id);
   try {
-    const result = await updatePlant(data);
-    if ("error" in result) {
-      setFormError(result.error);
+    const result = await logWatering({ plantId: plant.id });
+    // ... existing result handling ...
+  } catch {
+    toast.error("Couldn't log watering. Check your connection and try again.", {
+      action: { label: "Retry", onClick: () => handleWater(plant) },
+    });
+  } finally {
+    setWateringPlantIds((prev) => {
+      const next = new Set(prev);
+      next.delete(plant.id);
+      return next;
+    });
+    setRemovingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(plant.id);
+      return next;
+    });
+  }
+});
+```
+
+### WR-02: Seed starter plants failure silently ignored during onboarding
+
+**File:** `src/components/onboarding/onboarding-banner.tsx:43-46`
+**Issue:** The `Promise.all` result destructures only `onboardingResult`, discarding the `seedStarterPlants` result. If the user checked "Start with a few example plants" and seeding fails, the banner shows "Got it -- your tips are personalized" and collapses, but no starter plants were created. The user has no indication that something went wrong and no way to retry.
+**Fix:** Capture and check the seed result:
+```typescript
+const [onboardingResult, seedResult] = await Promise.all([
+  completeOnboarding({ plantCountRange: range }),
+  seedStarters ? seedStarterPlants(range) : Promise.resolve(null),
+]);
+
+setIsCompleting(false);
+
+if (onboardingResult && "error" in onboardingResult) {
+  toast.error("Something went wrong. Please try again.");
+  setSelectedRange(null);
+  return;
+}
+
+if (seedResult && "error" in seedResult) {
+  toast.error("Could not add starter plants. You can add plants manually.");
+}
+```
+
+### WR-03: Alerts tab can never show active state
+
+**File:** `src/components/layout/bottom-tab-bar.tsx:9-36`
+**Issue:** The "Alerts" tab is defined with `href: "/notifications"` (line 12) and the active check compares pathname against `/notifications` (lines 29-31). However, the actual link target is overridden to `/dashboard` on line 36 (`href={href === "/notifications" ? "/dashboard" : href}`). Since navigating the tab goes to `/dashboard`, the active indicator always highlights "Dashboard" instead of "Alerts". Additionally, no `/notifications` route exists. The tab misleads users into thinking there is a dedicated notifications page.
+**Fix:** Either remove the Alerts tab entirely until a notifications page is implemented, or disable it visually:
+```typescript
+const TABS = [
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
+  { href: "/plants", icon: Leaf, label: "Plants", exact: false },
+  { href: "/rooms", icon: DoorOpen, label: "Rooms", exact: false },
+  // Alerts tab deferred until notifications page is built
+] as const;
+```
+
+### WR-04: Missing try/catch in register form onSubmit
+
+**File:** `src/components/auth/register-form.tsx:37-51`
+**Issue:** The `onSubmit` function calls `registerUser` without a try/catch. If the server action throws an unexpected error (not a redirect), the user sees no feedback. This is inconsistent with `login-form.tsx` (line 53) which has a catch block showing "Something went wrong." While react-hook-form will reset `isSubmitting`, the user gets no error toast.
+**Fix:** Add a try/catch consistent with the login form:
+```typescript
+async function onSubmit(values: RegisterInput) {
+  try {
+    const result = await registerUser({
+      email: values.email,
+      password: values.password,
+      confirmPassword: values.confirmPassword,
+    });
+
+    if (result?.error) {
+      toast.error(result.error);
       return;
     }
-    toast("Changes saved.");
-    handleOpenChange(false);
   } catch {
-    setFormError("Something went wrong. Please try again.");
+    toast.error("Something went wrong. Please try again in a moment.");
   }
 }
 ```
 
----
+### WR-05: Dead code branch -- overdueDays === 0 is unreachable
 
-### WR-04: `TimezoneSync` sets `user_tz` cookie client-side — server should validate before use
-
-**File:** `src/components/watering/timezone-sync.tsx:11`
-**Issue:** The `user_tz` cookie is set via `document.cookie` (cannot be HttpOnly). This cookie value is consumed server-side in `dashboard/page.tsx:54` and used directly in `toLocaleDateString({ timeZone: userTz })`. A malicious browser extension or any XSS vector could tamper with this cookie to inject an invalid timezone string, which (per CR-01) would crash the server component with a `RangeError`. The fix described in CR-01's dashboard defensive fallback addresses this; this warning calls out that the same defensive pattern is needed in any other server route that reads `user_tz`.
-
-**Fix:** Apply the defensive `try/catch` timezone cookie validation at every server-side consumption point (see CR-01 fix). The client-side `TimezoneSync` component itself cannot be made HttpOnly — that is an inherent architectural constraint.
-
----
-
-### WR-05: `parseInt` silently resets watering interval to `1` on clear/backspace
-
-**File:** `src/components/plants/edit-plant-dialog.tsx:198`
-**Issue:** The `onChange` handler uses:
-```tsx
-field.onChange(parseInt(e.target.value, 10) || 1)
+**File:** `src/components/plants/plant-card.tsx:21-26`
+**Issue:** On line 21, the condition `daysUntil < 0` (strict less-than) means `Math.abs(daysUntil)` on line 22 will always be >= 1. The ternary `overdueDays === 0 ? "Overdue"` on line 26 is unreachable dead code. If `daysUntil` were exactly 0, execution would fall through to the `daysUntil === 0` check on line 30 instead. The same pattern exists in `dashboard-plant-card.tsx:26-30`.
+**Fix:** Remove the unreachable branch:
+```typescript
+if (daysUntil < 0) {
+  const overdueDays = Math.abs(daysUntil);
+  return (
+    <Badge className="bg-destructive/10 text-destructive border-destructive/20 gap-1.5 items-center">
+      <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />
+      {overdueDays}d overdue
+    </Badge>
+  );
+}
 ```
-When the user clears the field (empty string), `parseInt("", 10)` returns `NaN` and the `|| 1` forces the field value to `1`. This means the user cannot type a multi-digit number by first clearing the field — the moment it's empty it resets to `1`, and re-typing "1" followed by "4" gives "14" but through an unexpected intermediate state. Also prevents entering zero temporarily while mid-edit.
-
-**Fix:**
-```tsx
-onChange={(e) => {
-  const raw = e.target.value;
-  if (raw === "") {
-    field.onChange(undefined); // let Zod's min(1) catch empty at submit
-  } else {
-    const parsed = parseInt(raw, 10);
-    if (!isNaN(parsed)) field.onChange(parsed);
-  }
-}}
-```
-
----
-
-### WR-06: Snooze buttons have no accessible label — "1d", "2d", "1w" are ambiguous
-
-**File:** `src/components/watering/dashboard-plant-card.tsx:99-109`
-**Issue:** The `InlineSnoozePills` buttons display labels "1d", "2d", "1w" as their only text content. Screen reader users hear these as isolated characters with no context about what is being snoozed or by how long. Combined with the wrapping `onClick` / `onKeyDown` stopPropagation on the parent `<div>` (lines 153-156), the snooze area is reachable but not clearly announced.
-
-**Fix:**
-```tsx
-<button
-  key={label}
-  type="button"
-  aria-label={`Snooze ${days === 7 ? "1 week" : `${days} day${days > 1 ? "s" : ""}`}`}
-  onClick={(e) => handleSnooze(e, days, msg)}
-  disabled={isPending}
-  ...
->
-  {label}
-</button>
-```
-
----
 
 ## Info
 
-### IN-01: `overdueDays === 0` branch in `plant-card.tsx` `getStatusBadge` is unreachable
+### IN-01: Unused Skeleton import in dashboard page
 
-**File:** `src/components/plants/plant-card.tsx:22-28`
-**Issue:** Inside the `if (daysUntil < 0)` block, `overdueDays = Math.abs(daysUntil)` is always `>= 1`, so the ternary `overdueDays === 0 ? "Overdue" : \`${overdueDays}d overdue\`` never takes the "Overdue" branch. The dead code is harmless but is a logic smell. The equivalent code in `dashboard-plant-card.tsx` has the same pattern and the same unreachability.
+**File:** `src/app/(main)/dashboard/page.tsx:14`
+**Issue:** `Skeleton` is imported from `@/components/ui/skeleton` but the `DashboardSkeleton` component defined inline (lines 17-39) also imports it. Since `DashboardSkeleton` is in the same file and uses the same import, this is fine. However, `Skeleton` is not used outside of `DashboardSkeleton`, so the import on line 14 is effectively a duplicate of the usage on line 1 of the inner component -- no issue per se, but the `loading.tsx` file at `src/app/(main)/dashboard/loading.tsx` already defines a separate loading skeleton. The inline `DashboardSkeleton` duplicates the loading skeleton pattern. Consider reusing the `loading.tsx` export.
 
-**Fix:** Remove the dead branch:
+### IN-02: Notification badge count accessible name missing
+
+**File:** `src/components/layout/bottom-tab-bar.tsx:47-49`
+**Issue:** The notification count badge (`<span>9+</span>` or `<span>{notificationCount}</span>`) is purely visual. Screen readers will see the "Alerts" label but won't announce the count. Consider adding an `aria-label` or `sr-only` span for the count.
+**Fix:** Add a screen-reader-only announcement:
 ```tsx
-{overdueDays}d overdue
+<span className="sr-only">{notificationCount} unread</span>
 ```
 
----
+### IN-03: Hardcoded demo credentials in source code
 
-### IN-02: FilterChips `(s.value ?? undefined)` is a no-op
-
-**File:** `src/components/plants/filter-chips.tsx:110`
-**Issue:** The expression `(s.value ?? undefined) === activeStatus` on line 110 is redundant. `s.value` for the "All" entry is already `undefined` (typed via `as const`). Applying `?? undefined` to an already-`undefined` value produces `undefined` — the expression is equivalent to `s.value === activeStatus`.
-
-**Fix:** Simplify to `s.value === activeStatus`.
+**File:** `src/features/demo/seed-data.ts:1-2`
+**Issue:** `DEMO_EMAIL` and `DEMO_PASSWORD` are defined as plaintext constants. The password value is `"demo-password-not-secret"` which is self-documented as not sensitive. This is acceptable for a demo seeding mechanism since the demo user is intentionally public. No action needed, but noting for visibility -- ensure this account cannot be escalated to admin privileges and that the demo password is not reused anywhere.
 
 ---
 
-### IN-03: Unused `Skeleton` import in dashboard page / near-duplicate skeleton definition
-
-**File:** `src/app/(main)/dashboard/page.tsx:14-39`
-**Issue:** `Skeleton` is imported and used only inside the inline `DashboardSkeleton` function (lines 17-39). `loading.tsx` in the same directory (`DashboardLoading`) defines a visually nearly-identical skeleton layout. Both exist for different reasons (route-level loading vs Suspense fallback), but the visual duplication is non-obvious to future maintainers.
-
-**Fix:** Consider extracting a shared skeleton component and importing it in both `loading.tsx` and `page.tsx`, or add a comment explaining the two-level distinction.
-
----
-
-### IN-04: `globals.css` dark mode block has no WCAG contrast audit annotation
-
-**File:** `src/app/globals.css:147-180`
-**Issue:** The light mode block (`:root`) has a thorough WCAG AA audit comment at lines 83-109. The `.dark` block has no such annotation. Notably `--muted-foreground` in dark mode is `oklch(0.708 0 0)` (~`#a3a3a3`) on `--background` `oklch(0.145 0 0)` (~`#252525`), which passes AA at approximately 4.7:1 — but this is undocumented. Future colour changes to the dark theme could silently drop below AA without any audit trail.
-
-**Fix:** Add a brief contrast table for the dark mode block mirroring the light mode audit comment.
-
----
-
-### IN-05: `seedStarterPlants` creates plants serially — slow for large counts
-
-**File:** `src/features/demo/actions.ts:128-150`
-**Issue:** The `for...of` loop on line 128 calls `db.plant.create` sequentially for each profile, resulting in up to 35 sequential DB round-trips for the "30+ plants" onboarding tier. This makes onboarding feel slow (several seconds) for large counts. This is a startup-time issue, not a correctness bug.
-
-**Fix:**
-```typescript
-await Promise.all(
-  allProfiles.map((profile) =>
-    db.plant.create({
-      data: { /* same fields */ },
-    })
-  )
-);
-```
-Note: `createMany` cannot be used here because of the nested `reminders.create` relation.
-
----
-
-### IN-06: Prisma schema missing explicit index on `Plant.userId`
-
-**File:** `prisma/schema.prisma:36-56`
-**Issue:** The `Plant` model is queried with `findMany({ where: { userId, archivedAt: null } })` on every dashboard and plants page load, but there is no `@@index([userId])` or `@@index([userId, archivedAt])` declared. The `Note` model (line 75) has an explicit `@@index([plantId])`, suggesting indexes are intended to be declared explicitly in this project. Without an index, full table scans run against the plant table for each user's dashboard request.
-
-**Fix:**
-```prisma
-model Plant {
-  // ... existing fields ...
-  @@index([userId, archivedAt])
-}
-```
-
----
-
-_Reviewed: 2026-04-16_
+_Reviewed: 2026-04-16T04:56:22Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
