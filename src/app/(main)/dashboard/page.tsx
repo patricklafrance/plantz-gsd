@@ -134,7 +134,7 @@ export default async function DashboardPage() {
 
       {/* Dashboard header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Dashboard</h1>
+        <h1 tabIndex={-1} className="text-2xl font-semibold outline-none">Dashboard</h1>
         <AddPlantDialog catalog={catalog} rooms={rooms} />
       </div>
 

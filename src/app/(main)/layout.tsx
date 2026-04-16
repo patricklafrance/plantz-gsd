@@ -8,6 +8,7 @@ import { TimezoneSync } from "@/components/watering/timezone-sync";
 import { cookies } from "next/headers";
 import { getReminderCount, getReminderItems } from "@/features/reminders/queries";
 import { NotificationBell } from "@/components/reminders/notification-bell";
+import { FocusHeading } from "@/components/shared/focus-heading";
 
 export default async function MainLayout({
   children,
@@ -43,6 +44,7 @@ export default async function MainLayout({
   return (
     <div className="min-h-screen bg-background">
       <TimezoneSync />
+      <FocusHeading />
       {isDemo && (
         <div className="sticky top-0 z-50 flex h-9 items-center justify-center border-b border-border bg-surface">
           <p className="text-sm text-muted-foreground">
@@ -57,7 +59,7 @@ export default async function MainLayout({
         </div>
       )}
       <header className="border-b border-border">
-        <nav className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
+        <nav aria-label="Top navigation" className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
           <Link href="/dashboard" className="flex items-center gap-2">
             <Leaf className="h-5 w-5 text-accent" />
             <span className="text-base font-semibold">Plant Minder</span>
@@ -82,7 +84,7 @@ export default async function MainLayout({
           </div>
         </nav>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main id="main-content" className="mx-auto max-w-5xl px-4 py-6">
         {children}
       </main>
     </div>

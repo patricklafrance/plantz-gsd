@@ -44,7 +44,7 @@ export function PreferencesForm({
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <h1 className="text-xl font-semibold">Preferences</h1>
+      <h1 tabIndex={-1} className="text-2xl font-semibold outline-none">Preferences</h1>
 
       {/* Notifications section */}
       <Card>

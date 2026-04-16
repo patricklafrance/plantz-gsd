@@ -26,7 +26,7 @@ export default async function RoomDetailPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">{room.name}</h1>
+        <h1 tabIndex={-1} className="text-2xl font-semibold outline-none">{room.name}</h1>
         <p className="text-sm text-muted-foreground">
           {room.plants.length}{" "}
           {room.plants.length === 1 ? "plant" : "plants"}
