@@ -1,7 +1,7 @@
 ---
 phase: 07-polish-and-accessibility
 verified: 2026-04-16T23:55:00Z
-status: human_needed
+status: gaps_found
 score: 16/16 must-haves verified
 overrides_applied: 0
 re_verification:
@@ -190,9 +190,31 @@ No TODOs, FIXMEs, placeholders, or stub patterns detected in Plan 06 modified fi
 
 ### Gaps Summary
 
-No gaps found. All 16 must-haves pass programmatic verification across existence (L1), substance (L2), wiring (L3), and data flow (L4) checks. All 4 UIAX requirements are satisfied. Plan 06 UAT fixes (drawer safe-area, MutationObserver focus, DB-backed timezone warning) are properly implemented and wired.
+4 gaps found during human testing:
 
-Phase goal is programmatically achieved. 7 human verification items remain for visual/interactive testing before phase closure.
+#### Gap 1: Login "show password" button not vertically centered
+- **Severity:** cosmetic
+- **File:** `src/components/auth/login-form.tsx:100-104`
+- **Root cause:** Button has `absolute right-0 top-0 h-11` but Input is `h-8` (32px). The `top-0` pins the button to the top instead of centering it vertically.
+- **Fix:** Change positioning to `top-1/2 -translate-y-1/2` or match the button height to the input.
+
+#### Gap 2: Dashboard watering flicker on recently watered plants
+- **Severity:** major
+- **File:** `src/components/watering/dashboard-client.tsx:56-57`
+- **Root cause:** Optimistic update calls `removeFromGroups(plant.id)` unconditionally, removing the plant from ALL groups. After server revalidation, `classifyAndSort` in `src/features/watering/queries.ts:76-83` re-categorizes the plant back into "Recently Watered" (since `lastWateredAt` is within 48 hours). This remove-then-reappear cycle causes a visible flicker.
+- **Fix:** For plants already in "Recently Watered", the optimistic update should keep them in place with updated dates instead of removing them entirely.
+
+#### Gap 3: "Seed 30+ plants" only creates 5
+- **Severity:** major
+- **File:** `src/features/demo/seed-data.ts:19-25`, `src/features/demo/actions.ts:90-133`
+- **Root cause:** `STARTER_PLANTS` is a hardcoded array of exactly 5 plants. `seedStarterPlants()` ignores the `plantCountRange` parameter entirely — all range options produce the same 5 plants.
+- **Fix:** Use the `plantCountRange` to determine how many plants to seed. Generate additional plants by sampling from the full `CATALOG_PLANTS` array when the requested count exceeds `STARTER_PLANTS.length`.
+
+#### Gap 4: Unbreakable long plant names render differently
+- **Severity:** cosmetic
+- **Files:** `src/components/watering/dashboard-plant-card.tsx:136`, `src/components/plants/plant-card.tsx:54`
+- **Root cause:** Both use `truncate` which handles `text-overflow: ellipsis` but does not include `break-all` for strings without natural word-break points. A 40-char unbroken string can overflow the flex container before truncation kicks in.
+- **Fix:** Add `break-all` class alongside `truncate` on the plant nickname elements.
 
 ---
 
