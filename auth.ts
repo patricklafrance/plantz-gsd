@@ -36,7 +36,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (token.id) {
         session.user.id = token.id as string;
         session.user.isDemo = token.isDemo === true;
-        session.user.activeHouseholdId = token.activeHouseholdId as string | undefined;
+        session.user.activeHouseholdId =
+          typeof token.activeHouseholdId === "string" ? token.activeHouseholdId : undefined;
       }
       return session;
     },
