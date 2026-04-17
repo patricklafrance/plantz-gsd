@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 export const PAGE_SIZE = 20;
 
 export async function getPlants(
-  userId: string,
+  householdId: string,
   options: {
     roomId?: string;
     search?: string;
@@ -43,7 +43,7 @@ export async function getPlants(
         : { nickname: "asc" as const };
 
   const where = {
-    userId,
+    householdId,
     ...archivedFilter,
     ...(roomId ? { roomId } : {}),
     ...(search
@@ -78,9 +78,9 @@ export async function getPlants(
   };
 }
 
-export async function getPlant(plantId: string, userId: string) {
+export async function getPlant(plantId: string, householdId: string) {
   return db.plant.findFirst({
-    where: { id: plantId, userId },
+    where: { id: plantId, householdId },
     include: { room: true, careProfile: true },
   });
 }

@@ -1,16 +1,16 @@
 import { db } from "@/lib/db";
 
-export async function getRooms(userId: string) {
+export async function getRooms(householdId: string) {
   return db.room.findMany({
-    where: { userId },
+    where: { householdId },
     include: { _count: { select: { plants: true } } },
     orderBy: { createdAt: "asc" },
   });
 }
 
-export async function getRoom(roomId: string, userId: string) {
+export async function getRoom(roomId: string, householdId: string) {
   return db.room.findFirst({
-    where: { id: roomId, userId },
+    where: { id: roomId, householdId },
     include: {
       plants: {
         where: { archivedAt: null },
@@ -21,9 +21,9 @@ export async function getRoom(roomId: string, userId: string) {
   });
 }
 
-export async function getRoomsForSelect(userId: string) {
+export async function getRoomsForSelect(householdId: string) {
   return db.room.findMany({
-    where: { userId },
+    where: { householdId },
     select: { id: true, name: true },
     orderBy: { createdAt: "asc" },
   });

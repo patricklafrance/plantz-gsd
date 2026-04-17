@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 
 export const createPlantSchema = z.object({
+  householdId: z.string().min(1),
   nickname: z
     .string()
     .min(1, "Nickname is required.")
@@ -16,6 +17,7 @@ export const createPlantSchema = z.object({
 });
 
 export const editPlantSchema = z.object({
+  householdId: z.string().min(1),
   id: z.string().min(1),
   nickname: z
     .string()
