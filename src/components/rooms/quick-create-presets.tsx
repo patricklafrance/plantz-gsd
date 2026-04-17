@@ -8,11 +8,13 @@ import { createRoom } from "@/features/rooms/actions";
 interface QuickCreatePresetsProps {
   presets: string[];
   existingNames: string[];
+  householdId: string;
 }
 
 export function QuickCreatePresets({
   presets,
   existingNames,
+  householdId,
 }: QuickCreatePresetsProps) {
   const [creating, setCreating] = useState<string | null>(null);
 
@@ -20,7 +22,7 @@ export function QuickCreatePresets({
     if (existingNames.includes(name)) return;
     setCreating(name);
     try {
-      const result = await createRoom({ name });
+      const result = await createRoom({ householdId, name });
       if ("error" in result) {
         toast.error(result.error);
         return;

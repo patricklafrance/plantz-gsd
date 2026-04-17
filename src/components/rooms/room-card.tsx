@@ -24,9 +24,10 @@ import type { RoomWithPlantCount } from "@/types/plants";
 
 interface RoomCardProps {
   room: RoomWithPlantCount;
+  householdId: string;
 }
 
-export function RoomCard({ room }: RoomCardProps) {
+export function RoomCard({ room, householdId }: RoomCardProps) {
   const plantCount = room._count.plants;
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -34,7 +35,7 @@ export function RoomCard({ room }: RoomCardProps) {
   async function handleDelete() {
     setDeleting(true);
     try {
-      const result = await deleteRoom(room.id);
+      const result = await deleteRoom({ householdId, roomId: room.id });
       if ("error" in result) {
         toast.error(result.error);
         return;
@@ -53,6 +54,7 @@ export function RoomCard({ room }: RoomCardProps) {
     <>
       <CreateRoomDialog
         room={{ id: room.id, name: room.name }}
+        householdId={householdId}
         open={editOpen}
         onOpenChange={setEditOpen}
       />

@@ -24,3 +24,9 @@ export const deleteRoomSchema = z.object({
 
 export type CreateRoomInput = z.infer<typeof createRoomSchema>;
 export type EditRoomInput = z.infer<typeof editRoomSchema>;
+
+export const roomTargetSchema = z.object({
+  householdId: z.string().cuid(),
+  roomId: z.string().min(1, "Room ID is required."),
+});
+export type RoomTargetInput = z.infer<typeof roomTargetSchema>;

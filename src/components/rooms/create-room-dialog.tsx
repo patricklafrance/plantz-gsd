@@ -19,6 +19,7 @@ import { createRoom, updateRoom } from "@/features/rooms/actions";
 
 interface CreateRoomDialogProps {
   room?: { id: string; name: string };
+  householdId: string;
   trigger?: React.ReactElement;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -26,6 +27,7 @@ interface CreateRoomDialogProps {
 
 export function CreateRoomDialog({
   room,
+  householdId,
   trigger,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
@@ -70,14 +72,14 @@ export function CreateRoomDialog({
     setSubmitting(true);
     try {
       if (isEditMode) {
-        const result = await updateRoom({ id: room.id, name: trimmed });
+        const result = await updateRoom({ householdId, id: room.id, name: trimmed });
         if ("error" in result) {
           setError(result.error);
           return;
         }
         toast("Room updated.");
       } else {
-        const result = await createRoom({ name: trimmed });
+        const result = await createRoom({ householdId, name: trimmed });
         if ("error" in result) {
           setError(result.error);
           return;

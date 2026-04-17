@@ -11,10 +11,22 @@ vi.mock("@/lib/db", () => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    householdMember: {
+      findFirst: vi.fn(),
+    },
   },
 }));
 vi.mock("../auth", () => ({ auth: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/features/household/guards", async () => {
+  const actual = await vi.importActual<typeof import("@/features/household/guards")>(
+    "@/features/household/guards"
+  );
+  return {
+    ...actual,
+    requireHouseholdAccess: vi.fn(),
+  };
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -98,4 +110,90 @@ describe("Phase 2 — rooms actions reject non-members with ForbiddenError (D-17
   test.todo("createRoom throws ForbiddenError when requireHouseholdAccess throws");
   test.todo("updateRoom throws ForbiddenError when requireHouseholdAccess throws");
   test.todo("deleteRoom throws ForbiddenError when requireHouseholdAccess throws");
+});
+
+describe("Plan 05a — roomTargetSchema (D-12 blob payload for deleteRoom)", () => {
+  test("roomTargetSchema accepts valid householdId + roomId", async () => {
+    const { roomTargetSchema } = await import("@/features/rooms/schemas");
+    const result = roomTargetSchema.safeParse({
+      householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+      roomId: "room_abc",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("roomTargetSchema rejects missing householdId", async () => {
+    const { roomTargetSchema } = await import("@/features/rooms/schemas");
+    const result = roomTargetSchema.safeParse({ roomId: "room_abc" });
+    expect(result.success).toBe(false);
+  });
+
+  test("roomTargetSchema rejects empty roomId", async () => {
+    const { roomTargetSchema } = await import("@/features/rooms/schemas");
+    const result = roomTargetSchema.safeParse({
+      householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+      roomId: "",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("Plan 05a — rooms actions use householdId scope (D-12, Pitfall 16)", () => {
+  const HOUSEHOLD_ID = "clxxxxxxxxxxxxxxxxxxxxxxxxx";
+  const mockHousehold = { id: HOUSEHOLD_ID, name: "Test Household", slug: "test" };
+
+  test("deleteRoom calls requireHouseholdAccess with householdId from payload", async () => {
+    const { auth } = await import("../auth");
+    const { requireHouseholdAccess } = await import("@/features/household/guards");
+    const { db } = await import("@/lib/db");
+
+    vi.mocked(auth).mockResolvedValueOnce({
+      user: { id: "user_1", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockResolvedValueOnce({
+      household: mockHousehold,
+      member: {} as never,
+      role: "OWNER",
+    } as never);
+    vi.mocked(db.room.findFirst).mockResolvedValueOnce({
+      id: "room_1",
+      name: "Living Room",
+      _count: { plants: 0 },
+    } as never);
+    vi.mocked(db.room.delete).mockResolvedValueOnce({} as never);
+
+    const { deleteRoom } = await import("@/features/rooms/actions");
+    const result = await deleteRoom({ householdId: HOUSEHOLD_ID, roomId: "room_1" });
+
+    expect(requireHouseholdAccess).toHaveBeenCalledWith(HOUSEHOLD_ID);
+    expect(result).toMatchObject({ success: true, hadPlants: false });
+  });
+
+  test("createRoom wires createdByUserId audit column", async () => {
+    const { auth } = await import("../auth");
+    const { requireHouseholdAccess } = await import("@/features/household/guards");
+    const { db } = await import("@/lib/db");
+
+    vi.mocked(auth).mockResolvedValueOnce({
+      user: { id: "user_1", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockResolvedValueOnce({
+      household: mockHousehold,
+      member: {} as never,
+      role: "OWNER",
+    } as never);
+    vi.mocked(db.room.create).mockResolvedValueOnce({ id: "room_new" } as never);
+
+    const { createRoom } = await import("@/features/rooms/actions");
+    await createRoom({ householdId: HOUSEHOLD_ID, name: "Kitchen" });
+
+    expect(db.room.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          createdByUserId: "user_1",
+          householdId: HOUSEHOLD_ID,
+        }),
+      })
+    );
+  });
 });
