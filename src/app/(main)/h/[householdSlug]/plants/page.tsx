@@ -119,7 +119,7 @@ export default async function PlantsPage({
         )
       ) : (
         <>
-          <PlantGrid plants={plants} />
+          <PlantGrid plants={plants} householdSlug={householdSlug} />
           <Pagination
             currentPage={page}
             totalPages={totalPages}

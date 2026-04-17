@@ -53,7 +53,7 @@ export default async function RoomDetailPage({
           body="Assign a plant to this room when adding or editing it."
         />
       ) : (
-        <PlantGrid plants={plantsWithRoom} />
+        <PlantGrid plants={plantsWithRoom} householdSlug={householdSlug} />
       )}
     </div>
   );

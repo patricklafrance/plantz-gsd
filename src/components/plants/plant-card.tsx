@@ -43,9 +43,9 @@ function getStatusBadge(plant: PlantWithRelations) {
   );
 }
 
-export function PlantCard({ plant }: { plant: PlantWithRelations }) {
+export function PlantCard({ plant, householdSlug }: { plant: PlantWithRelations; householdSlug: string }) {
   return (
-    <Link href={`/plants/${plant.id}`} className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+    <Link href={`/h/${householdSlug}/plants/${plant.id}`} className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
       <Card className="flex items-center gap-4 p-4 hover:shadow-sm hover:border-accent/40 transition-shadow cursor-pointer">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent/10">
           <Leaf className="h-5 w-5 text-accent" />

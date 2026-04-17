@@ -25,7 +25,7 @@ function groupByRoom(plants: PlantWithRelations[]) {
   return sorted.map(([, group]) => group);
 }
 
-export function PlantGrid({ plants }: { plants: PlantWithRelations[] }) {
+export function PlantGrid({ plants, householdSlug }: { plants: PlantWithRelations[]; householdSlug: string }) {
   const roomGroups = groupByRoom(plants);
 
   // If only one group, skip the room headers
@@ -33,7 +33,7 @@ export function PlantGrid({ plants }: { plants: PlantWithRelations[] }) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {plants.map((plant) => (
-          <PlantCard key={plant.id} plant={plant} />
+          <PlantCard key={plant.id} plant={plant} householdSlug={householdSlug} />
         ))}
       </div>
     );
@@ -51,7 +51,7 @@ export function PlantGrid({ plants }: { plants: PlantWithRelations[] }) {
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {group.plants.map((plant) => (
-              <PlantCard key={plant.id} plant={plant} />
+              <PlantCard key={plant.id} plant={plant} householdSlug={householdSlug} />
             ))}
           </div>
         </div>
