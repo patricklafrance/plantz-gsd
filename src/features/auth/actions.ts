@@ -6,6 +6,7 @@ import bcryptjs from "bcryptjs";
 import { registerSchema } from "./schemas";
 import { onboardingSchema } from "./schemas";
 import { generateHouseholdSlug } from "@/lib/slug";
+import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { revalidatePath } from "next/cache";
 
@@ -149,7 +150,9 @@ export async function completeOnboarding(data: {
     },
   });
 
-  // Revalidate dashboard so the banner disappears on next server render
-  revalidatePath("/dashboard");
+  // Revalidate the household-scoped dashboard so the onboarding banner
+  // disappears on next server render. The legacy `/dashboard` path is a
+  // redirect stub and revalidating it would not touch the real page.
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
   return { success: true };
 }
