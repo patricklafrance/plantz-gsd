@@ -25,9 +25,10 @@ import type { RoomWithPlantCount } from "@/types/plants";
 interface RoomCardProps {
   room: RoomWithPlantCount;
   householdId: string;
+  householdSlug: string;
 }
 
-export function RoomCard({ room, householdId }: RoomCardProps) {
+export function RoomCard({ room, householdId, householdSlug }: RoomCardProps) {
   const plantCount = room._count.plants;
   const [editOpen, setEditOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -62,7 +63,7 @@ export function RoomCard({ room, householdId }: RoomCardProps) {
       <Card className="flex items-center gap-4 px-4 py-4 hover:shadow-sm transition-shadow">
         {/* Clickable area linking to room detail */}
         <Link
-          href={`/rooms/${room.id}`}
+          href={`/h/${householdSlug}/rooms/${room.id}`}
           className="flex-1 min-w-0 hover:underline hover:underline-offset-2"
         >
           <p className="text-base font-semibold truncate">{room.name}</p>
