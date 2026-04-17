@@ -41,11 +41,13 @@ function DashboardSkeleton() {
 
 async function DashboardContent({
   householdId,
+  householdSlug,
   catalog,
   rooms,
   isDemo,
 }: {
   householdId: string;
+  householdSlug: string;
   catalog: Awaited<ReturnType<typeof getCatalog>>;
   rooms: Awaited<ReturnType<typeof getRoomsForSelect>>;
   isDemo: boolean;
@@ -104,7 +106,7 @@ async function DashboardContent({
           </p>
         </div>
       )}
-      <DashboardClient groups={groups} isDemo={isDemo} householdId={householdId} />
+      <DashboardClient groups={groups} isDemo={isDemo} householdId={householdId} householdSlug={householdSlug} />
     </div>
   );
 }
@@ -149,6 +151,7 @@ export default async function DashboardPage({
       <Suspense fallback={<DashboardSkeleton />}>
         <DashboardContent
           householdId={household.id}
+          householdSlug={householdSlug}
           catalog={catalog}
           rooms={rooms}
           isDemo={session.user.isDemo ?? false}

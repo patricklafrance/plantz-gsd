@@ -14,6 +14,7 @@ import type { DashboardPlant } from "@/types/plants";
 
 interface DashboardPlantCardProps {
   householdId: string;
+  householdSlug: string;
   plant: DashboardPlant;
   onWater: () => void;
   isWatering: boolean;
@@ -114,6 +115,7 @@ function InlineSnoozePills({ householdId, plantId, isDemo }: { householdId: stri
 
 export function DashboardPlantCard({
   householdId,
+  householdSlug,
   plant,
   onWater,
   isWatering,
@@ -123,7 +125,7 @@ export function DashboardPlantCard({
   const showSnooze = plant.urgency === "overdue" || plant.urgency === "dueToday" || (plant.urgency === "upcoming" && plant.daysUntil === 0);
 
   return (
-    <Link href={`/plants/${plant.id}`} className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+    <Link href={`/h/${householdSlug}/plants/${plant.id}`} className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
       <Card
         className={cn(
           "flex items-center gap-4 p-4 hover:shadow-sm hover:border-accent/40 transition-shadow cursor-pointer",

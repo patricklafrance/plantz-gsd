@@ -17,6 +17,7 @@ type GroupedDashboardPlants = {
 
 interface DashboardClientProps {
   householdId: string;
+  householdSlug: string;
   groups: GroupedDashboardPlants;
   isDemo?: boolean;
 }
@@ -63,7 +64,7 @@ function movePlantToRecentlyWatered(
   };
 }
 
-export function DashboardClient({ householdId, groups, isDemo }: DashboardClientProps) {
+export function DashboardClient({ householdId, householdSlug, groups, isDemo }: DashboardClientProps) {
   const [optimisticGroups, updateGroups] = useOptimistic(
     groups,
     movePlantToRecentlyWatered
@@ -161,6 +162,7 @@ export function DashboardClient({ householdId, groups, isDemo }: DashboardClient
             <DashboardPlantCard
               key={plant.id}
               householdId={householdId}
+              householdSlug={householdSlug}
               plant={plant}
               onWater={() => handleWater(plant)}
               isWatering={wateringPlantIds.has(plant.id)}
