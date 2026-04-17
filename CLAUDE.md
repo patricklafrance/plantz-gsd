@@ -157,7 +157,16 @@ Use these entry points:
 Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
 <!-- GSD:workflow-end -->
 
+## Validating UI Output
 
+For any UI or frontend change, validate the result with the Chrome DevTools MCP (`mcp__chrome-devtools__*`) before reporting the task as complete:
+
+- Navigate to the affected page (`navigate_page`) and take a snapshot (`take_snapshot`) or screenshot (`take_screenshot`) to confirm the rendered output matches intent.
+- Check `list_console_messages` for runtime errors, hydration warnings, and React warnings — a change that compiles but throws at runtime is not done.
+- Check `list_network_requests` for failed requests (4xx/5xx) introduced by the change, especially after modifying Server Actions, route handlers, or data fetching.
+- Exercise the golden path interactively (`click`, `fill`, `hover`) on changed components rather than only inspecting the static render.
+
+Type checking and passing tests verify code correctness, not feature correctness. If the Chrome DevTools MCP is unavailable for a given change, say so explicitly instead of claiming the UI works.
 
 <!-- GSD:profile-start -->
 ## Developer Profile
