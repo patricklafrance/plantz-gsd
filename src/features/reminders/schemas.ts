@@ -1,11 +1,13 @@
 import { z } from "zod/v4";
 
 export const snoozeSchema = z.object({
+  householdId: z.string().min(1),
   plantId: z.string().min(1, "Plant ID is required."),
   days: z.number().int().min(1).max(365),
 });
 
 export const snoozeCustomSchema = z.object({
+  householdId: z.string().min(1),
   plantId: z.string().min(1, "Plant ID is required."),
   snoozedUntil: z.coerce.date().refine(
     (date) => date > new Date(),
@@ -14,6 +16,7 @@ export const snoozeCustomSchema = z.object({
 });
 
 export const toggleReminderSchema = z.object({
+  householdId: z.string().min(1),
   plantId: z.string().min(1, "Plant ID is required."),
   enabled: z.boolean(),
 });

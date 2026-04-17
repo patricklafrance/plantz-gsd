@@ -5,31 +5,30 @@ import type { ReminderItem } from "./types";
 /**
  * Lightweight count query for the nav badge.
  * Returns count of overdue + due-today plants with active (non-snoozed, enabled) reminders.
- * Checks global remindersEnabled on User first.
+ *
+ * D-14: Signature stable across Phase 2 → Phase 5. Phase 5 modifies the BODY
+ * to add an active Cycle join and `assignedUserId === session.user.id` gate.
+ * Callers (dashboard Server Components, NotificationBell) do not change.
+ *
+ * D-15: Phase 2 body has NO assignee gate — every member of the household sees
+ * the same count. This is a deliberate temporary regression until Phase 5 lands.
+ * Roommates will see false-positive "due today" badges until then.
  */
 export async function getReminderCount(
-  userId: string,
+  householdId: string,
   todayStart: Date,
   todayEnd: Date
 ): Promise<number> {
-  // Check global toggle first — fast exit
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: { remindersEnabled: true },
-  });
-  if (!user?.remindersEnabled) return 0;
-
   const now = new Date();
 
   const [overdue, dueToday] = await Promise.all([
     db.plant.count({
       where: {
-        userId,
+        householdId,
         archivedAt: null,
         nextWateringAt: { lt: todayStart },
         reminders: {
           some: {
-            userId,
             enabled: true,
             OR: [{ snoozedUntil: null }, { snoozedUntil: { lt: now } }],
           },
@@ -38,12 +37,11 @@ export async function getReminderCount(
     }),
     db.plant.count({
       where: {
-        userId,
+        householdId,
         archivedAt: null,
         nextWateringAt: { gte: todayStart, lt: todayEnd },
         reminders: {
           some: {
-            userId,
             enabled: true,
             OR: [{ snoozedUntil: null }, { snoozedUntil: { lt: now } }],
           },
@@ -58,23 +56,23 @@ export async function getReminderCount(
 /**
  * Fetches plant data for the notification dropdown panel.
  * Returns ReminderItem[] sorted: overdue first (most days overdue), then due-today (alphabetical).
+ *
+ * D-14: Signature stable across Phase 2 → Phase 5. Phase 5 modifies the BODY
+ * to add an active Cycle join and `assignedUserId === session.user.id` gate.
+ * Callers do not change.
+ *
+ * D-15: Phase 2 body has NO assignee gate — every member of the household sees
+ * the same items. This is a deliberate temporary regression until Phase 5 lands.
  */
 export async function getReminderItems(
-  userId: string,
+  householdId: string,
   todayStart: Date,
   todayEnd: Date
 ): Promise<ReminderItem[]> {
-  const user = await db.user.findUnique({
-    where: { id: userId },
-    select: { remindersEnabled: true },
-  });
-  if (!user?.remindersEnabled) return [];
-
   const now = new Date();
 
   const reminderFilter = {
     some: {
-      userId,
       enabled: true as const,
       OR: [{ snoozedUntil: null }, { snoozedUntil: { lt: now } }],
     },
@@ -83,7 +81,7 @@ export async function getReminderItems(
   const [overduePlants, dueTodayPlants] = await Promise.all([
     db.plant.findMany({
       where: {
-        userId,
+        householdId,
         archivedAt: null,
         nextWateringAt: { lt: todayStart },
         reminders: reminderFilter,
@@ -93,7 +91,7 @@ export async function getReminderItems(
     }),
     db.plant.findMany({
       where: {
-        userId,
+        householdId,
         archivedAt: null,
         nextWateringAt: { gte: todayStart, lt: todayEnd },
         reminders: reminderFilter,
@@ -134,6 +132,8 @@ export async function getReminderItems(
 /**
  * Fetches the Reminder record for a specific plant, used on the plant detail page.
  * Returns null if no Reminder record exists (should not happen after backfill).
+ *
+ * UNCHANGED: This is a per-user-per-plant preference read (not household-scoped).
  */
 export async function getPlantReminder(
   plantId: string,
