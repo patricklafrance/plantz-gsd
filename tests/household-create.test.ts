@@ -87,7 +87,7 @@ describe("createHousehold (HSLD-02, D-06)", () => {
 
     // WR-02: 10 total attempts before the throw — findUnique called exactly 10 times
     // (previously 11, which contradicted the "after 10 attempts" error message).
-    expect(txMock.household.findUnique.mock.calls.length).toBeGreaterThanOrEqual(10);
+    expect(txMock.household.findUnique).toHaveBeenCalledTimes(10);
     expect(txMock.household.create).not.toHaveBeenCalled();
   });
 
