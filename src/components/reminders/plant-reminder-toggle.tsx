@@ -6,6 +6,7 @@ import { togglePlantReminder } from "@/features/reminders/actions";
 import { toast } from "sonner";
 
 interface PlantReminderToggleProps {
+  householdId: string;
   plantId: string;
   initialEnabled: boolean;
   globalRemindersEnabled: boolean;
@@ -13,6 +14,7 @@ interface PlantReminderToggleProps {
 }
 
 export function PlantReminderToggle({
+  householdId,
   plantId,
   initialEnabled,
   globalRemindersEnabled,
@@ -31,7 +33,7 @@ export function PlantReminderToggle({
     setEnabled(checked);
     setIsPending(true);
 
-    const result = await togglePlantReminder({ plantId, enabled: checked });
+    const result = await togglePlantReminder({ householdId, plantId, enabled: checked });
     setIsPending(false);
 
     if (result?.error) {

@@ -4,10 +4,11 @@ import { signIn, auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_PLANTS, STARTER_PLANTS } from "./seed-data";
+import { generateHouseholdSlug } from "@/lib/slug";
 
 /**
- * Ensures the demo user exists in the database, creating it with sample
- * plants if needed, then signs in and redirects to /dashboard.
+ * Ensures the demo user exists in the database, creating it with a Household,
+ * HouseholdMember, and sample plants if needed, then signs in and redirects.
  * Called from the /demo route page — fully self-bootstrapping.
  */
 export async function startDemoSession() {
@@ -19,21 +20,70 @@ export async function startDemoSession() {
       const { subDays, addDays } = await import("date-fns");
       const passwordHash = await bcryptjs.hash(DEMO_PASSWORD, 12);
 
-      const demoUser = await db.user.create({
-        data: {
-          email: DEMO_EMAIL,
-          passwordHash,
-          name: "Demo User",
-          onboardingCompleted: true,
-          remindersEnabled: true,
-        },
+      // Create user + household + householdMember atomically
+      const { demoUser, household } = await db.$transaction(async (tx) => {
+        const demoUser = await tx.user.create({
+          data: {
+            email: DEMO_EMAIL,
+            passwordHash,
+            name: "Demo User",
+            onboardingCompleted: true,
+            remindersEnabled: true,
+          },
+        });
+
+        // Slug collision loop (mirrors auth/actions.ts pattern)
+        let slug: string;
+        let attempts = 0;
+        do {
+          slug = generateHouseholdSlug();
+          const existingHousehold = await tx.household.findUnique({
+            where: { slug },
+            select: { id: true },
+          });
+          if (!existingHousehold) break;
+          if (++attempts > 10) {
+            throw new Error("Slug generation failed after 10 attempts");
+          }
+        } while (true);
+
+        const household = await tx.household.create({
+          data: {
+            name: "Demo Plants",
+            slug: slug!,
+            timezone: "UTC",
+            cycleDuration: 7,
+            rotationStrategy: "sequential",
+          },
+        });
+
+        await tx.householdMember.create({
+          data: {
+            userId: demoUser.id,
+            householdId: household.id,
+            role: "OWNER",
+            rotationOrder: 0,
+            isDefault: true, // demo user's only household is their default
+          },
+        });
+
+        return { demoUser, household };
       });
 
+      // Create rooms outside the transaction (non-critical if partial failure)
       const livingRoom = await db.room.create({
-        data: { name: "Living Room", userId: demoUser.id },
+        data: {
+          name: "Living Room",
+          householdId: household.id,
+          createdByUserId: demoUser.id,
+        },
       });
       const bedroom = await db.room.create({
-        data: { name: "Bedroom", userId: demoUser.id },
+        data: {
+          name: "Bedroom",
+          householdId: household.id,
+          createdByUserId: demoUser.id,
+        },
       });
       const rooms = [livingRoom, bedroom];
       const now = new Date();
@@ -53,17 +103,22 @@ export async function startDemoSession() {
             roomId: rooms[i % rooms.length].id,
             wateringInterval: dp.intervalDays,
             careProfileId: careProfile?.id ?? null,
-            userId: demoUser.id,
+            householdId: household.id,      // CHANGED: was userId
+            createdByUserId: demoUser.id,   // AUDT-02
             lastWateredAt,
             nextWateringAt,
             reminders: {
-              create: { userId: demoUser.id, enabled: true },
+              create: { userId: demoUser.id, enabled: true }, // D-13: per-user
             },
           },
         });
 
         await db.wateringLog.create({
-          data: { plantId: plant.id, wateredAt: lastWateredAt },
+          data: {
+            plantId: plant.id,
+            wateredAt: lastWateredAt,
+            performedByUserId: demoUser.id, // AUDT-01
+          },
         });
       }
     }
@@ -87,8 +142,9 @@ export async function startDemoSession() {
  * Seeds the current user's collection with common starter plants from the CareProfile catalog.
  * Called during onboarding (DEMO-03). Rejects demo users.
  * @param plantCountRange - Optional range string from onboarding (e.g. "30+ plants")
+ * @param householdId - The household to seed plants into
  */
-export async function seedStarterPlants(plantCountRange?: string) {
+export async function seedStarterPlants(plantCountRange?: string, householdId?: string) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
   if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
@@ -100,6 +156,10 @@ export async function seedStarterPlants(plantCountRange?: string) {
     "30+ plants": 35,
   };
   const targetCount = TARGET_COUNTS[plantCountRange ?? "1-5 plants"] ?? 5;
+
+  // Resolve householdId: use provided value or fall back to session's active household
+  const targetHouseholdId = householdId ?? session.user.activeHouseholdId;
+  if (!targetHouseholdId) return { error: "No household found." };
 
   const { addDays } = await import("date-fns");
   const now = new Date();
@@ -134,12 +194,13 @@ export async function seedStarterPlants(plantCountRange?: string) {
         species: profile.species,
         wateringInterval: profile.wateringInterval,
         careProfileId: profile.id,
-        userId: session.user.id,
+        householdId: targetHouseholdId,   // CHANGED: was userId
+        createdByUserId: session.user.id, // AUDT-02
         lastWateredAt: now,
         nextWateringAt,
         reminders: {
           create: {
-            userId: session.user.id,
+            userId: session.user.id, // D-13: per-user
             enabled: true,
           },
         },
@@ -149,8 +210,8 @@ export async function seedStarterPlants(plantCountRange?: string) {
     createdPlants.push(plant.id);
   }
 
-  revalidatePath("/dashboard");
-  revalidatePath("/plants");
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath("/h/[householdSlug]/plants", "page");
 
   return { success: true, count: createdPlants.length };
 }

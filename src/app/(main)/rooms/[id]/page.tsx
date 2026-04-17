@@ -1,12 +1,13 @@
+/**
+ * Legacy redirect stub — Plan 03a migrates the real room detail page to
+ * /h/[householdSlug]/rooms/[id]. This stub redirects to the user's
+ * active household room detail page.
+ */
 import { auth } from "../../../../../auth";
-import { redirect, notFound } from "next/navigation";
-import { getRoom } from "@/features/rooms/queries";
-import { PlantGrid } from "@/components/plants/plant-grid";
-import { EmptyState } from "@/components/shared/empty-state";
-import { Leaf } from "lucide-react";
-import type { PlantWithRelations } from "@/types/plants";
+import { db } from "@/lib/db";
+import { redirect } from "next/navigation";
 
-export default async function RoomDetailPage({
+export default async function LegacyRoomDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -14,36 +15,15 @@ export default async function RoomDetailPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const { id } = await params;
-  const room = await getRoom(id, session.user.id);
-  if (!room) notFound();
+  const id = session.user.activeHouseholdId;
+  if (!id) redirect("/login");
 
-  // Map plants to include the room reference for PlantCard display
-  const plantsWithRoom: PlantWithRelations[] = room.plants.map((plant) => ({
-    ...plant,
-    room: { id: room.id, name: room.name, userId: room.userId, createdAt: room.createdAt, updatedAt: room.updatedAt },
-  }));
+  const household = await db.household.findUnique({
+    where: { id },
+    select: { slug: true },
+  });
+  if (!household) redirect("/login");
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 tabIndex={-1} className="text-2xl font-semibold outline-none">{room.name}</h1>
-        <p className="text-sm text-muted-foreground">
-          {room.plants.length}{" "}
-          {room.plants.length === 1 ? "plant" : "plants"}
-        </p>
-      </div>
-
-      {room.plants.length === 0 ? (
-        <EmptyState
-          icon={Leaf}
-          iconVariant="muted"
-          heading="No plants in this room"
-          body="Assign a plant to this room when adding or editing it."
-        />
-      ) : (
-        <PlantGrid plants={plantsWithRoom} />
-      )}
-    </div>
-  );
+  const { id: roomId } = await params;
+  redirect(`/h/${household.slug}/rooms/${roomId}`);
 }

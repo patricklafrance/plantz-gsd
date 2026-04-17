@@ -17,6 +17,7 @@ import type { PlantWithRelations } from "@/types/plants";
 import type { TimelineEntry as TimelineEntryType } from "@/types/timeline";
 
 interface PlantDetailProps {
+  householdId: string;
   plant: PlantWithRelations;
   timelineEntries: TimelineEntryType[];
   timelineTotal: number;
@@ -52,6 +53,7 @@ function getLightLabel(lightRequirement: string | null) {
 }
 
 export function PlantDetail({
+  householdId,
   plant,
   timelineEntries,
   timelineTotal,
@@ -99,7 +101,7 @@ export function PlantDetail({
                     : `${Math.abs(daysUntilWatering)} day${Math.abs(daysUntilWatering) !== 1 ? "s" : ""} overdue`}
                 </span>
               </div>
-              <SnoozePills plantId={plant.id} isDemo={isDemo} />
+              <SnoozePills householdId={householdId} plantId={plant.id} isDemo={isDemo} />
             </div>
           )}
           {wateringStatus === "due-today" && (
@@ -112,7 +114,7 @@ export function PlantDetail({
                   </span>
                 )}
               </div>
-              <SnoozePills plantId={plant.id} isDemo={isDemo} />
+              <SnoozePills householdId={householdId} plantId={plant.id} isDemo={isDemo} />
             </div>
           )}
           {wateringStatus === "upcoming" && (
@@ -177,6 +179,7 @@ export function PlantDetail({
         </CardHeader>
         <CardContent>
           <PlantReminderToggle
+            householdId={householdId}
             plantId={plant.id}
             initialEnabled={reminderEnabled}
             globalRemindersEnabled={globalRemindersEnabled}
@@ -189,10 +192,11 @@ export function PlantDetail({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Timeline</CardTitle>
-          <LogWateringDialog plantId={plant.id} plantNickname={plant.nickname} />
+          <LogWateringDialog householdId={householdId} plantId={plant.id} plantNickname={plant.nickname} />
         </CardHeader>
         <CardContent>
           <Timeline
+            householdId={householdId}
             plantId={plant.id}
             plantNickname={plant.nickname}
             initialEntries={timelineEntries}

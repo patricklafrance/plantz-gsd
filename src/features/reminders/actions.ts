@@ -10,6 +10,7 @@ import {
   toggleReminderSchema,
   toggleGlobalRemindersSchema,
 } from "./schemas";
+import { requireHouseholdAccess } from "@/features/household/guards";
 
 export async function snoozeReminder(data: unknown) {
   const session = await auth();
@@ -19,24 +20,27 @@ export async function snoozeReminder(data: unknown) {
   const parsed = snoozeSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
+  await requireHouseholdAccess(parsed.data.householdId);
+
   const { plantId, days } = parsed.data;
 
-  // Ownership check
+  // Ownership check: plant belongs to this household
   const plant = await db.plant.findFirst({
-    where: { id: plantId, userId: session.user.id },
+    where: { id: plantId, householdId: parsed.data.householdId },
   });
   if (!plant) return { error: "Plant not found." };
 
   const snoozedUntil = addDays(new Date(), days);
 
+  // D-13: Reminder is per-user-per-plant; compound key preserved verbatim
   await db.reminder.upsert({
     where: { plantId_userId: { plantId, userId: session.user.id } },
     update: { snoozedUntil },
     create: { plantId, userId: session.user.id, enabled: true, snoozedUntil },
   });
 
-  revalidatePath("/plants/" + plantId);
-  revalidatePath("/dashboard");
+  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
 
   return { success: true };
 }
@@ -49,22 +53,25 @@ export async function snoozeCustomReminder(data: unknown) {
   const parsed = snoozeCustomSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
+  await requireHouseholdAccess(parsed.data.householdId);
+
   const { plantId, snoozedUntil } = parsed.data;
 
-  // Ownership check
+  // Ownership check: plant belongs to this household
   const plant = await db.plant.findFirst({
-    where: { id: plantId, userId: session.user.id },
+    where: { id: plantId, householdId: parsed.data.householdId },
   });
   if (!plant) return { error: "Plant not found." };
 
+  // D-13: Reminder is per-user-per-plant; compound key preserved verbatim
   await db.reminder.upsert({
     where: { plantId_userId: { plantId, userId: session.user.id } },
     update: { snoozedUntil },
     create: { plantId, userId: session.user.id, enabled: true, snoozedUntil },
   });
 
-  revalidatePath("/plants/" + plantId);
-  revalidatePath("/dashboard");
+  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
 
   return { success: true };
 }
@@ -77,26 +84,34 @@ export async function togglePlantReminder(data: unknown) {
   const parsed = toggleReminderSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
+  await requireHouseholdAccess(parsed.data.householdId);
+
   const { plantId, enabled } = parsed.data;
 
-  // Ownership check
+  // Ownership check: plant belongs to this household
   const plant = await db.plant.findFirst({
-    where: { id: plantId, userId: session.user.id },
+    where: { id: plantId, householdId: parsed.data.householdId },
   });
   if (!plant) return { error: "Plant not found." };
 
+  // D-13: Reminder is per-user-per-plant; compound key preserved verbatim
   await db.reminder.upsert({
     where: { plantId_userId: { plantId, userId: session.user.id } },
     update: { enabled },
     create: { plantId, userId: session.user.id, enabled },
   });
 
-  revalidatePath("/plants/" + plantId);
-  revalidatePath("/dashboard");
+  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
 
   return { success: true };
 }
 
+/**
+ * toggleGlobalReminders is intentionally NOT migrated to household scope.
+ * It writes User.remindersEnabled which is a per-user global setting (T-02-05b-07).
+ * No requireHouseholdAccess — this is a per-user preference, not household-scoped.
+ */
 export async function toggleGlobalReminders(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
@@ -110,7 +125,8 @@ export async function toggleGlobalReminders(data: unknown) {
     data: { remindersEnabled: parsed.data.enabled },
   });
 
-  revalidatePath("/dashboard");
+  // Revalidate all household dashboards via literal pattern (Next.js invalidates all matching)
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
   revalidatePath("/preferences");
 
   return { success: true };

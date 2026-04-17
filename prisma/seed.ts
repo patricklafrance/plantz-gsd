@@ -4,6 +4,7 @@ import { catalogData } from "./data/catalog";
 import bcryptjs from "bcryptjs";
 import { addDays, subDays } from "date-fns";
 import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_PLANTS } from "../src/features/demo/seed-data";
+import { generateHouseholdSlug } from "../src/lib/slug";
 
 const connectionString = process.env["DATABASE_URL"];
 if (!connectionString) {
@@ -44,22 +45,69 @@ async function main() {
   const existingDemo = await db.user.findUnique({ where: { email: DEMO_EMAIL } });
   if (!existingDemo) {
     const passwordHash = await bcryptjs.hash(DEMO_PASSWORD, 12);
-    const demoUser = await db.user.create({
-      data: {
-        email: DEMO_EMAIL,
-        passwordHash,
-        name: "Demo User",
-        onboardingCompleted: true,
-        remindersEnabled: true,
-      },
+
+    // Create demo user + household + householdMember atomically
+    const { demoUser, household } = await db.$transaction(async (tx) => {
+      const demoUser = await tx.user.create({
+        data: {
+          email: DEMO_EMAIL,
+          passwordHash,
+          name: "Demo User",
+          onboardingCompleted: true,
+          remindersEnabled: true,
+        },
+      });
+
+      // Slug collision loop
+      let slug: string;
+      let attempts = 0;
+      do {
+        slug = generateHouseholdSlug();
+        const existing = await tx.household.findUnique({
+          where: { slug },
+          select: { id: true },
+        });
+        if (!existing) break;
+        if (++attempts > 10) throw new Error("Slug generation failed after 10 attempts");
+      } while (true);
+
+      const household = await tx.household.create({
+        data: {
+          name: "Demo Plants",
+          slug: slug!,
+          timezone: "UTC",
+          cycleDuration: 7,
+          rotationStrategy: "sequential",
+        },
+      });
+
+      await tx.householdMember.create({
+        data: {
+          userId: demoUser.id,
+          householdId: household.id,
+          role: "OWNER",
+          rotationOrder: 0,
+          isDefault: true,
+        },
+      });
+
+      return { demoUser, household };
     });
 
-    // Create rooms for the demo user
+    // Create rooms for the demo household
     const livingRoom = await db.room.create({
-      data: { name: "Living Room", userId: demoUser.id },
+      data: {
+        name: "Living Room",
+        householdId: household.id,
+        createdByUserId: demoUser.id,
+      },
     });
     const bedroom = await db.room.create({
-      data: { name: "Bedroom", userId: demoUser.id },
+      data: {
+        name: "Bedroom",
+        householdId: household.id,
+        createdByUserId: demoUser.id,
+      },
     });
 
     const rooms = [livingRoom, bedroom];
@@ -83,12 +131,13 @@ async function main() {
           roomId: rooms[i % rooms.length].id,
           wateringInterval: demoPlant.intervalDays,
           careProfileId: careProfile?.id ?? null,
-          userId: demoUser.id,
+          householdId: household.id,        // CHANGED: was userId
+          createdByUserId: demoUser.id,     // AUDT-02
           lastWateredAt,
           nextWateringAt,
           reminders: {
             create: {
-              userId: demoUser.id,
+              userId: demoUser.id,          // D-13: per-user reminder
               enabled: true,
             },
           },
@@ -100,6 +149,7 @@ async function main() {
         data: {
           plantId: plant.id,
           wateredAt: lastWateredAt,
+          performedByUserId: demoUser.id,   // AUDT-01
         },
       });
     }

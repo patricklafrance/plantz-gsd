@@ -21,11 +21,12 @@ const QUICK_SNOOZE_OPTIONS = [
 ] as const;
 
 interface SnoozePillsProps {
+  householdId: string;
   plantId: string;
   isDemo?: boolean;
 }
 
-export function SnoozePills({ plantId, isDemo }: SnoozePillsProps) {
+export function SnoozePills({ householdId, plantId, isDemo }: SnoozePillsProps) {
   const [isCustomOpen, setIsCustomOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isPending, setIsPending] = useState(false);
@@ -36,7 +37,7 @@ export function SnoozePills({ plantId, isDemo }: SnoozePillsProps) {
       return;
     }
     setIsPending(true);
-    const result = await snoozeReminder({ plantId, days });
+    const result = await snoozeReminder({ householdId, plantId, days });
     setIsPending(false);
     if (result?.error) {
       toast.error("Could not snooze reminder. Try again.");
@@ -51,7 +52,7 @@ export function SnoozePills({ plantId, isDemo }: SnoozePillsProps) {
       return;
     }
     setIsPending(true);
-    const result = await snoozeCustomReminder({ plantId, snoozedUntil: selectedDate });
+    const result = await snoozeCustomReminder({ householdId, plantId, snoozedUntil: selectedDate });
     setIsPending(false);
     if (result?.error) {
       toast.error("Could not snooze reminder. Try again.");
