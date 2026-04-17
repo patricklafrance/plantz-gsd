@@ -197,8 +197,11 @@ export async function loadMoreWateringHistory(data: unknown) {
   const parsed = loadMoreWateringHistorySchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  // READ delegation — no requireHouseholdAccess needed (the underlying
-  // query function filters by plant.householdId, which serves as the
-  // authorization boundary for reads). Non-members get empty results.
+  // WR-01: Live membership check — the underlying query filters by
+  // plant.householdId, but that only prevents leaks from unrelated households.
+  // A removed member could otherwise keep paginating historical data until
+  // their session expires. requireHouseholdAccess is the enforcement point.
+  await requireHouseholdAccess(parsed.data.householdId);
+
   return getWateringHistory(parsed.data.plantId, parsed.data.householdId, parsed.data.skip, 20);
 }

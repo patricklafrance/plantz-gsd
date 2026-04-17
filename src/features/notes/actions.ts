@@ -104,6 +104,10 @@ export async function loadMoreTimeline(data: unknown) {
   const parsed = loadMoreTimelineSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  // READ delegation — no requireHouseholdAccess needed (query filters by plant.householdId)
+  // WR-01: Live membership check — query filters by plant.householdId but
+  // that does not block a removed member from paginating their old household's
+  // timeline until the session expires. requireHouseholdAccess is authoritative.
+  await requireHouseholdAccess(parsed.data.householdId);
+
   return getTimeline(parsed.data.plantId, parsed.data.householdId, parsed.data.skip, 20);
 }
