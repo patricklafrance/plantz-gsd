@@ -85,8 +85,9 @@ describe("createHousehold (HSLD-02, D-06)", () => {
       createHousehold({ name: "Doomed", timezone: "UTC" })
     ).rejects.toThrow(/Slug generation failed after 10 attempts/);
 
-    // 11 attempts total (0..10 inclusive) before the throw — findUnique called at least 11 times
-    expect(txMock.household.findUnique.mock.calls.length).toBeGreaterThanOrEqual(11);
+    // WR-02: 10 total attempts before the throw — findUnique called exactly 10 times
+    // (previously 11, which contradicted the "after 10 attempts" error message).
+    expect(txMock.household.findUnique.mock.calls.length).toBeGreaterThanOrEqual(10);
     expect(txMock.household.create).not.toHaveBeenCalled();
   });
 

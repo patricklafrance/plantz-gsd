@@ -68,7 +68,8 @@ async function main() {
           select: { id: true },
         });
         if (!existing) break;
-        if (++attempts > 10) throw new Error("Slug generation failed after 10 attempts");
+        // WR-02: throw after 10 total attempts (previously 11) to match message.
+        if (attempts++ >= 9) throw new Error("Slug generation failed after 10 attempts");
       } while (true);
 
       const household = await tx.household.create({

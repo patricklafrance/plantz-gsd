@@ -45,7 +45,9 @@ export async function createHousehold(data: unknown) {
         select: { id: true },
       });
       if (!existing) break;
-      if (++attempts > 10) {
+      // WR-02: throw after 10 total attempts — previously ran 11 iterations
+      // before throwing, which contradicted the "after 10 attempts" message.
+      if (attempts++ >= 9) {
         throw new Error("Slug generation failed after 10 attempts");
       }
     }
