@@ -653,3 +653,14 @@ describe("Server Actions", () => {
     });
   });
 });
+
+describe("Phase 2 — watering queries honor householdId scope via nested plant (D-10, D-16)", () => {
+  test.todo("getWateringHistory uses plant: { householdId } nested filter");
+  test.todo("loadMoreWateringHistory uses plant: { householdId } nested filter");
+});
+
+describe("Phase 2 — watering actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {
+  test.todo("logWatering throws ForbiddenError when requireHouseholdAccess throws");
+  test.todo("editWateringLog throws ForbiddenError when requireHouseholdAccess throws");
+  test.todo("deleteWateringLog throws ForbiddenError when requireHouseholdAccess throws");
+});

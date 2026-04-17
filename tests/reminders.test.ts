@@ -69,3 +69,15 @@ describe("Zod schemas", () => {
     });
   });
 });
+
+describe("Phase 2 — reminders queries honor householdId scope (D-10, D-14, D-15, D-16)", () => {
+  it.todo("getReminderCount uses householdId (NOT userId) in where clause");
+  it.todo("getReminderItems uses householdId (NOT userId) in where clause");
+  it.todo("Phase 5 regression notice: no assignee gate — every member sees the same count (D-15)");
+});
+
+describe("Phase 2 — reminders actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {
+  it.todo("snoozeReminder throws ForbiddenError when requireHouseholdAccess throws");
+  it.todo("snoozeCustomReminder throws ForbiddenError when requireHouseholdAccess throws");
+  it.todo("togglePlantReminder throws ForbiddenError when requireHouseholdAccess throws");
+});

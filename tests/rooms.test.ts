@@ -49,3 +49,14 @@ describe("room queries (ROOM-04, ROOM-05)", () => {
   test.todo("getRooms returns all rooms for the user with plant counts");
   test.todo("getRoom returns single room with its plants");
 });
+
+describe("Phase 2 — rooms queries honor householdId scope (D-10, D-16)", () => {
+  test.todo("getRooms includes householdId in findMany where clause");
+  test.todo("getRoom filters by roomId AND householdId");
+});
+
+describe("Phase 2 — rooms actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {
+  test.todo("createRoom throws ForbiddenError when requireHouseholdAccess throws");
+  test.todo("updateRoom throws ForbiddenError when requireHouseholdAccess throws");
+  test.todo("deleteRoom throws ForbiddenError when requireHouseholdAccess throws");
+});

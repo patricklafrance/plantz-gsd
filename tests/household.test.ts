@@ -465,7 +465,9 @@ describe("JWT activeHouseholdId extension (D-13, D-15)", () => {
   test("auth.ts session callback copies token.activeHouseholdId to session.user.activeHouseholdId", async () => {
     const fs = await import("fs");
     const src = fs.readFileSync("auth.ts", "utf8");
-    expect(src).toMatch(/session\.user\.activeHouseholdId\s*=\s*token\.activeHouseholdId/);
+    // WR-01: assignment uses typeof narrowing — match the lhs assignment target only
+    expect(src).toMatch(/session\.user\.activeHouseholdId\s*=/);
+    expect(src).toContain("token.activeHouseholdId");
   });
 
   test("src/types/next-auth.d.ts Session.user has activeHouseholdId?: string", async () => {

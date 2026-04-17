@@ -81,3 +81,18 @@ describe("plant queries (PLNT-05, PLNT-06)", () => {
   test.todo("getPlant returns single plant with room and careProfile relations");
   test.todo("getCatalog returns all CareProfile entries");
 });
+
+describe("Phase 2 — plants queries honor householdId scope (D-10, D-16)", () => {
+  test.todo("getPlants includes householdId in findMany where clause");
+  test.todo("getPlants count includes householdId in where clause");
+  test.todo("getPlant filters by plantId AND householdId");
+  test.todo("getRoomsForSelect filters by householdId");
+});
+
+describe("Phase 2 — plants actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {
+  test.todo("createPlant throws ForbiddenError when requireHouseholdAccess throws");
+  test.todo("updatePlant throws ForbiddenError when requireHouseholdAccess throws");
+  test.todo("archivePlant throws ForbiddenError when requireHouseholdAccess throws");
+  test.todo("unarchivePlant throws ForbiddenError when requireHouseholdAccess throws");
+  test.todo("deletePlant throws ForbiddenError when requireHouseholdAccess throws");
+});
