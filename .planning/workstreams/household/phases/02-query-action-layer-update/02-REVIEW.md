@@ -1,7 +1,9 @@
 ---
 phase: 02-query-action-layer-update
-reviewed: 2026-04-16T14:00:00Z
+reviewed: 2026-04-17T18:45:00Z
 depth: standard
+iteration: 3
+previous_review: 2026-04-17T15:26:22Z
 files_reviewed: 63
 files_reviewed_list:
   - auth.ts
@@ -22,18 +24,26 @@ files_reviewed_list:
   - src/app/(main)/h/[householdSlug]/rooms/loading.tsx
   - src/app/(main)/h/[householdSlug]/rooms/page.tsx
   - src/app/(main)/layout.tsx
+  - src/app/(main)/not-found.tsx
   - src/app/(main)/plants/[id]/page.tsx
   - src/app/(main)/plants/page.tsx
   - src/app/(main)/rooms/[id]/page.tsx
   - src/app/(main)/rooms/page.tsx
+  - src/components/auth/login-form.tsx
   - src/components/layout/bottom-tab-bar.tsx
+  - src/components/onboarding/onboarding-banner.tsx
   - src/components/plants/add-plant-dialog.tsx
+  - src/components/plants/plant-card.tsx
+  - src/components/plants/plant-grid.tsx
+  - src/components/rooms/room-card.tsx
   - src/components/watering/dashboard-client.tsx
+  - src/components/watering/dashboard-plant-card.tsx
   - src/features/auth/actions.ts
   - src/features/demo/actions.ts
   - src/features/household/actions.ts
   - src/features/household/context.ts
   - src/features/household/guards.ts
+  - src/features/household/paths.ts
   - src/features/household/queries.ts
   - src/features/household/schema.ts
   - src/features/notes/actions.ts
@@ -59,200 +69,138 @@ files_reviewed_list:
   - tests/reminders.test.ts
   - tests/rooms.test.ts
   - tests/watering.test.ts
+fixes_verified:
+  - CR-01
+  - WR-01
+  - WR-02
+  - WR-03
+  - WR-04
+  - IN-01
+  - IN-02
+  - IN-03
+  - IN-04
+  - IN-05
 findings:
-  critical: 1
-  warning: 4
-  info: 3
-  total: 8
+  critical: 0
+  warning: 0
+  info: 2
+  total: 2
 status: issues_found
 ---
 
-# Phase 02: Code Review Report
+# Phase 02: Code Review Report (Re-review — Iteration 3)
 
-**Reviewed:** 2026-04-16T14:00:00Z
+**Reviewed:** 2026-04-17T18:45:00Z
 **Depth:** standard
 **Files Reviewed:** 63
-**Status:** issues_found
+**Status:** issues_found (Info-only; all Critical/Warning and all iteration-2 Info findings resolved)
 
 ## Summary
 
-Phase 02 introduces household-scoped authorization across the full action layer: `requireHouseholdAccess` guard, `getCurrentHousehold` React cache helper, the `/h/[householdSlug]/` route tree, legacy redirect stubs, and migration of plants/rooms/watering/notes/reminders actions from `userId` to `householdId` scope.
+This is the third-pass re-review of Phase 02 covering (a) verification of the 5 Info findings from iteration 2 (commits 2e47d51, ebf3534, f5926d5, 4db5df7, 9c1bcce) and (b) review of new files added by gap-closure phases 02-08 / 02-09 / 02-10 (`src/app/(main)/not-found.tsx`, `src/components/auth/login-form.tsx` rewrite, `src/components/onboarding/onboarding-banner.tsx`, and householdSlug threading through `PlantCard` / `PlantGrid` / `RoomCard` / `DashboardClient` / `DashboardPlantCard`).
 
-The overall authorization architecture is sound. Every primary mutating action (createPlant, updatePlant, archivePlant, unarchivePlant, deletePlant, createRoom, updateRoom, deleteRoom, logWatering, editWateringLog, deleteWateringLog, createNote, updateNote, deleteNote, snoozeReminder, snoozeCustomReminder, togglePlantReminder) calls `requireHouseholdAccess` before any DB write. All queries filter by `householdId` directly or through nested `plant: { householdId }` relations. The `ForbiddenError` class, error boundary, slug loop, and React cache usage are all correctly implemented.
+**Overall assessment:** Every iteration-1 Critical/Warning finding (CR-01, WR-01, WR-02, WR-03, WR-04) and every iteration-2 Info finding (IN-01, IN-02, IN-03, IN-04, IN-05) is now verified resolved. The 02-08/09/10 work introduced no Critical or Warning regressions. Two new minor Info-level observations are recorded below — neither is a correctness issue and neither blocks phase completion.
 
-One critical gap exists: `seedStarterPlants` in `src/features/demo/actions.ts` accepts a caller-supplied `householdId` and writes plants directly into it without calling `requireHouseholdAccess`. This allows any authenticated non-demo user to inject plants into any household by ID.
+**Iteration-2 fix verification:**
 
-Four warnings are also present: two "read" actions skip membership verification; the slug-loop off-by-one makes the comment misleading; and the legacy `revalidatePath` pattern with literal bracket segments may not clear all Next.js page caches correctly.
+- **IN-01** (dead `deleteRoomSchema`) — Fixed. `src/features/rooms/schemas.ts` no longer exports `deleteRoomSchema`; `deleteRoom` continues to import and use `roomTargetSchema`. Repo-wide grep for `deleteRoomSchema` returns zero matches.
+- **IN-02** (`householdId` schema inconsistency) — Fixed. All `householdId` fields across `plants/schemas.ts`, `rooms/schemas.ts`, `notes/schemas.ts`, `reminders/schemas.ts`, and `watering/schemas.ts` now use `z.string().min(1)`. Repo-wide grep for `.cuid()` returns zero matches in `src/`.
+- **IN-03** (`completeOnboarding` revalidates legacy path) — Fixed. `src/features/auth/actions.ts:156` calls `revalidatePath(HOUSEHOLD_PATHS.dashboard, "page")` with the household-scoped pattern. The import on line 9 is in place.
+- **IN-04** (unused `household` destructures) — Fixed. Only two `const { household } = await requireHouseholdAccess(...)` destructures remain in the repo: `createPlant` (line 19) and `createRoom` (line 18) — both actually reference `household.id` on the next write. The previously-flagged `updatePlant` / `archivePlant` / `unarchivePlant` / `deletePlant` / `updateRoom` / `deleteRoom` sites now call `await requireHouseholdAccess(parsed.data.householdId)` without destructuring.
+- **IN-05** (loose slug-loop test assertion) — Fixed. `tests/household-create.test.ts:90` now asserts `expect(txMock.household.findUnique).toHaveBeenCalledTimes(10)` — strictly enforces "exactly 10" instead of the previous `toBeGreaterThanOrEqual(10)`.
 
-## Critical Issues
+**02-08/09/10 review (new/modified files):**
 
-### CR-01: `seedStarterPlants` writes to caller-supplied householdId without membership check
+- `src/app/(main)/not-found.tsx` (new) — Root-level 404 for routes outside `/h/[householdSlug]/`. Copy-paste of the household not-found component (see IN-06 below). No security issue; works as expected.
+- `src/app/(main)/h/[householdSlug]/not-found.tsx` — Unchanged from iteration 2.
+- `src/components/auth/login-form.tsx` (rewritten) — UAT-2 fix. Uses Auth.js v5 native server-side redirect (`redirect: true, redirectTo: "/dashboard"`) instead of the `{ redirect: false }` + `router.push` pattern. Correctly re-throws `isRedirectError` on success. No credential leakage, no exposed state.
+- `src/components/onboarding/onboarding-banner.tsx` (new/rewritten) — Concurrent-action flow via `Promise.all` for `completeOnboarding` + `seedStarterPlants`. Surfaces seed-error via `toast.error` without auto-dismissing (UAT-10). One small nit flagged as IN-07.
+- `src/components/plants/plant-card.tsx` — Now accepts `householdSlug` prop; builds household-scoped link at line 48. No session/DB access client-side — correct.
+- `src/components/plants/plant-grid.tsx` — Passes `householdSlug` through to `PlantCard`. Pure presentation.
+- `src/components/rooms/room-card.tsx` — Accepts `householdId` + `householdSlug`; calls `deleteRoom({ householdId, roomId })` correctly; link builds `/h/${householdSlug}/rooms/${room.id}`. Correct.
+- `src/components/watering/dashboard-client.tsx` — Adds `householdSlug` to props and threads it through to `DashboardPlantCard`. `logWatering({ householdId, plantId })` call at line 91 matches the `logWateringSchema` contract.
+- `src/components/watering/dashboard-plant-card.tsx` — Accepts `householdSlug` for link construction; `snoozeReminder({ householdId, plantId, days })` at line 89 matches schema. Correct.
 
-**File:** `src/features/demo/actions.ts:147-217`
-
-**Issue:** `seedStarterPlants` accepts an optional `householdId` parameter from the caller and uses it directly as the target for bulk plant creation. There is no call to `requireHouseholdAccess` before writing. An authenticated non-demo user can pass any household ID they know (or guess) and populate it with plants — bypassing all household membership controls established in this phase.
-
-The fallback path (`session.user.activeHouseholdId`) also uses a JWT-resident value for authorization, which contradicts D-14/Pitfall 16: the JWT value is a landing-target hint only and must not be used as the authorization source.
-
-```typescript
-// Current (insecure):
-const targetHouseholdId = householdId ?? session.user.activeHouseholdId;
-if (!targetHouseholdId) return { error: "No household found." };
-
-// Fixed:
-const targetHouseholdId = householdId ?? session.user.activeHouseholdId;
-if (!targetHouseholdId) return { error: "No household found." };
-
-// Add after the targetHouseholdId check:
-await requireHouseholdAccess(targetHouseholdId);
-```
-
-Import `requireHouseholdAccess` at the top of `src/features/demo/actions.ts`:
-
-```typescript
-import { requireHouseholdAccess } from "@/features/household/guards";
-```
-
-## Warnings
-
-### WR-01: `loadMoreWateringHistory` and `loadMoreTimeline` skip membership check, exposing household data to unauthenticated cross-household reads
-
-**File:** `src/features/watering/actions.ts:193-204` and `src/features/notes/actions.ts:100-109`
-
-**Issue:** Both pagination actions are documented as safe because "the underlying query filters by `plant.householdId`". However, the query filter only prevents a non-member from seeing plants from a *different* household — it does not prevent a member of household A from enumerating watering history or timeline entries from household B if they supply household B's ID and a plant ID that happens to exist in household B. The session check (`!session?.user?.id`) only verifies the user is authenticated, not that they are a member of the requested household.
-
-A user removed from a household can continue paginating through historical data until their session expires.
-
-```typescript
-// Fix for loadMoreWateringHistory:
-export async function loadMoreWateringHistory(data: unknown) {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Not authenticated." };
-
-  const parsed = loadMoreWateringHistorySchema.safeParse(data);
-  if (!parsed.success) return { error: "Invalid input." };
-
-  await requireHouseholdAccess(parsed.data.householdId);
-
-  return getWateringHistory(parsed.data.plantId, parsed.data.householdId, parsed.data.skip, 20);
-}
-```
-
-Apply the same pattern to `loadMoreTimeline` in `src/features/notes/actions.ts`.
-
-### WR-02: Slug collision loop throw threshold is off-by-one relative to its comment
-
-**File:** `src/features/household/actions.ts:41-51` and `src/features/demo/actions.ts:37-48` and `prisma/seed.ts:64-72`
-
-**Issue:** The loop increments `attempts` with `++attempts > 10` *after* the break check, meaning the loop runs for attempts 0 through 10 — 11 total iterations — before throwing. The comment and error message both say "after 10 attempts". The test in `household-create.test.ts:88` asserts `findUnique.mock.calls.length >= 11`, confirming 11 calls happen. This is not a functional bug (11 attempts is fine), but the mismatch between the documented intent ("10 attempts") and the actual behavior (11 attempts) creates confusion and makes the test assertion counterintuitive.
-
-```typescript
-// Current (throws after 11 attempts):
-if (++attempts > 10) {
-  throw new Error("Slug generation failed after 10 attempts");
-}
-
-// Option A — fix the threshold to match the message (10 attempts total):
-if (attempts++ >= 9) {
-  throw new Error("Slug generation failed after 10 attempts");
-}
-
-// Option B — fix the message to match the behavior (cleaner):
-if (++attempts > 10) {
-  throw new Error("Slug generation failed after 11 attempts");
-}
-```
-
-The same pattern exists in `src/features/auth/actions.ts:63-65` and `prisma/seed.ts:71` — fix all four occurrences consistently.
-
-### WR-03: JWT narrowing converts `null` activeHouseholdId to `undefined`, causing redirect loop for new users with no household
-
-**File:** `auth.ts:39-41`
-
-**Issue:** The session callback converts `token.activeHouseholdId` from `null` to `undefined`:
-
-```typescript
-session.user.activeHouseholdId =
-  typeof token.activeHouseholdId === "string" ? token.activeHouseholdId : undefined;
-```
-
-This is correct for the TypeScript declaration (`activeHouseholdId?: string` on Session, not `string | null`). However, legacy redirect stubs (`/dashboard`, `/plants`, `/rooms`, `/plants/[id]`, `/rooms/[id]`) branch on `!id` (where `id = session.user.activeHouseholdId`) and redirect to `/login` when it is falsy:
-
-```typescript
-const id = session.user.activeHouseholdId;
-if (!id) redirect("/login");
-```
-
-A brand-new authenticated user whose household creation failed in a race condition, or any user whose JWT was issued before the household was created, will be silently redirected to `/login` instead of receiving an actionable error. This is an edge case but produces a confusing UX with no error message.
-
-**Fix:** Replace the silent `/login` redirect in legacy stubs with a redirect to an error or onboarding page, or surface a toast/error before redirecting.
-
-### WR-04: `revalidatePath` with literal bracket patterns may not invalidate all cached pages
-
-**File:** `src/features/plants/actions.ts:40-41`, `src/features/rooms/actions.ts:27-28`, `src/features/watering/actions.ts:77-78`, and similar across all actions
-
-**Issue:** The revalidation calls use literal bracket segments:
-
-```typescript
-revalidatePath("/h/[householdSlug]/plants", "page");
-revalidatePath("/h/[householdSlug]/dashboard", "page");
-```
-
-In Next.js 15/16, `revalidatePath` with a dynamic-segment pattern in bracket notation invalidates all rendered instances of that route (all slugs). This is documented behavior and is intentional here. However, the pattern only works if the segment name in the call exactly matches the folder name in `src/app/(main)/h/[householdSlug]/`. If the folder name ever changes, this revalidation will silently stop working with no build-time error.
-
-This is a documentation/fragility warning rather than a runtime bug at present. Consider centralizing the path patterns as named constants to make refactoring safer:
-
-```typescript
-// src/features/household/paths.ts
-export const HOUSEHOLD_PATHS = {
-  dashboard: "/h/[householdSlug]/dashboard",
-  plants: "/h/[householdSlug]/plants",
-  plantDetail: "/h/[householdSlug]/plants/[id]",
-  rooms: "/h/[householdSlug]/rooms",
-  roomDetail: "/h/[householdSlug]/rooms/[id]",
-} as const;
-```
+**No new Critical or Warning findings.** Two Info items follow.
 
 ## Info
 
-### IN-01: `deleteRoomSchema` in `rooms/schemas.ts` is dead code — `deleteRoom` action uses `roomTargetSchema`
+### IN-06: `src/app/(main)/not-found.tsx` duplicates `src/app/(main)/h/[householdSlug]/not-found.tsx` byte-for-byte
 
-**File:** `src/features/rooms/schemas.ts:20-23`
+**Files:**
+- `src/app/(main)/not-found.tsx:1-19`
+- `src/app/(main)/h/[householdSlug]/not-found.tsx:1-19`
 
-**Issue:** `deleteRoomSchema` defines `{ householdId, id }` but the `deleteRoom` action imports and uses `roomTargetSchema` (which defines `{ householdId, roomId }`). `deleteRoomSchema` is never imported anywhere.
+**Issue:** Both files export a "Household not found" component with identical icon (`SearchX`), identical headline, identical body copy, and identical "Go to dashboard" button pointing at `/dashboard`. The inner file is correct for the `/h/[householdSlug]/*` route scope (household lookup failed for a known slug shape). The outer file renders for routes outside `/h/*` — where the message "Household not found" is semantically wrong (the user hit e.g. `/settings`, not a household route).
 
-```typescript
-// Remove dead schema:
-export const deleteRoomSchema = z.object({
-  householdId: z.string().min(1),
-  id: z.string().min(1),
-});
+The copy is harmless in practice because `/dashboard` will redirect to a valid household (or `/login?error=no_household` via the WR-03 fix), but future divergence is invited: a copy change in one file will silently drift from the other.
+
+**Fix:**
+
+Option A (recommended — fix the outer message):
+
+```tsx
+// src/app/(main)/not-found.tsx
+export default function MainNotFound() {
+  return (
+    <div className="space-y-4 py-12 text-center">
+      <SearchX className="mx-auto h-12 w-12 text-muted-foreground" aria-hidden="true" />
+      <h1 className="text-xl font-semibold">Page not found</h1>
+      <p className="text-muted-foreground max-w-md mx-auto">
+        We couldn&apos;t find what you&apos;re looking for. Head back to your dashboard.
+      </p>
+      <Link href="/dashboard">
+        <Button variant="outline" size="sm">Go to dashboard</Button>
+      </Link>
+    </div>
+  );
+}
 ```
 
-### IN-02: Inconsistent `householdId` validation across Zod schemas
+Option B: Extract a shared `<NotFoundCard heading={…} body={…} />` component in `src/components/shared/` and import it from both locations.
 
-**File:** `src/features/plants/schemas.ts:38-41` vs `src/features/plants/schemas.ts:3-6`
+### IN-07: `userId` prop on `OnboardingBanner` is unused
 
-**Issue:** `plantTargetSchema.householdId` uses `.cuid()` validation while `createPlantSchema.householdId` uses `.string().min(1)`. Similarly, `roomTargetSchema.householdId` uses `.cuid()` but `createRoomSchema.householdId` uses `.min(1)`. The inconsistency is harmless at runtime (all valid household IDs are CUIDs) but makes the API surface harder to reason about and could cause surprising validation failures if IDs ever change format.
+**File:** `src/components/onboarding/onboarding-banner.tsx:14-19`
 
-Pick one convention and apply it uniformly. Given that `requireHouseholdAccess` is the authoritative membership check, `.string().min(1)` is sufficient for all schemas — `.cuid()` at the schema layer provides minimal additional security value since the guard is the enforcement point.
+**Issue:** `OnboardingBannerProps` declares `userId: string` and the function destructures it, but the variable is never referenced in the component body. Both Server Actions it invokes (`completeOnboarding` and `seedStarterPlants`) re-authenticate via `auth()` server-side and derive `session.user.id` themselves — the client-passed `userId` is redundant. A caller that passes a wrong `userId` would not cause a security issue (the server action ignores it), but the prop is dead surface area and will trip `@typescript-eslint/no-unused-vars` under strict lint configs.
 
-### IN-03: `completeOnboarding` in `src/features/auth/actions.ts` still calls `revalidatePath("/dashboard")` (legacy path) instead of household-scoped path
+The `householdId` prop, by contrast, is load-bearing: it's the landing-target hint that the server action uses (and subsequently re-authorizes via `requireHouseholdAccess`), which is the D-14 pattern.
 
-**File:** `src/features/auth/actions.ts:152`
+**Fix:**
 
-**Issue:** After Phase 02 migration, `/dashboard` is now a legacy redirect stub that immediately forwards to `/h/[householdSlug]/dashboard`. The `revalidatePath("/dashboard")` call will revalidate the stub (which has no persistent cache) rather than the actual dashboard page. The onboarding banner will continue to appear until the user navigates to a page that triggers a server re-render.
+```tsx
+// Before
+interface OnboardingBannerProps {
+  userId: string;
+  householdId: string;
+}
 
-```typescript
-// Current:
-revalidatePath("/dashboard");
+export function OnboardingBanner({ userId, householdId }: OnboardingBannerProps) {
 
-// Fix — revalidate the actual page pattern:
-revalidatePath("/h/[householdSlug]/dashboard", "page");
+// After
+interface OnboardingBannerProps {
+  householdId: string;
+}
+
+export function OnboardingBanner({ householdId }: OnboardingBannerProps) {
 ```
+
+And at the call site in `src/app/(main)/h/[householdSlug]/dashboard/page.tsx:139`:
+
+```tsx
+// Before
+<OnboardingBanner userId={session.user.id} householdId={household.id} />
+
+// After
+<OnboardingBanner householdId={household.id} />
+```
+
+No behavioral change.
 
 ---
 
-_Reviewed: 2026-04-16T14:00:00Z_
+_Reviewed: 2026-04-17T18:45:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
+_Iteration: 3 (re-review)_

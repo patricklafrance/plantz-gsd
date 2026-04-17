@@ -57,7 +57,20 @@ This milestone retrofits the v1.0 single-user app into a multi-household, rotati
   2. Owner can create a new household from settings (becomes owner; household appears in their membership list)
   3. User can view a list of all households they belong to with their role shown for each
   4. All Server Actions enforce live household membership check (`requireHouseholdAccess`) — stale JWT cannot access a household the user was removed from
-**Plans**: TBD
+**Plans**: 13 plans (revised 2026-04-16 after checker feedback — 02-03 split into 03a/03b/03c; 02-05 split into 05a/05b; 02-07 added for D-18 real-Prisma integration tests; 02-08/09/10 added 2026-04-17 as gap-closure plans for UAT-4/9/2+10)
+  - [x] 02-01-PLAN.md — HouseholdMember.isDefault migration + getCurrentHousehold cached helper + WR-01 JWT normalization + Wave 0 test scaffolds
+  - [x] 02-02-PLAN.md — createHousehold + getUserHouseholds + registerUser isDefault=true (HSLD-02/03 data layer — mocked Prisma unit tests)
+  - [x] 02-04-PLAN.md — Query-layer migration across plants/rooms/watering/notes/reminders + D-16 isolation tests
+  - [x] 02-05a-PLAN.md — Action-layer migration for plants + rooms (D-12 7-step; archive/unarchive/delete flip to data-blob signature); dialog + action-button components thread householdId
+  - [x] 02-05b-PLAN.md — Action-layer migration for watering/notes/reminders/demo (nested plant.householdId + AUDT-01 audit columns + D-13 Reminder compound-key preserved); 9 client components thread householdId; updateNote + loadMoreWateringHistory + loadMoreTimeline included
+  - [x] 02-07-PLAN.md — Real-Prisma integration tests for createHousehold + getUserHouseholds (D-18 — CONTEXT authoritative)
+  - [x] 02-03a-PLAN.md — New /h/[householdSlug]/ route tree (layout chokepoint + error/not-found boundaries + moved pages with household-scoped queries)
+  - [x] 02-03b-PLAN.md — Legacy redirect stubs (/dashboard, /plants, etc. → /h/[slug]/...); auth.config.ts post-login landing unchanged
+  - [x] 02-03c-PLAN.md — Chrome relocation (Q11 Option A) — move header/NotificationBell/BottomTabBar into inner layout with householdSlug prop threading; slim outer (main)/layout.tsx
+  - [x] 02-06-PLAN.md — ForbiddenError authz tests (D-17) for 17 mutating actions; full phase build gate
+  - [ ] 02-08-PLAN.md — Gap closure UAT-4: thread householdSlug through PlantCard/DashboardPlantCard so plant links target /h/{slug}/plants/{id} directly
+  - [ ] 02-09-PLAN.md — Gap closure UAT-9: diagnose + fix blank page on /h/{bogus}/dashboard so not-found.tsx content renders
+  - [ ] 02-10-PLAN.md — Gap closure UAT-2 + UAT-10: diagnose fresh-JWT cold-start + seed-starter-plants silent failure; thread householdId from onboarding banner; surface seed errors; CR-01 guard preserved
 **Pitfall flags**:
   - Pitfall 1: Audit checklist — plants/queries.ts, watering/queries.ts, notes/queries.ts, rooms/queries.ts, reminders/queries.ts all updated; integration test asserts cross-household reads return empty/404
   - Pitfall 16: Every Server Action uses live `householdMember.findFirst` check, not JWT alone
@@ -148,7 +161,7 @@ This milestone retrofits the v1.0 single-user app into a multi-household, rotati
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Schema Foundation + Data Migration | 0/TBD | Not started | - |
-| 2. Query + Action Layer Update | 0/TBD | Not started | - |
+| 2. Query + Action Layer Update | 0/6 | Not started | - |
 | 3. Rotation Engine + Availability | 0/TBD | Not started | - |
 | 4. Invitation System | 0/TBD | Not started | - |
 | 5. Household Notifications | 0/TBD | Not started | - |
