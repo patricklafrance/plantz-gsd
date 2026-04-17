@@ -52,7 +52,7 @@ export async function updatePlant(data: unknown) {
   const parsed = editPlantSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  const { household } = await requireHouseholdAccess(parsed.data.householdId);
+  await requireHouseholdAccess(parsed.data.householdId);
 
   const existing = await db.plant.findFirst({
     where: { id: parsed.data.id, householdId: parsed.data.householdId },
@@ -97,7 +97,7 @@ export async function archivePlant(data: unknown) {
   const parsed = plantTargetSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  const { household } = await requireHouseholdAccess(parsed.data.householdId);
+  await requireHouseholdAccess(parsed.data.householdId);
 
   const plant = await db.plant.findFirst({
     where: { id: parsed.data.plantId, householdId: parsed.data.householdId },
@@ -123,7 +123,7 @@ export async function unarchivePlant(data: unknown) {
   const parsed = plantTargetSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  const { household } = await requireHouseholdAccess(parsed.data.householdId);
+  await requireHouseholdAccess(parsed.data.householdId);
 
   const plant = await db.plant.findFirst({
     where: { id: parsed.data.plantId, householdId: parsed.data.householdId },
@@ -149,7 +149,7 @@ export async function deletePlant(data: unknown) {
   const parsed = plantTargetSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  const { household } = await requireHouseholdAccess(parsed.data.householdId);
+  await requireHouseholdAccess(parsed.data.householdId);
 
   const plant = await db.plant.findFirst({
     where: { id: parsed.data.plantId, householdId: parsed.data.householdId },

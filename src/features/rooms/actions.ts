@@ -39,7 +39,7 @@ export async function updateRoom(data: unknown) {
   const parsed = editRoomSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  const { household } = await requireHouseholdAccess(parsed.data.householdId);
+  await requireHouseholdAccess(parsed.data.householdId);
 
   const existing = await db.room.findFirst({
     where: { id: parsed.data.id, householdId: parsed.data.householdId },
@@ -66,7 +66,7 @@ export async function deleteRoom(data: unknown) {
   const parsed = roomTargetSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  const { household } = await requireHouseholdAccess(parsed.data.householdId);
+  await requireHouseholdAccess(parsed.data.householdId);
 
   const room = await db.room.findFirst({
     where: { id: parsed.data.roomId, householdId: parsed.data.householdId },
