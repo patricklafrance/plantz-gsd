@@ -13,9 +13,10 @@ const PLANT_RANGES = ["1-5 plants", "6-15 plants", "16-30 plants", "30+ plants"]
 
 interface OnboardingBannerProps {
   userId: string;
+  householdId: string;
 }
 
-export function OnboardingBanner({ userId }: OnboardingBannerProps) {
+export function OnboardingBanner({ userId, householdId }: OnboardingBannerProps) {
   const [dismissed, setDismissed] = useState(false);
   const [selectedRange, setSelectedRange] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -40,15 +41,23 @@ export function OnboardingBanner({ userId }: OnboardingBannerProps) {
     setIsCompleting(true);
 
     // Fire both actions concurrently
-    const [onboardingResult] = await Promise.all([
+    const [onboardingResult, seedResult] = await Promise.all([
       completeOnboarding({ plantCountRange: range }),
-      seedStarters ? seedStarterPlants(range) : Promise.resolve(null),
+      seedStarters ? seedStarterPlants(range, householdId) : Promise.resolve(null),
     ]);
 
     setIsCompleting(false);
 
     if (onboardingResult && "error" in onboardingResult) {
       toast.error("Something went wrong. Please try again.");
+      setSelectedRange(null);
+      return;
+    }
+
+    if (seedResult && "error" in seedResult) {
+      toast.error(`Could not seed starter plants: ${seedResult.error}`);
+      // Onboarding itself succeeded; do NOT auto-dismiss so the user can
+      // retry or dismiss manually.
       setSelectedRange(null);
       return;
     }

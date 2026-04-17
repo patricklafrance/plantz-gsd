@@ -164,12 +164,6 @@ export async function seedStarterPlants(plantCountRange?: string, householdId?: 
   const targetHouseholdId = householdId ?? session.user.activeHouseholdId;
   if (!targetHouseholdId) return { error: "No household found." };
 
-  // CR-01: Live membership check — Pitfall 16 / D-14.
-  // The fallback to session.user.activeHouseholdId is a landing-target hint, not
-  // an authorization source. requireHouseholdAccess throws ForbiddenError if the
-  // caller is not a member of targetHouseholdId.
-  await requireHouseholdAccess(targetHouseholdId);
-
   const { addDays } = await import("date-fns");
   const now = new Date();
 
@@ -192,11 +186,23 @@ export async function seedStarterPlants(plantCountRange?: string, householdId?: 
     allProfiles = [...allProfiles, ...additionalProfiles];
   }
 
+  // Surface empty-catalog as a seed error instead of silently returning count: 0.
+  // Matches UAT-10 observed failure mode when the CareProfile table has not been
+  // seeded (run `npx prisma db seed`).
+  if (allProfiles.length === 0) {
+    return { error: "Starter plant catalog is empty. Run `npx prisma db seed` to populate it." };
+  }
+
   const createdPlants: string[] = [];
 
+  // CR-01: Live membership check immediately before the write loop — Pitfall 16 / D-14.
+  // Positioned in the 2 lines preceding the first db.plant.create call so a mechanical
+  // grep (see Plan 02-10 acceptance criteria) can verify the guard has not drifted away
+  // from the write it protects. The fallback to session.user.activeHouseholdId is a
+  // landing-target hint, not an authorization source; this throws ForbiddenError if
+  // the caller is not a member of targetHouseholdId.
+  await requireHouseholdAccess(targetHouseholdId);
   for (const profile of allProfiles) {
-    const nextWateringAt = addDays(now, profile.wateringInterval);
-
     const plant = await db.plant.create({
       data: {
         nickname: profile.name,
@@ -206,7 +212,7 @@ export async function seedStarterPlants(plantCountRange?: string, householdId?: 
         householdId: targetHouseholdId,   // CHANGED: was userId
         createdByUserId: session.user.id, // AUDT-02
         lastWateredAt: now,
-        nextWateringAt,
+        nextWateringAt: addDays(now, profile.wateringInterval),
         reminders: {
           create: {
             userId: session.user.id, // D-13: per-user
