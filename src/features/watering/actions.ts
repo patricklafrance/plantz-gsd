@@ -4,8 +4,14 @@ import { auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { addDays } from "date-fns";
-import { logWateringSchema, editWateringLogSchema } from "./schemas";
+import {
+  logWateringSchema,
+  editWateringLogSchema,
+  deleteWateringLogSchema,
+  loadMoreWateringHistorySchema,
+} from "./schemas";
 import { getWateringHistory } from "./queries";
+import { requireHouseholdAccess } from "@/features/household/guards";
 
 export async function logWatering(data: unknown) {
   const session = await auth();
@@ -15,11 +21,13 @@ export async function logWatering(data: unknown) {
   const parsed = logWateringSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  // Ownership check: only active (non-archived) plants owned by this user
+  await requireHouseholdAccess(parsed.data.householdId);
+
+  // Ownership check: only active (non-archived) plants in this household
   const plant = await db.plant.findFirst({
     where: {
       id: parsed.data.plantId,
-      userId: session.user.id,
+      householdId: parsed.data.householdId,
       archivedAt: null,
     },
   });
@@ -42,12 +50,13 @@ export async function logWatering(data: unknown) {
   });
   if (existingLog) return { error: "DUPLICATE" };
 
-  // Create the watering log first
+  // Create the watering log with audit column
   await db.wateringLog.create({
     data: {
       plantId: plant.id,
       wateredAt,
       note: parsed.data.note ?? null,
+      performedByUserId: session.user.id, // AUDT-01
     },
   });
 
@@ -65,8 +74,8 @@ export async function logWatering(data: unknown) {
     data: { lastWateredAt, nextWateringAt },
   });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/plants/" + plant.id);
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
 
   return { success: true, nextWateringAt, plantNickname: plant.nickname };
 }
@@ -79,11 +88,13 @@ export async function editWateringLog(data: unknown) {
   const parsed = editWateringLogSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
+  await requireHouseholdAccess(parsed.data.householdId);
+
   // Ownership check through plant relation
   const log = await db.wateringLog.findFirst({
     where: {
       id: parsed.data.logId,
-      plant: { userId: session.user.id },
+      plant: { householdId: parsed.data.householdId },
     },
     include: { plant: true },
   });
@@ -118,22 +129,27 @@ export async function editWateringLog(data: unknown) {
     });
   }
 
-  revalidatePath("/dashboard");
-  revalidatePath("/plants/" + log.plantId);
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
 
   return { success: true };
 }
 
-export async function deleteWateringLog(logId: string) {
+export async function deleteWateringLog(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
   if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
+  const parsed = deleteWateringLogSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  await requireHouseholdAccess(parsed.data.householdId);
+
   // Ownership check through plant relation
   const log = await db.wateringLog.findFirst({
     where: {
-      id: logId,
-      plant: { userId: session.user.id },
+      id: parsed.data.logId,
+      plant: { householdId: parsed.data.householdId },
     },
     include: { plant: true },
   });
@@ -141,7 +157,7 @@ export async function deleteWateringLog(logId: string) {
 
   // Delete the log
   await db.wateringLog.delete({
-    where: { id: logId },
+    where: { id: parsed.data.logId },
   });
 
   // Recalculate nextWateringAt from remaining logs (Pitfall 4)
@@ -168,15 +184,21 @@ export async function deleteWateringLog(logId: string) {
     data: { lastWateredAt, nextWateringAt },
   });
 
-  revalidatePath("/dashboard");
-  revalidatePath("/plants/" + log.plantId);
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
 
   return { success: true };
 }
 
-export async function loadMoreWateringHistory(plantId: string, skip: number) {
+export async function loadMoreWateringHistory(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
 
-  return getWateringHistory(plantId, session.user.id, skip, 20);
+  const parsed = loadMoreWateringHistorySchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  // READ delegation — no requireHouseholdAccess needed (the underlying
+  // query function filters by plant.householdId, which serves as the
+  // authorization boundary for reads). Non-members get empty results.
+  return getWateringHistory(parsed.data.plantId, parsed.data.householdId, parsed.data.skip, 20);
 }

@@ -35,6 +35,7 @@ import { LogWateringDialog } from "@/components/watering/log-watering-dialog";
 import type { TimelineEntry } from "@/types/timeline";
 
 interface TimelineEntryProps {
+  householdId: string;
   entry: TimelineEntry;
   plantNickname: string;
   onMutated?: () => void;
@@ -49,6 +50,7 @@ function formatRelativeTime(date: Date): string {
 }
 
 function TimelineEntryComponent({
+  householdId,
   entry,
   plantNickname,
   onMutated,
@@ -68,7 +70,7 @@ function TimelineEntryComponent({
     if (!trimmed) return;
 
     setIsSaving(true);
-    const result = await updateNote({ noteId: entry.id, content: trimmed });
+    const result = await updateNote({ householdId, noteId: entry.id, content: trimmed });
     setIsSaving(false);
 
     if ("error" in result) {
@@ -90,8 +92,8 @@ function TimelineEntryComponent({
     setIsDeleting(true);
     const result =
       entry.type === "note"
-        ? await deleteNote({ noteId: entry.id })
-        : await deleteWateringLog(entry.id);
+        ? await deleteNote({ householdId, noteId: entry.id })
+        : await deleteWateringLog({ householdId, logId: entry.id });
     setIsDeleting(false);
 
     if ("error" in result) {
@@ -169,6 +171,7 @@ function TimelineEntryComponent({
 
         {/* Edit dialog */}
         <LogWateringDialog
+          householdId={householdId}
           plantId={entry.data.plantId}
           plantNickname={plantNickname}
           editLog={{

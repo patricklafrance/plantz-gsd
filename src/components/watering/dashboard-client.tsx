@@ -16,6 +16,7 @@ type GroupedDashboardPlants = {
 };
 
 interface DashboardClientProps {
+  householdId: string;
   groups: GroupedDashboardPlants;
   isDemo?: boolean;
 }
@@ -62,7 +63,7 @@ function movePlantToRecentlyWatered(
   };
 }
 
-export function DashboardClient({ groups, isDemo }: DashboardClientProps) {
+export function DashboardClient({ householdId, groups, isDemo }: DashboardClientProps) {
   const [optimisticGroups, updateGroups] = useOptimistic(
     groups,
     movePlantToRecentlyWatered
@@ -86,7 +87,7 @@ export function DashboardClient({ groups, isDemo }: DashboardClientProps) {
       // Optimistically move plant to recentlyWatered — stays applied until transition ends
       updateGroups(plant.id);
 
-      const result = await logWatering({ plantId: plant.id });
+      const result = await logWatering({ householdId, plantId: plant.id });
 
       // Clean up local state
       setWateringPlantIds((prev) => {
@@ -159,6 +160,7 @@ export function DashboardClient({ groups, isDemo }: DashboardClientProps) {
           renderCard={(plant) => (
             <DashboardPlantCard
               key={plant.id}
+              householdId={householdId}
               plant={plant}
               onWater={() => handleWater(plant)}
               isWatering={wateringPlantIds.has(plant.id)}

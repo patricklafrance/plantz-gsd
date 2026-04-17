@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import type { DashboardPlant } from "@/types/plants";
 
 interface DashboardPlantCardProps {
+  householdId: string;
   plant: DashboardPlant;
   onWater: () => void;
   isWatering: boolean;
@@ -73,7 +74,7 @@ const QUICK_SNOOZE = [
   { label: "1w", days: 7, msg: "Snoozed 1 week" },
 ] as const;
 
-function InlineSnoozePills({ plantId, isDemo }: { plantId: string; isDemo?: boolean }) {
+function InlineSnoozePills({ householdId, plantId, isDemo }: { householdId: string; plantId: string; isDemo?: boolean }) {
   const [isPending, setIsPending] = useState(false);
 
   async function handleSnooze(e: React.MouseEvent, days: number, msg: string) {
@@ -84,7 +85,7 @@ function InlineSnoozePills({ plantId, isDemo }: { plantId: string; isDemo?: bool
       return;
     }
     setIsPending(true);
-    const result = await snoozeReminder({ plantId, days });
+    const result = await snoozeReminder({ householdId, plantId, days });
     setIsPending(false);
     if (result?.error) {
       toast.error("Could not snooze. Try again.");
@@ -112,6 +113,7 @@ function InlineSnoozePills({ plantId, isDemo }: { plantId: string; isDemo?: bool
 }
 
 export function DashboardPlantCard({
+  householdId,
   plant,
   onWater,
   isWatering,
@@ -151,7 +153,7 @@ export function DashboardPlantCard({
         </div>
         {showSnooze && (
           <div className="w-full" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
-            <InlineSnoozePills plantId={plant.id} isDemo={isDemo} />
+            <InlineSnoozePills householdId={householdId} plantId={plant.id} isDemo={isDemo} />
           </div>
         )}
       </Card>

@@ -13,6 +13,7 @@ import { loadMoreTimeline } from "@/features/notes/actions";
 import type { TimelineEntry as TimelineEntryType } from "@/types/timeline";
 
 interface TimelineProps {
+  householdId: string;
   plantId: string;
   plantNickname: string;
   initialEntries: TimelineEntryType[];
@@ -21,6 +22,7 @@ interface TimelineProps {
 }
 
 export function Timeline({
+  householdId,
   plantId,
   plantNickname,
   initialEntries,
@@ -41,7 +43,7 @@ export function Timeline({
 
   async function handleLoadMore() {
     setIsLoading(true);
-    const result = await loadMoreTimeline({ plantId, skip: entries.length });
+    const result = await loadMoreTimeline({ householdId, plantId, skip: entries.length });
     setIsLoading(false);
 
     if ("error" in result) {
@@ -54,7 +56,7 @@ export function Timeline({
   }
 
   async function handleRefetch() {
-    const result = await loadMoreTimeline({ plantId, skip: 0 });
+    const result = await loadMoreTimeline({ householdId, plantId, skip: 0 });
 
     if ("error" in result) {
       return;
@@ -67,7 +69,7 @@ export function Timeline({
 
   return (
     <TooltipProvider>
-      <NoteInput plantId={plantId} />
+      <NoteInput householdId={householdId} plantId={plantId} />
       <Separator className="my-2" />
 
       {entries.length === 0 ? (
@@ -84,6 +86,7 @@ export function Timeline({
           {entries.map((entry) => (
             <TimelineEntry
               key={entry.id}
+              householdId={householdId}
               entry={entry}
               plantNickname={plantNickname}
               onMutated={handleRefetch}

@@ -3,9 +3,14 @@
 import { auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { z } from "zod/v4";
-import { createNoteSchema, updateNoteSchema, deleteNoteSchema } from "./schemas";
+import {
+  createNoteSchema,
+  updateNoteSchema,
+  deleteNoteSchema,
+  loadMoreTimelineSchema,
+} from "./schemas";
 import { getTimeline } from "./queries";
+import { requireHouseholdAccess } from "@/features/household/guards";
 
 export async function createNote(data: unknown) {
   const session = await auth();
@@ -15,9 +20,11 @@ export async function createNote(data: unknown) {
   const parsed = createNoteSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  // Ownership check: plant belongs to this user (per RESEARCH pitfall 3)
+  await requireHouseholdAccess(parsed.data.householdId);
+
+  // Ownership check: plant belongs to this household
   const plant = await db.plant.findFirst({
-    where: { id: parsed.data.plantId, userId: session.user.id },
+    where: { id: parsed.data.plantId, householdId: parsed.data.householdId },
   });
   if (!plant) return { error: "Plant not found." };
 
@@ -25,10 +32,11 @@ export async function createNote(data: unknown) {
     data: {
       plantId: plant.id,
       content: parsed.data.content,
+      performedByUserId: session.user.id, // AUDT-01
     },
   });
 
-  revalidatePath("/plants/" + plant.id);
+  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
 
   return { success: true, note };
 }
@@ -41,11 +49,13 @@ export async function updateNote(data: unknown) {
   const parsed = updateNoteSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  // Ownership check through plant relation (per RESEARCH pitfall 3)
+  await requireHouseholdAccess(parsed.data.householdId);
+
+  // Ownership check through plant relation
   const note = await db.note.findFirst({
     where: {
       id: parsed.data.noteId,
-      plant: { userId: session.user.id },
+      plant: { householdId: parsed.data.householdId },
     },
     include: { plant: true },
   });
@@ -56,7 +66,7 @@ export async function updateNote(data: unknown) {
     data: { content: parsed.data.content },
   });
 
-  revalidatePath("/plants/" + note.plantId);
+  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
 
   return { success: true, note: updated };
 }
@@ -69,26 +79,23 @@ export async function deleteNote(data: unknown) {
   const parsed = deleteNoteSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  // Ownership check through plant relation (per RESEARCH pitfall 3)
+  await requireHouseholdAccess(parsed.data.householdId);
+
+  // Ownership check through plant relation
   const note = await db.note.findFirst({
     where: {
       id: parsed.data.noteId,
-      plant: { userId: session.user.id },
+      plant: { householdId: parsed.data.householdId },
     },
   });
   if (!note) return { error: "Note not found." };
 
   await db.note.delete({ where: { id: parsed.data.noteId } });
 
-  revalidatePath("/plants/" + note.plantId);
+  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
 
   return { success: true };
 }
-
-const loadMoreTimelineSchema = z.object({
-  plantId: z.string().min(1),
-  skip: z.number().int().min(0),
-});
 
 export async function loadMoreTimeline(data: unknown) {
   const session = await auth();
@@ -97,5 +104,6 @@ export async function loadMoreTimeline(data: unknown) {
   const parsed = loadMoreTimelineSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  return getTimeline(parsed.data.plantId, session.user.id, parsed.data.skip, 20);
+  // READ delegation — no requireHouseholdAccess needed (query filters by plant.householdId)
+  return getTimeline(parsed.data.plantId, parsed.data.householdId, parsed.data.skip, 20);
 }

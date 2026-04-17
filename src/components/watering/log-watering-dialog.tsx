@@ -41,6 +41,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface LogWateringDialogProps {
+  householdId: string;
   plantId: string;
   plantNickname: string;
   editLog?: { id: string; wateredAt: Date; note: string | null };
@@ -51,6 +52,7 @@ interface LogWateringDialogProps {
 }
 
 export function LogWateringDialog({
+  householdId,
   plantId,
   plantNickname,
   editLog,
@@ -87,6 +89,7 @@ export function LogWateringDialog({
   async function onSubmit(data: FormValues) {
     if (isEditMode) {
       const result = await editWateringLog({
+        householdId,
         logId: editLog!.id,
         wateredAt: data.wateredAt,
         note: data.note || undefined,
@@ -100,6 +103,7 @@ export function LogWateringDialog({
       onEdited?.();
     } else {
       const result = await logWatering({
+        householdId,
         plantId,
         wateredAt: data.wateredAt,
         note: data.note || undefined,

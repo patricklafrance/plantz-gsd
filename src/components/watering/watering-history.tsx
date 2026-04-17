@@ -9,6 +9,7 @@ import { loadMoreWateringHistory } from "@/features/watering/actions";
 import type { WateringLog } from "@/generated/prisma/client";
 
 interface WateringHistoryProps {
+  householdId: string;
   plantId: string;
   plantNickname: string;
   initialLogs: WateringLog[];
@@ -17,6 +18,7 @@ interface WateringHistoryProps {
 }
 
 export function WateringHistory({
+  householdId,
   plantId,
   plantNickname,
   initialLogs,
@@ -37,7 +39,7 @@ export function WateringHistory({
 
   async function handleLoadMore() {
     setIsLoading(true);
-    const result = await loadMoreWateringHistory(plantId, logs.length);
+    const result = await loadMoreWateringHistory({ householdId, plantId, skip: logs.length });
     setIsLoading(false);
 
     if ("error" in result) {
@@ -59,6 +61,7 @@ export function WateringHistory({
       {logs.map((log) => (
         <WateringHistoryEntry
           key={log.id}
+          householdId={householdId}
           log={log}
           plantId={plantId}
           plantNickname={plantNickname}

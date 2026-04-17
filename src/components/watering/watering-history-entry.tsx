@@ -28,6 +28,7 @@ import { deleteWateringLog } from "@/features/watering/actions";
 import type { WateringLog } from "@/generated/prisma/client";
 
 interface WateringHistoryEntryProps {
+  householdId: string;
   log: WateringLog;
   plantId: string;
   plantNickname: string;
@@ -43,6 +44,7 @@ function formatRelativeTime(date: Date): string {
 }
 
 export function WateringHistoryEntry({
+  householdId,
   log,
   plantId,
   plantNickname,
@@ -55,7 +57,7 @@ export function WateringHistoryEntry({
 
   async function handleDelete() {
     setIsDeleting(true);
-    const result = await deleteWateringLog(log.id);
+    const result = await deleteWateringLog({ householdId, logId: log.id });
     setIsDeleting(false);
 
     if ("error" in result) {
@@ -118,6 +120,7 @@ export function WateringHistoryEntry({
 
       {/* Edit dialog */}
       <LogWateringDialog
+        householdId={householdId}
         plantId={plantId}
         plantNickname={plantNickname}
         editLog={{

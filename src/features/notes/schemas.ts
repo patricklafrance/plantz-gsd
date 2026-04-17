@@ -17,6 +17,13 @@ export const deleteNoteSchema = z.object({
   noteId: z.string().min(1, "Note ID is required."),
 });
 
+export const loadMoreTimelineSchema = z.object({
+  householdId: z.string().min(1),
+  plantId: z.string().min(1),
+  skip: z.number().int().min(0),
+});
+export type LoadMoreTimelineInput = z.infer<typeof loadMoreTimelineSchema>;
+
 export type CreateNoteInput = z.infer<typeof createNoteSchema>;
 export type UpdateNoteInput = z.infer<typeof updateNoteSchema>;
 export type DeleteNoteInput = z.infer<typeof deleteNoteSchema>;

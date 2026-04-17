@@ -29,6 +29,14 @@ export const deleteWateringLogSchema = z.object({
   householdId: z.string().min(1),
   logId: z.string().min(1, "Log ID is required."),
 });
+export type DeleteWateringLogInput = z.infer<typeof deleteWateringLogSchema>;
+
+export const loadMoreWateringHistorySchema = z.object({
+  householdId: z.string().min(1),
+  plantId: z.string().min(1),
+  skip: z.number().int().min(0),
+});
+export type LoadMoreWateringHistoryInput = z.infer<typeof loadMoreWateringHistorySchema>;
 
 export type LogWateringInput = z.infer<typeof logWateringSchema>;
 export type EditWateringLogInput = z.infer<typeof editWateringLogSchema>;

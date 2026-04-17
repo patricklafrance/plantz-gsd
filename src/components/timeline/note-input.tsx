@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { createNote } from "@/features/notes/actions";
 
 interface NoteInputProps {
+  householdId: string;
   plantId: string;
 }
 
-export function NoteInput({ plantId }: NoteInputProps) {
+export function NoteInput({ householdId, plantId }: NoteInputProps) {
   const [value, setValue] = useState("");
   const [isPending, setIsPending] = useState(false);
 
@@ -19,7 +20,7 @@ export function NoteInput({ plantId }: NoteInputProps) {
     if (!trimmed) return;
 
     setIsPending(true);
-    const result = await createNote({ plantId, content: trimmed });
+    const result = await createNote({ householdId, plantId, content: trimmed });
     setIsPending(false);
 
     if ("error" in result) {
