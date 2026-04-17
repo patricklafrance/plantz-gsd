@@ -132,6 +132,31 @@ describe("Prisma schema — composite indexes (D-03, Pitfall 3)", () => {
   });
 });
 
+describe("Prisma schema — HouseholdMember.isDefault column (Phase 2 Q7)", () => {
+  test("HouseholdMember has isDefault Boolean @default(false) column (Phase 2 Q7)", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const schema = fs.readFileSync(path.join("prisma", "schema.prisma"), "utf8");
+    const memberBlock = schema.match(/model HouseholdMember \{[\s\S]*?\n\}/)?.[0];
+    expect(memberBlock).toBeDefined();
+    expect(memberBlock).toMatch(/isDefault\s+Boolean\s+@default\(false\)/);
+  });
+
+  test("add_household_member_is_default migration contains ALTER TABLE statement", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const migrationsDir = "prisma/migrations";
+    const dirs = fs.readdirSync(migrationsDir).filter((d) =>
+      fs.statSync(path.join(migrationsDir, d)).isDirectory() &&
+      d.includes("add_household_member_is_default")
+    );
+    expect(dirs.length).toBe(1);
+    const sql = fs.readFileSync(path.join(migrationsDir, dirs[0], "migration.sql"), "utf8");
+    expect(sql).toMatch(/ALTER TABLE "HouseholdMember" ADD COLUMN\s+"isDefault"/);
+    expect(sql).toContain('UPDATE "HouseholdMember" SET "isDefault" = true');
+  });
+});
+
 describe("WateringLog functional unique index (D-03, Pitfall 15)", () => {
   test("migration.sql contains CREATE UNIQUE INDEX on (plantId, date_trunc('day', wateredAt))", async () => {
     const fs = await import("fs");

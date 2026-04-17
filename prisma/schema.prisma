@@ -62,6 +62,7 @@ model HouseholdMember {
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   role          String    @default("MEMBER") // 'OWNER' | 'MEMBER'
   rotationOrder Int       @default(0)
+  isDefault     Boolean   @default(false)
   createdAt     DateTime  @default(now()) @db.Timestamptz(3)
 
   @@unique([householdId, userId])
