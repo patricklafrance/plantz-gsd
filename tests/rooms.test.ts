@@ -1,10 +1,30 @@
-import { expect, test, describe } from "vitest";
+import { expect, test, describe, vi, beforeEach } from "vitest";
+
+vi.mock("@/generated/prisma/client", () => ({ PrismaClient: vi.fn() }));
+vi.mock("@prisma/adapter-pg", () => ({ PrismaPg: vi.fn() }));
+vi.mock("@/lib/db", () => ({
+  db: {
+    room: {
+      findMany: vi.fn(),
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    },
+  },
+}));
+vi.mock("../auth", () => ({ auth: vi.fn() }));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 // Schema validation tests (run immediately)
 describe("room schema validation", () => {
   test("createRoomSchema accepts valid room name", async () => {
     const { createRoomSchema } = await import("@/features/rooms/schemas");
-    const result = createRoomSchema.safeParse({ name: "Living Room" });
+    const result = createRoomSchema.safeParse({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", name: "Living Room" });
     expect(result.success).toBe(true);
   });
 
@@ -51,8 +71,27 @@ describe("room queries (ROOM-04, ROOM-05)", () => {
 });
 
 describe("Phase 2 — rooms queries honor householdId scope (D-10, D-16)", () => {
-  test.todo("getRooms includes householdId in findMany where clause");
-  test.todo("getRoom filters by roomId AND householdId");
+  test("getRooms includes householdId in findMany where clause", async () => {
+    const { db } = await import("@/lib/db");
+    vi.mocked(db.room.findMany).mockResolvedValueOnce([]);
+    const { getRooms } = await import("@/features/rooms/queries");
+    await getRooms("hh_TEST");
+    expect(db.room.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ householdId: "hh_TEST" }) })
+    );
+  });
+
+  test("getRoom filters by roomId AND householdId", async () => {
+    const { db } = await import("@/lib/db");
+    vi.mocked(db.room.findFirst).mockResolvedValueOnce(null);
+    const { getRoom } = await import("@/features/rooms/queries");
+    await getRoom("room_1", "hh_TEST");
+    expect(db.room.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: "room_1", householdId: "hh_TEST" }),
+      })
+    );
+  });
 });
 
 describe("Phase 2 — rooms actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {

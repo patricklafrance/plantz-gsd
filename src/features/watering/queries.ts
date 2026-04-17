@@ -113,20 +113,20 @@ export function classifyAndSort(
 }
 
 /**
- * Fetches all active plants for a user, classifies by urgency, and returns grouped result.
+ * Fetches all active plants for a household, classifies by urgency, and returns grouped result.
  *
- * @param userId - The authenticated user's ID
+ * @param householdId - The household's ID
  * @param todayStart - Start of the user's local "today" in UTC
  * @param todayEnd - End of the user's local "today" in UTC
  */
 export async function getDashboardPlants(
-  userId: string,
+  householdId: string,
   todayStart: Date,
   todayEnd: Date
 ): Promise<DashboardResult> {
   const plants = await db.plant.findMany({
     where: {
-      userId,
+      householdId,
       archivedAt: null,
     },
     include: {
@@ -144,30 +144,27 @@ export async function getDashboardPlants(
 }
 
 /**
- * Fetches paginated watering history for a plant, with ownership check via userId.
+ * Fetches paginated watering history for a plant, with household scope via nested plant relation.
  */
 export async function getWateringHistory(
   plantId: string,
-  userId: string,
+  householdId: string,
   skip = 0,
   take = 20
 ): Promise<{ logs: WateringLog[]; total: number }> {
+  const where = {
+    plantId,
+    plant: { householdId },
+  };
+
   const [logs, total] = await Promise.all([
     db.wateringLog.findMany({
-      where: {
-        plantId,
-        plant: { userId },
-      },
+      where,
       orderBy: { wateredAt: "desc" },
       skip,
       take,
     }),
-    db.wateringLog.count({
-      where: {
-        plantId,
-        plant: { userId },
-      },
-    }),
+    db.wateringLog.count({ where }),
   ]);
 
   return { logs, total };

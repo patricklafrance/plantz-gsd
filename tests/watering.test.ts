@@ -50,7 +50,7 @@ describe("logWateringSchema", () => {
     const { logWateringSchema } = await import(
       "@/features/watering/schemas"
     );
-    const result = logWateringSchema.safeParse({ plantId: "plant-1" });
+    const result = logWateringSchema.safeParse({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "plant-1" });
     expect(result.success).toBe(true);
   });
 
@@ -60,6 +60,7 @@ describe("logWateringSchema", () => {
     );
     const yesterday = subDays(new Date(), 1);
     const result = logWateringSchema.safeParse({
+      householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
       plantId: "plant-1",
       wateredAt: yesterday.toISOString(),
       note: "Used filtered water",
@@ -106,6 +107,7 @@ describe("editWateringLogSchema", () => {
     );
     const yesterday = subDays(new Date(), 1);
     const result = editWateringLogSchema.safeParse({
+      householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
       logId: "log-1",
       wateredAt: yesterday.toISOString(),
     });
@@ -406,7 +408,7 @@ describe("Server Actions", () => {
       authMock.mockResolvedValue(null);
 
       const { logWatering } = await import("@/features/watering/actions");
-      const result = await logWatering({ plantId: "p1" });
+      const result = await logWatering({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "p1" });
       expect(result).toEqual({ error: "Not authenticated." });
     });
 
@@ -415,7 +417,7 @@ describe("Server Actions", () => {
       db.plant.findFirst.mockResolvedValue(null);
 
       const { logWatering } = await import("@/features/watering/actions");
-      const result = await logWatering({ plantId: "p1" });
+      const result = await logWatering({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "p1" });
       expect(result).toEqual({ error: "Plant not found." });
     });
 
@@ -435,7 +437,7 @@ describe("Server Actions", () => {
       });
 
       const { logWatering } = await import("@/features/watering/actions");
-      const result = await logWatering({ plantId: "p1" });
+      const result = await logWatering({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "p1" });
       expect(result).toEqual({ error: "DUPLICATE" });
     });
 
@@ -456,7 +458,7 @@ describe("Server Actions", () => {
       db.wateringLog.create.mockResolvedValue({ id: "wl-1" });
 
       const { logWatering } = await import("@/features/watering/actions");
-      const result = await logWatering({ plantId: "p1" });
+      const result = await logWatering({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "p1" });
 
       expect(result).toHaveProperty("success", true);
       expect(result).toHaveProperty("plantNickname", "Monstera");
@@ -483,6 +485,7 @@ describe("Server Actions", () => {
 
       const { logWatering } = await import("@/features/watering/actions");
       const result = await logWatering({
+        householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
         plantId: "p1",
         wateredAt: pastDate.toISOString(),
       });
@@ -514,6 +517,7 @@ describe("Server Actions", () => {
 
       const { logWatering } = await import("@/features/watering/actions");
       const result = await logWatering({
+        householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
         plantId: "p1",
         wateredAt: threeDaysAgo.toISOString(),
       });
@@ -541,6 +545,7 @@ describe("Server Actions", () => {
       );
       const yesterday = subDays(new Date(), 1);
       const result = await editWateringLog({
+        householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
         logId: "log-1",
         wateredAt: yesterday.toISOString(),
       });
@@ -569,6 +574,7 @@ describe("Server Actions", () => {
       );
       const yesterday = subDays(new Date(), 1);
       const result = await editWateringLog({
+        householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
         logId: "log-1",
         wateredAt: yesterday.toISOString(),
       });
@@ -655,8 +661,36 @@ describe("Server Actions", () => {
 });
 
 describe("Phase 2 — watering queries honor householdId scope via nested plant (D-10, D-16)", () => {
-  test.todo("getWateringHistory uses plant: { householdId } nested filter");
-  test.todo("loadMoreWateringHistory uses plant: { householdId } nested filter");
+  test("getWateringHistory uses plant: { householdId } nested filter", async () => {
+    const { db } = await import("@/lib/db");
+    vi.mocked(db.wateringLog.findMany).mockResolvedValueOnce([]);
+    vi.mocked(db.wateringLog.count).mockResolvedValueOnce(0);
+    const { getWateringHistory } = await import("@/features/watering/queries");
+    await getWateringHistory("plant_1", "hh_TEST");
+    expect(db.wateringLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          plantId: "plant_1",
+          plant: expect.objectContaining({ householdId: "hh_TEST" }),
+        }),
+      })
+    );
+  });
+
+  test("getWateringHistory count also applies plant: { householdId } filter", async () => {
+    const { db } = await import("@/lib/db");
+    vi.mocked(db.wateringLog.findMany).mockResolvedValueOnce([]);
+    vi.mocked(db.wateringLog.count).mockResolvedValueOnce(0);
+    const { getWateringHistory } = await import("@/features/watering/queries");
+    await getWateringHistory("plant_1", "hh_TEST");
+    expect(db.wateringLog.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          plant: expect.objectContaining({ householdId: "hh_TEST" }),
+        }),
+      })
+    );
+  });
 });
 
 describe("Phase 2 — watering actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {

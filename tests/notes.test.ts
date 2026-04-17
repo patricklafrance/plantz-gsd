@@ -13,6 +13,10 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
+    wateringLog: {
+      findMany: vi.fn(),
+      count: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));
@@ -29,6 +33,7 @@ describe("createNoteSchema", () => {
   test("accepts valid input with plantId and content", async () => {
     const { createNoteSchema } = await import("@/features/notes/schemas");
     const result = createNoteSchema.safeParse({
+      householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
       plantId: "plant-1",
       content: "Leaves looking healthy",
     });
@@ -37,19 +42,20 @@ describe("createNoteSchema", () => {
 
   test("rejects empty content", async () => {
     const { createNoteSchema } = await import("@/features/notes/schemas");
-    const result = createNoteSchema.safeParse({ plantId: "plant-1", content: "" });
+    const result = createNoteSchema.safeParse({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "plant-1", content: "" });
     expect(result.success).toBe(false);
   });
 
   test("rejects missing plantId", async () => {
     const { createNoteSchema } = await import("@/features/notes/schemas");
-    const result = createNoteSchema.safeParse({ content: "test" });
+    const result = createNoteSchema.safeParse({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", content: "test" });
     expect(result.success).toBe(false);
   });
 
   test("accepts content up to 1000 characters (D-14)", async () => {
     const { createNoteSchema } = await import("@/features/notes/schemas");
     const result = createNoteSchema.safeParse({
+      householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
       plantId: "plant-1",
       content: "x".repeat(1000),
     });
@@ -59,6 +65,7 @@ describe("createNoteSchema", () => {
   test("rejects content exceeding 1000 characters (D-14)", async () => {
     const { createNoteSchema } = await import("@/features/notes/schemas");
     const result = createNoteSchema.safeParse({
+      householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
       plantId: "plant-1",
       content: "x".repeat(1001),
     });
@@ -70,6 +77,7 @@ describe("updateNoteSchema", () => {
   test("accepts valid input with noteId and content", async () => {
     const { updateNoteSchema } = await import("@/features/notes/schemas");
     const result = updateNoteSchema.safeParse({
+      householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
       noteId: "note-1",
       content: "Updated observation",
     });
@@ -78,7 +86,7 @@ describe("updateNoteSchema", () => {
 
   test("rejects empty content", async () => {
     const { updateNoteSchema } = await import("@/features/notes/schemas");
-    const result = updateNoteSchema.safeParse({ noteId: "note-1", content: "" });
+    const result = updateNoteSchema.safeParse({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", noteId: "note-1", content: "" });
     expect(result.success).toBe(false);
   });
 });
@@ -90,7 +98,7 @@ describe("createNote action", () => {
     const { auth } = await import("../auth");
     vi.mocked(auth).mockResolvedValueOnce(null);
     const { createNote } = await import("@/features/notes/actions");
-    const result = await createNote({ plantId: "plant-1", content: "Test note" });
+    const result = await createNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "plant-1", content: "Test note" });
     expect(result).toEqual({ error: "Not authenticated." });
   });
 
@@ -102,7 +110,7 @@ describe("createNote action", () => {
     } as Awaited<ReturnType<typeof auth>>);
     vi.mocked(db.plant.findFirst).mockResolvedValueOnce(null);
     const { createNote } = await import("@/features/notes/actions");
-    const result = await createNote({ plantId: "plant-1", content: "Test note" });
+    const result = await createNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "plant-1", content: "Test note" });
     expect(result).toEqual({ error: "Plant not found." });
   });
 
@@ -128,7 +136,7 @@ describe("createNote action", () => {
       createdNote as Awaited<ReturnType<typeof db.note.create>>
     );
     const { createNote } = await import("@/features/notes/actions");
-    const result = await createNote({ plantId: "plant-1", content: "Test note" });
+    const result = await createNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "plant-1", content: "Test note" });
     expect(result).toEqual({ success: true, note: createdNote });
     expect(db.note.create).toHaveBeenCalledWith({
       data: { plantId: "plant-1", content: "Test note" },
@@ -146,7 +154,7 @@ describe("updateNote action", () => {
     } as Awaited<ReturnType<typeof auth>>);
     vi.mocked(db.note.findFirst).mockResolvedValueOnce(null);
     const { updateNote } = await import("@/features/notes/actions");
-    const result = await updateNote({ noteId: "note-1", content: "Updated" });
+    const result = await updateNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", noteId: "note-1", content: "Updated" });
     expect(result).toEqual({ error: "Note not found." });
   });
 
@@ -172,7 +180,7 @@ describe("updateNote action", () => {
       updatedNote as Awaited<ReturnType<typeof db.note.update>>
     );
     const { updateNote } = await import("@/features/notes/actions");
-    const result = await updateNote({ noteId: "note-1", content: "Updated content" });
+    const result = await updateNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", noteId: "note-1", content: "Updated content" });
     expect(result).toEqual({ success: true, note: updatedNote });
   });
 });
@@ -186,7 +194,7 @@ describe("deleteNote action", () => {
     } as Awaited<ReturnType<typeof auth>>);
     vi.mocked(db.note.findFirst).mockResolvedValueOnce(null);
     const { deleteNote } = await import("@/features/notes/actions");
-    const result = await deleteNote({ noteId: "note-1" });
+    const result = await deleteNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", noteId: "note-1" });
     expect(result).toEqual({ error: "Note not found." });
   });
 
@@ -211,15 +219,49 @@ describe("deleteNote action", () => {
       existingNote as Awaited<ReturnType<typeof db.note.delete>>
     );
     const { deleteNote } = await import("@/features/notes/actions");
-    const result = await deleteNote({ noteId: "note-1" });
+    const result = await deleteNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", noteId: "note-1" });
     expect(result).toEqual({ success: true });
     expect(revalidatePath).toHaveBeenCalledWith("/plants/plant-1");
   });
 });
 
 describe("Phase 2 — notes queries honor householdId scope via nested plant (D-10, D-16)", () => {
-  test.todo("getTimeline uses plant: { householdId } nested filter");
-  test.todo("loadMoreTimeline uses plant: { householdId } nested filter");
+  test("getTimeline uses plant: { householdId } nested filter on both notes and watering", async () => {
+    const { db } = await import("@/lib/db");
+    vi.mocked(db.note.findMany).mockResolvedValueOnce([]);
+    vi.mocked(db.wateringLog.findMany).mockResolvedValueOnce([]);
+    const { getTimeline } = await import("@/features/notes/queries");
+    await getTimeline("plant_1", "hh_TEST");
+    expect(db.note.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          plant: expect.objectContaining({ householdId: "hh_TEST" }),
+        }),
+      })
+    );
+    expect(db.wateringLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          plant: expect.objectContaining({ householdId: "hh_TEST" }),
+        }),
+      })
+    );
+  });
+
+  test("loadMoreTimeline delegates to getTimeline with plant: { householdId } filter", async () => {
+    const { db } = await import("@/lib/db");
+    vi.mocked(db.note.findMany).mockResolvedValueOnce([]);
+    vi.mocked(db.wateringLog.findMany).mockResolvedValueOnce([]);
+    const { loadMoreTimeline } = await import("@/features/notes/queries");
+    await loadMoreTimeline("plant_1", "hh_TEST", 20);
+    expect(db.note.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          plant: expect.objectContaining({ householdId: "hh_TEST" }),
+        }),
+      })
+    );
+  });
 });
 
 describe("Phase 2 — notes actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {

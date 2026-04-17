@@ -42,17 +42,17 @@ export function mergeTimeline(
  */
 export async function getTimeline(
   plantId: string,
-  userId: string,
+  householdId: string,
   skip = 0,
   take = 20
 ): Promise<{ entries: TimelineEntry[]; total: number }> {
   const [wateringLogs, notes] = await Promise.all([
     db.wateringLog.findMany({
-      where: { plantId, plant: { userId } },
+      where: { plantId, plant: { householdId } },
       orderBy: { wateredAt: "desc" },
     }),
     db.note.findMany({
-      where: { plantId, plant: { userId } },
+      where: { plantId, plant: { householdId } },
       orderBy: { createdAt: "desc" },
     }),
   ]);
@@ -62,9 +62,9 @@ export async function getTimeline(
 
 export async function loadMoreTimeline(
   plantId: string,
-  userId: string,
+  householdId: string,
   skip: number,
   take = 20
 ): Promise<{ entries: TimelineEntry[]; total: number }> {
-  return getTimeline(plantId, userId, skip, take);
+  return getTimeline(plantId, householdId, skip, take);
 }
