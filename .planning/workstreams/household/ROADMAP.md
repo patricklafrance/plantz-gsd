@@ -35,7 +35,11 @@ This milestone retrofits the v1.0 single-user app into a multi-household, rotati
   3. `session.user.activeHouseholdId` resolves to a valid household for every authenticated user
   4. Plant and watering-log timeline entries carry `createdByUserId` / `performedByUserId` so authorship is recorded from this phase forward
   5. `requireHouseholdAccess()` guard exists and throws `Forbidden` when the user is not a member of the given household
-**Plans**: TBD
+**Plans**: 4 plans
+  - [x] 01-01-PLAN.md — Slug utility + Wave 0 test scaffold + REQUIREMENTS.md HSLD-04 traceability
+  - [x] 01-02-PLAN.md — Prisma schema (5 new models, reparented Plant/Room, indexes, cascades) + migration + WateringLog functional unique SQL + [BLOCKING] schema push
+  - [x] 01-03-PLAN.md — JWT/session activeHouseholdId extension + register-form timezone wiring + transactional registerUser (User + Household + HouseholdMember(OWNER))
+  - [x] 01-04-PLAN.md — requireHouseholdAccess guard + ForbiddenError + resolveHouseholdBySlug + household Zod v4 enums
 **Pitfall flags**:
   - Pitfall 4: Three-step migration order (nullable add → backfill SQL → NOT NULL) is mandatory; single-step fails on existing rows
   - Pitfall 2: Change `Plant → User` and `Room → User` cascade to `SetNull` before migration runs; `onDelete: Cascade` would wipe household plants on user delete
