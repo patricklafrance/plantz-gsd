@@ -81,6 +81,7 @@ export async function registerUser(data: {
           householdId: household.id,
           role: "OWNER",                     // D-08
           rotationOrder: 0,                  // RESEARCH Open Question §2: declare now
+          isDefault: true,                   // Phase 2 Q7: first-created (signup) household is the user's default
         },
       });
     });

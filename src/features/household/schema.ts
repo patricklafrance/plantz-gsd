@@ -14,3 +14,14 @@ export type HouseholdRole = z.infer<typeof householdRoleSchema>;
  */
 export const rotationStrategySchema = z.enum(["sequential"]);
 export type RotationStrategy = z.infer<typeof rotationStrategySchema>;
+
+/**
+ * HSLD-02 (D-06): Input schema for createHousehold Server Action.
+ * cycleDuration, rotationStrategy, and slug are NOT user-input — hard-coded
+ * in the action body to prevent mass-assignment (T-02-02-02).
+ */
+export const createHouseholdSchema = z.object({
+  name: z.string().min(1, "Household name is required.").max(80),
+  timezone: z.string().optional(),
+});
+export type CreateHouseholdInput = z.infer<typeof createHouseholdSchema>;
