@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { createPlantSchema, editPlantSchema, plantTargetSchema } from "./schemas";
 import { requireHouseholdAccess } from "@/features/household/guards";
+import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 import { addDays } from "date-fns";
 
 export async function createPlant(data: unknown) {
@@ -37,8 +38,8 @@ export async function createPlant(data: unknown) {
     },
   });
 
-  revalidatePath("/h/[householdSlug]/plants", "page");
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath(HOUSEHOLD_PATHS.plants, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
 
   return { success: true, plantId: plant.id };
 }
@@ -81,9 +82,9 @@ export async function updatePlant(data: unknown) {
     },
   });
 
-  revalidatePath("/h/[householdSlug]/plants", "page");
-  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath(HOUSEHOLD_PATHS.plants, "page");
+  revalidatePath(HOUSEHOLD_PATHS.plantDetail, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
 
   return { success: true };
 }
@@ -108,8 +109,8 @@ export async function archivePlant(data: unknown) {
     data: { archivedAt: new Date() },
   });
 
-  revalidatePath("/h/[householdSlug]/plants", "page");
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath(HOUSEHOLD_PATHS.plants, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
 
   return { success: true };
 }
@@ -134,8 +135,8 @@ export async function unarchivePlant(data: unknown) {
     data: { archivedAt: null },
   });
 
-  revalidatePath("/h/[householdSlug]/plants", "page");
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath(HOUSEHOLD_PATHS.plants, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
 
   return { success: true };
 }
@@ -159,8 +160,8 @@ export async function deletePlant(data: unknown) {
     where: { id: plant.id },
   });
 
-  revalidatePath("/h/[householdSlug]/plants", "page");
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath(HOUSEHOLD_PATHS.plants, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
 
   return { success: true };
 }

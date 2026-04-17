@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_PLANTS, STARTER_PLANTS } from "./seed-data";
 import { generateHouseholdSlug } from "@/lib/slug";
 import { requireHouseholdAccess } from "@/features/household/guards";
+import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 
 /**
  * Ensures the demo user exists in the database, creating it with a Household,
@@ -218,8 +219,8 @@ export async function seedStarterPlants(plantCountRange?: string, householdId?: 
     createdPlants.push(plant.id);
   }
 
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
-  revalidatePath("/h/[householdSlug]/plants", "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  revalidatePath(HOUSEHOLD_PATHS.plants, "page");
 
   return { success: true, count: createdPlants.length };
 }

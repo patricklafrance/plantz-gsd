@@ -11,6 +11,7 @@ import {
   toggleGlobalRemindersSchema,
 } from "./schemas";
 import { requireHouseholdAccess } from "@/features/household/guards";
+import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 
 export async function snoozeReminder(data: unknown) {
   const session = await auth();
@@ -39,8 +40,8 @@ export async function snoozeReminder(data: unknown) {
     create: { plantId, userId: session.user.id, enabled: true, snoozedUntil },
   });
 
-  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath(HOUSEHOLD_PATHS.plantDetail, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
 
   return { success: true };
 }
@@ -70,8 +71,8 @@ export async function snoozeCustomReminder(data: unknown) {
     create: { plantId, userId: session.user.id, enabled: true, snoozedUntil },
   });
 
-  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath(HOUSEHOLD_PATHS.plantDetail, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
 
   return { success: true };
 }
@@ -101,8 +102,8 @@ export async function togglePlantReminder(data: unknown) {
     create: { plantId, userId: session.user.id, enabled },
   });
 
-  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath(HOUSEHOLD_PATHS.plantDetail, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
 
   return { success: true };
 }
@@ -126,7 +127,7 @@ export async function toggleGlobalReminders(data: unknown) {
   });
 
   // Revalidate all household dashboards via literal pattern (Next.js invalidates all matching)
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
   revalidatePath("/preferences");
 
   return { success: true };

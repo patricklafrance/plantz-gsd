@@ -12,6 +12,7 @@ import {
 } from "./schemas";
 import { getWateringHistory } from "./queries";
 import { requireHouseholdAccess } from "@/features/household/guards";
+import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 
 export async function logWatering(data: unknown) {
   const session = await auth();
@@ -74,8 +75,8 @@ export async function logWatering(data: unknown) {
     data: { lastWateredAt, nextWateringAt },
   });
 
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
-  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  revalidatePath(HOUSEHOLD_PATHS.plantDetail, "page");
 
   return { success: true, nextWateringAt, plantNickname: plant.nickname };
 }
@@ -129,8 +130,8 @@ export async function editWateringLog(data: unknown) {
     });
   }
 
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
-  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  revalidatePath(HOUSEHOLD_PATHS.plantDetail, "page");
 
   return { success: true };
 }
@@ -184,8 +185,8 @@ export async function deleteWateringLog(data: unknown) {
     data: { lastWateredAt, nextWateringAt },
   });
 
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
-  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  revalidatePath(HOUSEHOLD_PATHS.plantDetail, "page");
 
   return { success: true };
 }

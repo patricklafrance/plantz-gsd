@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { createRoomSchema, editRoomSchema, roomTargetSchema } from "./schemas";
 import { requireHouseholdAccess } from "@/features/household/guards";
+import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 
 export async function createRoom(data: unknown) {
   const session = await auth();
@@ -24,8 +25,8 @@ export async function createRoom(data: unknown) {
     },
   });
 
-  revalidatePath("/h/[householdSlug]/rooms", "page");
-  revalidatePath("/h/[householdSlug]/plants", "page");
+  revalidatePath(HOUSEHOLD_PATHS.rooms, "page");
+  revalidatePath(HOUSEHOLD_PATHS.plants, "page");
 
   return { success: true, roomId: room.id };
 }
@@ -50,9 +51,9 @@ export async function updateRoom(data: unknown) {
     data: { name: parsed.data.name },
   });
 
-  revalidatePath("/h/[householdSlug]/rooms", "page");
-  revalidatePath("/h/[householdSlug]/rooms/[id]", "page");
-  revalidatePath("/h/[householdSlug]/plants", "page");
+  revalidatePath(HOUSEHOLD_PATHS.rooms, "page");
+  revalidatePath(HOUSEHOLD_PATHS.roomDetail, "page");
+  revalidatePath(HOUSEHOLD_PATHS.plants, "page");
 
   return { success: true };
 }
@@ -78,9 +79,9 @@ export async function deleteRoom(data: unknown) {
     where: { id: room.id },
   });
 
-  revalidatePath("/h/[householdSlug]/rooms", "page");
-  revalidatePath("/h/[householdSlug]/plants", "page");
-  revalidatePath("/h/[householdSlug]/dashboard", "page");
+  revalidatePath(HOUSEHOLD_PATHS.rooms, "page");
+  revalidatePath(HOUSEHOLD_PATHS.plants, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
 
   return { success: true, hadPlants: room._count.plants > 0 };
 }

@@ -11,6 +11,7 @@ import {
 } from "./schemas";
 import { getTimeline } from "./queries";
 import { requireHouseholdAccess } from "@/features/household/guards";
+import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 
 export async function createNote(data: unknown) {
   const session = await auth();
@@ -36,7 +37,7 @@ export async function createNote(data: unknown) {
     },
   });
 
-  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
+  revalidatePath(HOUSEHOLD_PATHS.plantDetail, "page");
 
   return { success: true, note };
 }
@@ -66,7 +67,7 @@ export async function updateNote(data: unknown) {
     data: { content: parsed.data.content },
   });
 
-  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
+  revalidatePath(HOUSEHOLD_PATHS.plantDetail, "page");
 
   return { success: true, note: updated };
 }
@@ -92,7 +93,7 @@ export async function deleteNote(data: unknown) {
 
   await db.note.delete({ where: { id: parsed.data.noteId } });
 
-  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
+  revalidatePath(HOUSEHOLD_PATHS.plantDetail, "page");
 
   return { success: true };
 }
