@@ -1,30 +1,71 @@
 {
   "version": "1.0",
-  "timestamp": "2026-04-16T16:34:40.291Z",
-  "phase": "04",
-  "phase_name": "dashboard-and-watering-core-loop",
-  "phase_dir": ".planning/phases/04-dashboard-and-watering-core-loop",
-  "plan": null,
-  "task": null,
-  "total_tasks": 6,
-  "status": "phase_complete",
-  "completed_tasks": [
-    {"id": 1, "name": "04-01 Watering data layer audit", "status": "done", "commit": "5dd6d4f"},
-    {"id": 2, "name": "04-02 Dashboard UI layer audit", "status": "done", "commit": "e2d345c"},
-    {"id": 3, "name": "04-03 Plant detail watering experience audit", "status": "done", "commit": "85fad8b"},
-    {"id": 4, "name": "Code review", "status": "done", "commit": "f56d32f"},
-    {"id": 5, "name": "Phase verification", "status": "done", "commit": "ae829e1"},
-    {"id": 6, "name": "Phase completion (ROADMAP/STATE/PROJECT)", "status": "done", "commit": "10840fc"}
+  "timestamp": "2026-04-17T14:41:36.946Z",
+  "workstream": "household",
+  "phase": "02",
+  "phase_name": "query-action-layer-update",
+  "phase_dir": ".planning/workstreams/household/phases/02-query-action-layer-update",
+  "status": "gaps_found",
+  "total_plans": 10,
+  "completed_plans": [
+    {"id": "02-01", "name": "Foundation primitives (isDefault migration + getCurrentHousehold + WR-01 fix + scaffolds)", "status": "done", "summary": "02-01-SUMMARY.md"},
+    {"id": "02-02", "name": "createHousehold + getUserHouseholds data layer", "status": "done", "summary": "02-02-SUMMARY.md"},
+    {"id": "02-03a", "name": "New /h/[householdSlug]/* route tree", "status": "done", "summary": "02-03a-SUMMARY.md"},
+    {"id": "02-03b", "name": "Legacy redirect stubs (cascaded from 02-05b)", "status": "done", "summary": "02-03b-SUMMARY.md", "note": "Retroactive SUMMARY — the work was executed by the 02-05b agent to unblock npm run build"},
+    {"id": "02-03c", "name": "Chrome relocation into household layout", "status": "done", "summary": "02-03c-SUMMARY.md"},
+    {"id": "02-04", "name": "Query migration (5 features) to householdId scope", "status": "done", "summary": "02-04-SUMMARY.md"},
+    {"id": "02-05a", "name": "plants + rooms actions → D-12 shape", "status": "done", "summary": "02-05a-SUMMARY.md"},
+    {"id": "02-05b", "name": "watering + notes + reminders + demo actions → D-12 shape", "status": "done", "summary": "02-05b-SUMMARY.md"},
+    {"id": "02-06", "name": "ForbiddenError test safety net (D-17)", "status": "done", "summary": "02-06-SUMMARY.md"},
+    {"id": "02-07", "name": "Real-Prisma integration tests", "status": "done", "summary": "02-07-SUMMARY.md", "note": "Env-gated — needs DATABASE_URL + pg package at runtime"}
   ],
-  "remaining_tasks": [],
+  "gaps": [
+    {
+      "id": "GAP-02-01",
+      "source": "CR-01 in 02-REVIEW.md, confirmed by 02-VERIFICATION.md goal #4",
+      "severity": "critical",
+      "file": "src/features/demo/actions.ts",
+      "line": 147,
+      "description": "seedStarterPlants accepts caller-supplied householdId and resolves targetHouseholdId = householdId ?? session.user.activeHouseholdId without calling requireHouseholdAccess. Any authenticated non-demo user can inject plants into any household by ID. Breaks Phase 02 goal #4 (All Server Actions enforce live household membership check).",
+      "fix": "Add 'await requireHouseholdAccess(targetHouseholdId)' after the null-check on line 162. Add import { requireHouseholdAccess } from '@/features/household/guards' at top of file.",
+      "blocks_phase_completion": true
+    }
+  ],
+  "deferred_to_phase_6_not_gaps": [
+    {"goal": "#2 — Owner can create a new household from settings UI", "status": "data layer complete (createHousehold action + integration tests); UI deferred to HSET-02/HSET-03"},
+    {"goal": "#3 — User can view a list of households with role shown", "status": "data layer complete (getUserHouseholds query); UI deferred to HSET-01 household switcher"}
+  ],
   "blockers": [],
   "human_actions_pending": [
-    {"action": "Manual UAT testing of 6 items in 04-HUMAN-UAT.md", "context": "Optimistic UI, responsive layout, duplicate detection, etc. require live browser testing", "blocking": false}
+    {"action": "Decide between /gsd-code-review-fix 02 --ws household (autonomous fix) vs /gsd-plan-phase 2 --gaps --ws household (planned gap closure)", "context": "Gap GAP-02-01 is a 2-line fix (add import + guard call). code-review-fix may be faster; plan-phase produces a proper gap closure plan with its own SUMMARY trail.", "blocking": false}
   ],
   "decisions": [
-    {"decision": "Phase 4 was an audit phase — no implementation code changed, only verification and 2 edge-case tests added", "rationale": "All watering/dashboard code was built in phases 3-7 which executed before phase 4 in this project's non-linear history", "phase": "04"}
+    {"decision": "Stopped at gaps_found status — did NOT mark Phase 02 complete in ROADMAP.md", "rationale": "Workflow rule: never auto-advance when verifier returns gaps_found. User must close the gap or explicitly override.", "phase": "02"},
+    {"decision": "Treated 02-03b as retroactively complete via cascade from 02-05b", "rationale": "02-05b executor preemptively wrote the 5 legacy redirect stubs to unblock npm run build during Wave 3. Retroactive validation against 02-03b-PLAN.md acceptance criteria was written into 02-03b-SUMMARY.md (commit 9165992). All must_haves satisfied except plants/page.tsx is 33 lines (3 over budget) — deviation accepted because the extra lines preserve search params (strict improvement over plan spec).", "phase": "02"},
+    {"decision": "Post-merge test fix committed as 3757e57 without seeking explicit approval for that single commit", "rationale": "User had already answered 'Fix now (recommended)' via AskUserQuestion before the fix was authored, and the change was test-mock only (no src/** changes, no deploy trigger).", "phase": "02"}
   ],
-  "uncommitted_files": [],
-  "next_action": "Start phase 5 discussion or planning: /gsd-discuss-phase 5 or /gsd-plan-phase 5",
-  "context_notes": "Phase 4 verified the core product value (one-tap watering dashboard). All 13 requirements confirmed in code. Code review found 1 critical (non-null assertion in logWatering), 3 warnings, 3 info — advisory only. 6 human UAT items tracked. Next phase is 05 (Notes, Search, and Filters)."
+  "uncommitted_files": [
+    ".planning/workstreams/household/ROADMAP.md",
+    ".planning/workstreams/household/STATE.md",
+    "skills-lock.json"
+  ],
+  "artifacts_produced_this_session": [
+    ".planning/workstreams/household/phases/02-query-action-layer-update/02-01-SUMMARY.md through 02-07-SUMMARY.md (10 total)",
+    ".planning/workstreams/household/phases/02-query-action-layer-update/02-REVIEW.md",
+    ".planning/workstreams/household/phases/02-query-action-layer-update/02-VERIFICATION.md"
+  ],
+  "tests_state": {
+    "unit": "179 passing + 88 todo (scaffolds for Phase 6 UI)",
+    "integration": "tests/household-integration.test.ts suite fails — needs DATABASE_URL env + node_modules/pg peer dep. Env-gated per 02-07 plan scope; run with npm run test:integration after exporting DATABASE_URL.",
+    "build": "npm run build exits 0"
+  },
+  "gates_run": {
+    "code_review": "completed — 02-REVIEW.md (1 critical, 4 warning, 3 info)",
+    "regression": "effectively covered by npm test (no prior-phase test failures)",
+    "schema_drift": "clean (isDefault migration applied to dev DB in 02-01)",
+    "security": "not invoked (workflow.security_enforcement default true but no SECURITY.md — deferred to /gsd-secure-phase)",
+    "verification": "gaps_found — 02-VERIFICATION.md"
+  },
+  "next_action": "Close GAP-02-01 (seedStarterPlants auth bypass). Fastest path: /gsd-code-review-fix 02 --ws household. Canonical path: /gsd-plan-phase 2 --gaps --ws household → /gsd-execute-phase 2 --gaps-only --ws household → verifier re-runs. Either path ends with Phase 02 completion being marked in ROADMAP via `node gsd-tools.cjs phase complete 02 --ws household`.",
+  "context_notes": "10 plans executed across 7 waves using isolation=worktree in Claude Code. Key observations: (1) Claude Code's worktree isolation sometimes commits directly onto feat/household rather than the worktree branch — the manual `git merge worktree-agent-*` step was sometimes a no-op. (2) Wave 2 and Wave 3 exposed that parallel executors with overlapping test-file changes can leave cross-plan integration issues — the post-merge test gate caught a 16-test regression from 02-05b skipping the guards mock pattern in watering/notes tests. (3) 02-05b did cascade work beyond its planned scope (legacy redirect stubs + demo bootstrap) to make npm run build green. This was documented and accepted retroactively in 02-03b-SUMMARY.md. (4) The CR-01 critical finding (seedStarterPlants auth bypass) was not caught by Wave 7 (02-06 ForbiddenError tests) because 02-06 only covered the 13 mutating actions that DO call requireHouseholdAccess — seedStarterPlants was never listed because it was (incorrectly) treated as a demo-only internal helper. This is the structural gap the verifier flagged."
 }
