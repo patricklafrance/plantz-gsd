@@ -3,7 +3,8 @@
 import { auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { createPlantSchema, editPlantSchema } from "./schemas";
+import { createPlantSchema, editPlantSchema, plantTargetSchema } from "./schemas";
+import { requireHouseholdAccess } from "@/features/household/guards";
 import { addDays } from "date-fns";
 
 export async function createPlant(data: unknown) {
@@ -13,6 +14,8 @@ export async function createPlant(data: unknown) {
 
   const parsed = createPlantSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
+
+  const { household } = await requireHouseholdAccess(parsed.data.householdId);
 
   const now = new Date();
   const nextWateringAt = addDays(now, parsed.data.wateringInterval);
@@ -24,20 +27,19 @@ export async function createPlant(data: unknown) {
       roomId: parsed.data.roomId ?? null,
       wateringInterval: parsed.data.wateringInterval,
       careProfileId: parsed.data.careProfileId ?? null,
-      userId: session.user.id,
+      householdId: household.id,
+      createdByUserId: session.user.id,
       lastWateredAt: now,
-      nextWateringAt: nextWateringAt,
+      nextWateringAt,
       reminders: {
-        create: {
-          userId: session.user.id,
-          enabled: true,
-        },
+        create: { userId: session.user.id, enabled: true },
       },
     },
   });
 
-  revalidatePath("/plants");
-  revalidatePath("/dashboard");
+  revalidatePath("/h/[householdSlug]/plants", "page");
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
+
   return { success: true, plantId: plant.id };
 }
 
@@ -49,9 +51,10 @@ export async function updatePlant(data: unknown) {
   const parsed = editPlantSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  // Verify ownership
+  const { household } = await requireHouseholdAccess(parsed.data.householdId);
+
   const existing = await db.plant.findFirst({
-    where: { id: parsed.data.id, userId: session.user.id },
+    where: { id: parsed.data.id, householdId: parsed.data.householdId },
   });
   if (!existing) return { error: "Plant not found." };
 
@@ -74,71 +77,90 @@ export async function updatePlant(data: unknown) {
           ? undefined
           : (parsed.data.roomId ?? null),
       wateringInterval: parsed.data.wateringInterval,
-      nextWateringAt: nextWateringAt,
+      nextWateringAt,
     },
   });
 
-  revalidatePath("/plants");
-  revalidatePath("/dashboard");
-  revalidatePath(`/plants/${parsed.data.id}`);
+  revalidatePath("/h/[householdSlug]/plants", "page");
+  revalidatePath("/h/[householdSlug]/plants/[id]", "page");
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
+
   return { success: true };
 }
 
-export async function archivePlant(plantId: string) {
+export async function archivePlant(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
   if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
+  const parsed = plantTargetSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  const { household } = await requireHouseholdAccess(parsed.data.householdId);
+
   const plant = await db.plant.findFirst({
-    where: { id: plantId, userId: session.user.id },
+    where: { id: parsed.data.plantId, householdId: parsed.data.householdId },
   });
   if (!plant) return { error: "Plant not found." };
 
   await db.plant.update({
-    where: { id: plantId },
+    where: { id: plant.id },
     data: { archivedAt: new Date() },
   });
 
-  revalidatePath("/plants");
-  revalidatePath("/dashboard");
+  revalidatePath("/h/[householdSlug]/plants", "page");
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
+
   return { success: true };
 }
 
-export async function unarchivePlant(plantId: string) {
+export async function unarchivePlant(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
   if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
+  const parsed = plantTargetSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  const { household } = await requireHouseholdAccess(parsed.data.householdId);
+
   const plant = await db.plant.findFirst({
-    where: { id: plantId, userId: session.user.id },
+    where: { id: parsed.data.plantId, householdId: parsed.data.householdId },
   });
   if (!plant) return { error: "Plant not found." };
 
   await db.plant.update({
-    where: { id: plantId },
+    where: { id: plant.id },
     data: { archivedAt: null },
   });
 
-  revalidatePath("/plants");
-  revalidatePath("/dashboard");
+  revalidatePath("/h/[householdSlug]/plants", "page");
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
+
   return { success: true };
 }
 
-export async function deletePlant(plantId: string) {
+export async function deletePlant(data: unknown) {
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
   if (session.user.isDemo) return { error: "Demo mode — sign up to save your changes." };
 
+  const parsed = plantTargetSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  const { household } = await requireHouseholdAccess(parsed.data.householdId);
+
   const plant = await db.plant.findFirst({
-    where: { id: plantId, userId: session.user.id },
+    where: { id: parsed.data.plantId, householdId: parsed.data.householdId },
   });
   if (!plant) return { error: "Plant not found." };
 
   await db.plant.delete({
-    where: { id: plantId },
+    where: { id: plant.id },
   });
 
-  revalidatePath("/plants");
-  revalidatePath("/dashboard");
+  revalidatePath("/h/[householdSlug]/plants", "page");
+  revalidatePath("/h/[householdSlug]/dashboard", "page");
+
   return { success: true };
 }

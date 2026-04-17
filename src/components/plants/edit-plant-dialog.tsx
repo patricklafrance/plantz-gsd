@@ -41,15 +41,17 @@ type Room = { id: string; name: string };
 interface EditPlantDialogProps {
   plant: PlantWithRelations;
   rooms: Room[];
+  householdId: string;
 }
 
-export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
+export function EditPlantDialog({ plant, rooms, householdId }: EditPlantDialogProps) {
   const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState<string | undefined>(undefined);
 
   const form = useForm<EditPlantInput>({
     resolver: zodResolver(editPlantSchema),
     defaultValues: {
+      householdId,
       id: plant.id,
       nickname: plant.nickname,
       species: plant.species ?? "",
@@ -63,6 +65,7 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
     if (!isOpen) {
       setFormError(undefined);
       form.reset({
+        householdId,
         id: plant.id,
         nickname: plant.nickname,
         species: plant.species ?? "",
@@ -102,6 +105,9 @@ export function EditPlantDialog({ plant, rooms }: EditPlantDialogProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
+            {/* Hidden householdId — required by editPlantSchema (D-04) */}
+            <input type="hidden" {...form.register("householdId")} />
+
             {/* Nickname */}
             <FormField
               control={form.control}

@@ -46,9 +46,10 @@ type Room = { id: string; name: string };
 interface AddPlantDialogProps {
   catalog: CareProfile[];
   rooms: Room[];
+  householdId: string;
 }
 
-export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
+export function AddPlantDialog({ catalog, rooms, householdId }: AddPlantDialogProps) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"catalog" | "form">("catalog");
   const [selectedProfile, setSelectedProfile] = useState<CareProfile | null>(null);
@@ -58,6 +59,7 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
   const form = useForm<CreatePlantInput>({
     resolver: zodResolver(createPlantSchema),
     defaultValues: {
+      householdId,
       nickname: "",
       species: "",
       roomId: undefined,
@@ -93,6 +95,7 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
         setSearch("");
         setFormError(undefined);
         form.reset({
+          householdId,
           nickname: "",
           species: "",
           roomId: undefined,
@@ -235,6 +238,9 @@ export function AddPlantDialog({ catalog, rooms }: AddPlantDialogProps) {
 
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-2">
+                {/* Hidden householdId — required by createPlantSchema (D-04) */}
+                <input type="hidden" {...form.register("householdId")} />
+
                 {/* Nickname */}
                 <FormField
                   control={form.control}

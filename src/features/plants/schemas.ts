@@ -34,3 +34,9 @@ export const editPlantSchema = z.object({
 
 export type CreatePlantInput = z.infer<typeof createPlantSchema>;
 export type EditPlantInput = z.infer<typeof editPlantSchema>;
+
+export const plantTargetSchema = z.object({
+  householdId: z.string().cuid(),
+  plantId: z.string().min(1, "Plant ID is required."),
+});
+export type PlantTargetInput = z.infer<typeof plantTargetSchema>;

@@ -23,9 +23,10 @@ import type { PlantWithRelations } from "@/types/plants";
 
 interface PlantActionsProps {
   plant: PlantWithRelations;
+  householdId: string;
 }
 
-export function PlantActions({ plant }: PlantActionsProps) {
+export function PlantActions({ plant, householdId }: PlantActionsProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
@@ -33,7 +34,7 @@ export function PlantActions({ plant }: PlantActionsProps) {
 
   async function handleArchive() {
     setIsArchiving(true);
-    const result = await archivePlant(plant.id);
+    const result = await archivePlant({ householdId, plantId: plant.id });
     setIsArchiving(false);
 
     if ("error" in result) {
@@ -46,7 +47,7 @@ export function PlantActions({ plant }: PlantActionsProps) {
       action: {
         label: "Undo",
         onClick: async () => {
-          const undoResult = await unarchivePlant(plant.id);
+          const undoResult = await unarchivePlant({ householdId, plantId: plant.id });
           if ("error" in undoResult) {
             toast.error(undoResult.error);
           } else {
@@ -59,7 +60,7 @@ export function PlantActions({ plant }: PlantActionsProps) {
 
   async function handleDelete() {
     setIsDeleting(true);
-    const result = await deletePlant(plant.id);
+    const result = await deletePlant({ householdId, plantId: plant.id });
     setIsDeleting(false);
 
     if ("error" in result) {
