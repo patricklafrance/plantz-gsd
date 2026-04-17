@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_PLANTS, STARTER_PLANTS } from "./seed-data";
 import { generateHouseholdSlug } from "@/lib/slug";
+import { requireHouseholdAccess } from "@/features/household/guards";
 
 /**
  * Ensures the demo user exists in the database, creating it with a Household,
@@ -160,6 +161,12 @@ export async function seedStarterPlants(plantCountRange?: string, householdId?: 
   // Resolve householdId: use provided value or fall back to session's active household
   const targetHouseholdId = householdId ?? session.user.activeHouseholdId;
   if (!targetHouseholdId) return { error: "No household found." };
+
+  // CR-01: Live membership check — Pitfall 16 / D-14.
+  // The fallback to session.user.activeHouseholdId is a landing-target hint, not
+  // an authorization source. requireHouseholdAccess throws ForbiddenError if the
+  // caller is not a member of targetHouseholdId.
+  await requireHouseholdAccess(targetHouseholdId);
 
   const { addDays } = await import("date-fns");
   const now = new Date();
