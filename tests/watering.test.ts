@@ -742,7 +742,59 @@ describe("Phase 2 — watering queries honor householdId scope via nested plant 
 });
 
 describe("Phase 2 — watering actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {
-  test.todo("logWatering throws ForbiddenError when requireHouseholdAccess throws");
-  test.todo("editWateringLog throws ForbiddenError when requireHouseholdAccess throws");
-  test.todo("deleteWateringLog throws ForbiddenError when requireHouseholdAccess throws");
+  const VALID_HOUSEHOLD_ID = "clxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+  test("logWatering throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { logWatering } = await import("@/features/watering/actions");
+    await expect(
+      logWatering({ householdId: VALID_HOUSEHOLD_ID, plantId: "p1" })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  test("editWateringLog throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { editWateringLog } = await import("@/features/watering/actions");
+    await expect(
+      editWateringLog({ householdId: VALID_HOUSEHOLD_ID, logId: "wl1", wateredAt: new Date().toISOString() })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  test("deleteWateringLog throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { deleteWateringLog } = await import("@/features/watering/actions");
+    await expect(
+      deleteWateringLog({ householdId: VALID_HOUSEHOLD_ID, logId: "wl1" })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
 });

@@ -107,9 +107,61 @@ describe("Phase 2 — rooms queries honor householdId scope (D-10, D-16)", () =>
 });
 
 describe("Phase 2 — rooms actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {
-  test.todo("createRoom throws ForbiddenError when requireHouseholdAccess throws");
-  test.todo("updateRoom throws ForbiddenError when requireHouseholdAccess throws");
-  test.todo("deleteRoom throws ForbiddenError when requireHouseholdAccess throws");
+  const VALID_HOUSEHOLD_ID = "clxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+  test("createRoom throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { createRoom } = await import("@/features/rooms/actions");
+    await expect(
+      createRoom({ householdId: VALID_HOUSEHOLD_ID, name: "Living Room" })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  test("updateRoom throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { updateRoom } = await import("@/features/rooms/actions");
+    await expect(
+      updateRoom({ householdId: VALID_HOUSEHOLD_ID, id: "r1", name: "Kitchen" })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  test("deleteRoom throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { deleteRoom } = await import("@/features/rooms/actions");
+    await expect(
+      deleteRoom({ householdId: VALID_HOUSEHOLD_ID, roomId: "r1" })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
 });
 
 describe("Plan 05a — roomTargetSchema (D-12 blob payload for deleteRoom)", () => {

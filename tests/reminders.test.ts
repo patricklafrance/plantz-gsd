@@ -4,16 +4,26 @@ vi.mock("@/generated/prisma/client", () => ({ PrismaClient: vi.fn() }));
 vi.mock("@prisma/adapter-pg", () => ({ PrismaPg: vi.fn() }));
 vi.mock("@/lib/db", () => ({
   db: {
-    user: { findUnique: vi.fn() },
+    user: { findUnique: vi.fn(), update: vi.fn() },
     plant: {
       count: vi.fn(),
       findMany: vi.fn(),
+      findFirst: vi.fn(),
     },
-    reminder: { findUnique: vi.fn() },
+    reminder: { findUnique: vi.fn(), upsert: vi.fn() },
   },
 }));
 vi.mock("../auth", () => ({ auth: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+vi.mock("@/features/household/guards", async () => {
+  const actual = await vi.importActual<typeof import("@/features/household/guards")>(
+    "@/features/household/guards"
+  );
+  return {
+    ...actual,
+    requireHouseholdAccess: vi.fn(),
+  };
+});
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -138,7 +148,63 @@ describe("Phase 2 — reminders queries honor householdId scope (D-10, D-14, D-1
 });
 
 describe("Phase 2 — reminders actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {
-  it.todo("snoozeReminder throws ForbiddenError when requireHouseholdAccess throws");
-  it.todo("snoozeCustomReminder throws ForbiddenError when requireHouseholdAccess throws");
-  it.todo("togglePlantReminder throws ForbiddenError when requireHouseholdAccess throws");
+  const VALID_HOUSEHOLD_ID = "clxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+  it("snoozeReminder throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { snoozeReminder } = await import("@/features/reminders/actions");
+    await expect(
+      snoozeReminder({ householdId: VALID_HOUSEHOLD_ID, plantId: "p1", days: 1 })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("snoozeCustomReminder throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { snoozeCustomReminder } = await import("@/features/reminders/actions");
+    await expect(
+      snoozeCustomReminder({
+        householdId: VALID_HOUSEHOLD_ID,
+        plantId: "p1",
+        snoozedUntil: new Date(Date.now() + 86400000),
+      })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("togglePlantReminder throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { togglePlantReminder } = await import("@/features/reminders/actions");
+    await expect(
+      togglePlantReminder({ householdId: VALID_HOUSEHOLD_ID, plantId: "p1", enabled: false })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
 });

@@ -304,7 +304,59 @@ describe("Phase 2 — notes queries honor householdId scope via nested plant (D-
 });
 
 describe("Phase 2 — notes actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {
-  test.todo("createNote throws ForbiddenError when requireHouseholdAccess throws");
-  test.todo("updateNote throws ForbiddenError when requireHouseholdAccess throws");
-  test.todo("deleteNote throws ForbiddenError when requireHouseholdAccess throws");
+  const VALID_HOUSEHOLD_ID = "clxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+  test("createNote throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { createNote } = await import("@/features/notes/actions");
+    await expect(
+      createNote({ householdId: VALID_HOUSEHOLD_ID, plantId: "p1", content: "Test note" })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  test("updateNote throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { updateNote } = await import("@/features/notes/actions");
+    await expect(
+      updateNote({ householdId: VALID_HOUSEHOLD_ID, noteId: "n1", content: "Updated" })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  test("deleteNote throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { deleteNote } = await import("@/features/notes/actions");
+    await expect(
+      deleteNote({ householdId: VALID_HOUSEHOLD_ID, noteId: "n1" })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
 });

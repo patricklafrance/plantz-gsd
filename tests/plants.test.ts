@@ -175,11 +175,97 @@ describe("Phase 2 — plants queries honor householdId scope (D-10, D-16)", () =
 });
 
 describe("Phase 2 — plants actions reject non-members with ForbiddenError (D-17, Pitfall 16)", () => {
-  test.todo("createPlant throws ForbiddenError when requireHouseholdAccess throws");
-  test.todo("updatePlant throws ForbiddenError when requireHouseholdAccess throws");
-  test.todo("archivePlant throws ForbiddenError when requireHouseholdAccess throws");
-  test.todo("unarchivePlant throws ForbiddenError when requireHouseholdAccess throws");
-  test.todo("deletePlant throws ForbiddenError when requireHouseholdAccess throws");
+  const VALID_HOUSEHOLD_ID = "clxxxxxxxxxxxxxxxxxxxxxxxxx";
+
+  test("createPlant throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { createPlant } = await import("@/features/plants/actions");
+    await expect(
+      createPlant({ householdId: VALID_HOUSEHOLD_ID, nickname: "Test", wateringInterval: 7 })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  test("updatePlant throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { updatePlant } = await import("@/features/plants/actions");
+    await expect(
+      updatePlant({ householdId: VALID_HOUSEHOLD_ID, id: "p1", nickname: "Test", wateringInterval: 7 })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  test("archivePlant throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { archivePlant } = await import("@/features/plants/actions");
+    await expect(
+      archivePlant({ householdId: VALID_HOUSEHOLD_ID, plantId: "p1" })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  test("unarchivePlant throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { unarchivePlant } = await import("@/features/plants/actions");
+    await expect(
+      unarchivePlant({ householdId: VALID_HOUSEHOLD_ID, plantId: "p1" })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  test("deletePlant throws ForbiddenError when requireHouseholdAccess throws", async () => {
+    const { auth } = await import("../auth");
+    const { ForbiddenError, requireHouseholdAccess } = await import(
+      "@/features/household/guards"
+    );
+    vi.mocked(auth).mockResolvedValue({
+      user: { id: "user_X", isDemo: false },
+    } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockRejectedValue(
+      new ForbiddenError("Not a member of this household")
+    );
+
+    const { deletePlant } = await import("@/features/plants/actions");
+    await expect(
+      deletePlant({ householdId: VALID_HOUSEHOLD_ID, plantId: "p1" })
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
 });
 
 describe("Plan 05a — plantTargetSchema (D-12 blob payload for archive/unarchive/delete)", () => {
