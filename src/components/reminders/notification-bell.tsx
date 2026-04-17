@@ -13,11 +13,12 @@ import { useRouter } from "next/navigation";
 import type { ReminderItem } from "@/features/reminders/types";
 
 interface NotificationBellProps {
+  householdSlug: string;
   count: number;
   items: ReminderItem[];
 }
 
-export function NotificationBell({ count, items }: NotificationBellProps) {
+export function NotificationBell({ householdSlug, count, items }: NotificationBellProps) {
   const router = useRouter();
 
   return (
@@ -56,7 +57,7 @@ export function NotificationBell({ count, items }: NotificationBellProps) {
           items.map((item) => (
             <DropdownMenuItem
               key={item.plantId}
-              onClick={() => router.push(`/plants/${item.plantId}`)}
+              onClick={() => router.push(`/h/${householdSlug}/plants/${item.plantId}`)}
               className="group/item flex cursor-pointer flex-col items-start gap-1 py-2"
             >
               <span className="text-sm font-semibold text-foreground group-data-[highlighted]/item:text-accent-foreground">

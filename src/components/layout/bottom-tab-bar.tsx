@@ -12,23 +12,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ReminderItem } from "@/features/reminders/types";
 
-const TABS = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard", exact: true },
-  { href: "/plants", icon: Leaf, label: "Plants", exact: false },
-  { href: "/rooms", icon: DoorOpen, label: "Rooms", exact: false },
-] as const;
-
 interface BottomTabBarProps {
+  householdSlug: string;
   notificationCount: number;
   reminderItems: ReminderItem[];
 }
 
 export function BottomTabBar({
+  householdSlug,
   notificationCount,
   reminderItems,
 }: BottomTabBarProps) {
   const pathname = usePathname();
   const router = useRouter();
+
+  const tabs = [
+    { href: `/h/${householdSlug}/dashboard`, icon: LayoutDashboard, label: "Dashboard", exact: true },
+    { href: `/h/${householdSlug}/plants`, icon: Leaf, label: "Plants", exact: false },
+    { href: `/h/${householdSlug}/rooms`, icon: DoorOpen, label: "Rooms", exact: false },
+  ];
 
   return (
     <nav
@@ -36,7 +38,7 @@ export function BottomTabBar({
       className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] sm:hidden"
     >
       <div className="flex h-14 items-stretch">
-        {TABS.map(({ href, icon: Icon, label, exact }) => {
+        {tabs.map(({ href, icon: Icon, label, exact }) => {
           const isActive = exact
             ? pathname === href
             : pathname === href || pathname.startsWith(href + "/");
@@ -93,7 +95,7 @@ export function BottomTabBar({
               reminderItems.map((item) => (
                 <DropdownMenuItem
                   key={item.plantId}
-                  onClick={() => router.push(`/plants/${item.plantId}`)}
+                  onClick={() => router.push(`/h/${householdSlug}/plants/${item.plantId}`)}
                   className="group/item flex cursor-pointer flex-col items-start gap-1 py-2"
                 >
                   <span className="text-sm font-semibold text-foreground group-data-[highlighted]/item:text-accent-foreground">
