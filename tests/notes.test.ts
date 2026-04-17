@@ -17,11 +17,38 @@ vi.mock("@/lib/db", () => ({
       findMany: vi.fn(),
       count: vi.fn(),
     },
+    householdMember: {
+      findFirst: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));
+vi.mock("@/features/household/guards", async () => {
+  const actual = await vi.importActual<typeof import("@/features/household/guards")>(
+    "@/features/household/guards"
+  );
+  return {
+    ...actual,
+    requireHouseholdAccess: vi.fn(),
+  };
+});
 vi.mock("../auth", () => ({ auth: vi.fn() }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
+
+const HOUSEHOLD_ID = "clxxxxxxxxxxxxxxxxxxxxxxxxx";
+const mockGuardResult = {
+  household: { id: HOUSEHOLD_ID, name: "Test Household", slug: "test" },
+  member: {
+    id: "m1",
+    householdId: HOUSEHOLD_ID,
+    userId: "user-1",
+    role: "OWNER" as const,
+    isDefault: true,
+    rotationOrder: 0,
+    createdAt: new Date(),
+  },
+  role: "OWNER" as const,
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -105,25 +132,29 @@ describe("createNote action", () => {
   test("returns error when plant not found or not owned", async () => {
     const { auth } = await import("../auth");
     const { db } = await import("@/lib/db");
+    const { requireHouseholdAccess } = await import("@/features/household/guards");
     vi.mocked(auth).mockResolvedValueOnce({
       user: { id: "user-1" },
     } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
     vi.mocked(db.plant.findFirst).mockResolvedValueOnce(null);
     const { createNote } = await import("@/features/notes/actions");
-    const result = await createNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "plant-1", content: "Test note" });
+    const result = await createNote({ householdId: HOUSEHOLD_ID, plantId: "plant-1", content: "Test note" });
     expect(result).toEqual({ error: "Plant not found." });
   });
 
   test("creates note and revalidates path on success", async () => {
     const { auth } = await import("../auth");
     const { db } = await import("@/lib/db");
+    const { requireHouseholdAccess } = await import("@/features/household/guards");
     const { revalidatePath } = await import("next/cache");
     vi.mocked(auth).mockResolvedValueOnce({
       user: { id: "user-1" },
     } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
     vi.mocked(db.plant.findFirst).mockResolvedValueOnce({
       id: "plant-1",
-      userId: "user-1",
+      householdId: HOUSEHOLD_ID,
     } as Awaited<ReturnType<typeof db.plant.findFirst>>);
     const createdNote = {
       id: "note-1",
@@ -136,12 +167,12 @@ describe("createNote action", () => {
       createdNote as Awaited<ReturnType<typeof db.note.create>>
     );
     const { createNote } = await import("@/features/notes/actions");
-    const result = await createNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "plant-1", content: "Test note" });
+    const result = await createNote({ householdId: HOUSEHOLD_ID, plantId: "plant-1", content: "Test note" });
     expect(result).toEqual({ success: true, note: createdNote });
     expect(db.note.create).toHaveBeenCalledWith({
-      data: { plantId: "plant-1", content: "Test note" },
+      data: { plantId: "plant-1", content: "Test note", performedByUserId: "user-1" },
     });
-    expect(revalidatePath).toHaveBeenCalledWith("/plants/plant-1");
+    expect(revalidatePath).toHaveBeenCalledWith("/h/[householdSlug]/plants/[id]", "page");
   });
 });
 
@@ -149,21 +180,25 @@ describe("updateNote action", () => {
   test("returns error when note not found or not owned", async () => {
     const { auth } = await import("../auth");
     const { db } = await import("@/lib/db");
+    const { requireHouseholdAccess } = await import("@/features/household/guards");
     vi.mocked(auth).mockResolvedValueOnce({
       user: { id: "user-1" },
     } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
     vi.mocked(db.note.findFirst).mockResolvedValueOnce(null);
     const { updateNote } = await import("@/features/notes/actions");
-    const result = await updateNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", noteId: "note-1", content: "Updated" });
+    const result = await updateNote({ householdId: HOUSEHOLD_ID, noteId: "note-1", content: "Updated" });
     expect(result).toEqual({ error: "Note not found." });
   });
 
   test("updates note content on success", async () => {
     const { auth } = await import("../auth");
     const { db } = await import("@/lib/db");
+    const { requireHouseholdAccess } = await import("@/features/household/guards");
     vi.mocked(auth).mockResolvedValueOnce({
       user: { id: "user-1" },
     } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
     const existingNote = {
       id: "note-1",
       plantId: "plant-1",
@@ -180,7 +215,7 @@ describe("updateNote action", () => {
       updatedNote as Awaited<ReturnType<typeof db.note.update>>
     );
     const { updateNote } = await import("@/features/notes/actions");
-    const result = await updateNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", noteId: "note-1", content: "Updated content" });
+    const result = await updateNote({ householdId: HOUSEHOLD_ID, noteId: "note-1", content: "Updated content" });
     expect(result).toEqual({ success: true, note: updatedNote });
   });
 });
@@ -189,22 +224,26 @@ describe("deleteNote action", () => {
   test("returns error when note not found or not owned", async () => {
     const { auth } = await import("../auth");
     const { db } = await import("@/lib/db");
+    const { requireHouseholdAccess } = await import("@/features/household/guards");
     vi.mocked(auth).mockResolvedValueOnce({
       user: { id: "user-1" },
     } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
     vi.mocked(db.note.findFirst).mockResolvedValueOnce(null);
     const { deleteNote } = await import("@/features/notes/actions");
-    const result = await deleteNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", noteId: "note-1" });
+    const result = await deleteNote({ householdId: HOUSEHOLD_ID, noteId: "note-1" });
     expect(result).toEqual({ error: "Note not found." });
   });
 
   test("deletes note on success", async () => {
     const { auth } = await import("../auth");
     const { db } = await import("@/lib/db");
+    const { requireHouseholdAccess } = await import("@/features/household/guards");
     const { revalidatePath } = await import("next/cache");
     vi.mocked(auth).mockResolvedValueOnce({
       user: { id: "user-1" },
     } as Awaited<ReturnType<typeof auth>>);
+    vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
     const existingNote = {
       id: "note-1",
       plantId: "plant-1",
@@ -219,9 +258,9 @@ describe("deleteNote action", () => {
       existingNote as Awaited<ReturnType<typeof db.note.delete>>
     );
     const { deleteNote } = await import("@/features/notes/actions");
-    const result = await deleteNote({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", noteId: "note-1" });
+    const result = await deleteNote({ householdId: HOUSEHOLD_ID, noteId: "note-1" });
     expect(result).toEqual({ success: true });
-    expect(revalidatePath).toHaveBeenCalledWith("/plants/plant-1");
+    expect(revalidatePath).toHaveBeenCalledWith("/h/[householdSlug]/plants/[id]", "page");
   });
 });
 

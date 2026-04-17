@@ -25,9 +25,22 @@ vi.mock("@/lib/db", () => ({
       delete: vi.fn(),
       count: vi.fn(),
     },
+    householdMember: {
+      findFirst: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
 }));
+
+vi.mock("@/features/household/guards", async () => {
+  const actual = await vi.importActual<typeof import("@/features/household/guards")>(
+    "@/features/household/guards"
+  );
+  return {
+    ...actual,
+    requireHouseholdAccess: vi.fn(),
+  };
+});
 
 // Mock auth for Server Action tests
 // actions.ts imports "../../../auth" which resolves to root auth.ts
@@ -35,6 +48,21 @@ vi.mock("@/lib/db", () => ({
 vi.mock("../auth", () => ({
   auth: vi.fn(),
 }));
+
+const HOUSEHOLD_ID = "clxxxxxxxxxxxxxxxxxxxxxxxxx";
+const mockGuardResult = {
+  household: { id: HOUSEHOLD_ID, name: "Test Household", slug: "test" },
+  member: {
+    id: "m1",
+    householdId: HOUSEHOLD_ID,
+    userId: "user-1",
+    role: "OWNER" as const,
+    isDefault: true,
+    rotationOrder: 0,
+    createdAt: new Date(),
+  },
+  role: "OWNER" as const,
+};
 
 // Mock revalidatePath for Server Action tests
 vi.mock("next/cache", () => ({
@@ -414,15 +442,19 @@ describe("Server Actions", () => {
 
     test("returns error for unowned plant", async () => {
       authMock.mockResolvedValue({ user: { id: "u1" } });
+      const { requireHouseholdAccess } = await import("@/features/household/guards");
+      vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
       db.plant.findFirst.mockResolvedValue(null);
 
       const { logWatering } = await import("@/features/watering/actions");
-      const result = await logWatering({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "p1" });
+      const result = await logWatering({ householdId: HOUSEHOLD_ID, plantId: "p1" });
       expect(result).toEqual({ error: "Plant not found." });
     });
 
     test("returns DUPLICATE when a log already exists for the same calendar date", async () => {
       authMock.mockResolvedValue({ user: { id: "u1" } });
+      const { requireHouseholdAccess } = await import("@/features/household/guards");
+      vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
       db.plant.findFirst.mockResolvedValue({
         id: "p1",
         userId: "u1",
@@ -437,12 +469,14 @@ describe("Server Actions", () => {
       });
 
       const { logWatering } = await import("@/features/watering/actions");
-      const result = await logWatering({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "p1" });
+      const result = await logWatering({ householdId: HOUSEHOLD_ID, plantId: "p1" });
       expect(result).toEqual({ error: "DUPLICATE" });
     });
 
     test("creates log and updates plant in transaction on success", async () => {
       authMock.mockResolvedValue({ user: { id: "u1" } });
+      const { requireHouseholdAccess } = await import("@/features/household/guards");
+      vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
       db.plant.findFirst.mockResolvedValue({
         id: "p1",
         userId: "u1",
@@ -458,7 +492,7 @@ describe("Server Actions", () => {
       db.wateringLog.create.mockResolvedValue({ id: "wl-1" });
 
       const { logWatering } = await import("@/features/watering/actions");
-      const result = await logWatering({ householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", plantId: "p1" });
+      const result = await logWatering({ householdId: HOUSEHOLD_ID, plantId: "p1" });
 
       expect(result).toHaveProperty("success", true);
       expect(result).toHaveProperty("plantNickname", "Monstera");
@@ -469,6 +503,8 @@ describe("Server Actions", () => {
 
     test("uses custom past wateredAt for nextWateringAt calculation", async () => {
       authMock.mockResolvedValue({ user: { id: "u1" } });
+      const { requireHouseholdAccess } = await import("@/features/household/guards");
+      vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
       db.plant.findFirst.mockResolvedValue({
         id: "p1",
         userId: "u1",
@@ -485,7 +521,7 @@ describe("Server Actions", () => {
 
       const { logWatering } = await import("@/features/watering/actions");
       const result = await logWatering({
-        householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+        householdId: HOUSEHOLD_ID,
         plantId: "p1",
         wateredAt: pastDate.toISOString(),
       });
@@ -501,6 +537,8 @@ describe("Server Actions", () => {
       const threeDaysAgo = subDays(new Date(), 3);
 
       authMock.mockResolvedValue({ user: { id: "u1" } });
+      const { requireHouseholdAccess } = await import("@/features/household/guards");
+      vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
       db.plant.findFirst.mockResolvedValue({
         id: "p1",
         userId: "u1",
@@ -517,7 +555,7 @@ describe("Server Actions", () => {
 
       const { logWatering } = await import("@/features/watering/actions");
       const result = await logWatering({
-        householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+        householdId: HOUSEHOLD_ID,
         plantId: "p1",
         wateredAt: threeDaysAgo.toISOString(),
       });
@@ -538,6 +576,8 @@ describe("Server Actions", () => {
   describe("editWateringLog", () => {
     test("returns error for unowned log", async () => {
       authMock.mockResolvedValue({ user: { id: "u1" } });
+      const { requireHouseholdAccess } = await import("@/features/household/guards");
+      vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
       db.wateringLog.findFirst.mockResolvedValue(null);
 
       const { editWateringLog } = await import(
@@ -545,7 +585,7 @@ describe("Server Actions", () => {
       );
       const yesterday = subDays(new Date(), 1);
       const result = await editWateringLog({
-        householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+        householdId: HOUSEHOLD_ID,
         logId: "log-1",
         wateredAt: yesterday.toISOString(),
       });
@@ -554,6 +594,8 @@ describe("Server Actions", () => {
 
     test("updates log and recalculates nextWateringAt", async () => {
       authMock.mockResolvedValue({ user: { id: "u1" } });
+      const { requireHouseholdAccess } = await import("@/features/household/guards");
+      vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
       // First findFirst (ownership check) returns the log
       db.wateringLog.findFirst
         .mockResolvedValueOnce({
@@ -574,7 +616,7 @@ describe("Server Actions", () => {
       );
       const yesterday = subDays(new Date(), 1);
       const result = await editWateringLog({
-        householdId: "clxxxxxxxxxxxxxxxxxxxxxxxxx",
+        householdId: HOUSEHOLD_ID,
         logId: "log-1",
         wateredAt: yesterday.toISOString(),
       });
@@ -588,17 +630,21 @@ describe("Server Actions", () => {
   describe("deleteWateringLog", () => {
     test("returns error for unowned log", async () => {
       authMock.mockResolvedValue({ user: { id: "u1" } });
+      const { requireHouseholdAccess } = await import("@/features/household/guards");
+      vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
       db.wateringLog.findFirst.mockResolvedValue(null);
 
       const { deleteWateringLog } = await import(
         "@/features/watering/actions"
       );
-      const result = await deleteWateringLog("log-1");
+      const result = await deleteWateringLog({ householdId: HOUSEHOLD_ID, logId: "log-1" });
       expect(result).toEqual({ error: "Log not found." });
     });
 
     test("resets nextWateringAt when no logs remain", async () => {
       authMock.mockResolvedValue({ user: { id: "u1" } });
+      const { requireHouseholdAccess } = await import("@/features/household/guards");
+      vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
       // First findFirst (ownership check)
       db.wateringLog.findFirst
         .mockResolvedValueOnce({
@@ -614,7 +660,7 @@ describe("Server Actions", () => {
       const { deleteWateringLog } = await import(
         "@/features/watering/actions"
       );
-      const result = await deleteWateringLog("log-1");
+      const result = await deleteWateringLog({ householdId: HOUSEHOLD_ID, logId: "log-1" });
 
       expect(result).toEqual({ success: true });
       expect(db.plant.update).toHaveBeenCalledWith(
@@ -629,6 +675,8 @@ describe("Server Actions", () => {
     test("recalculates from remaining logs after deletion", async () => {
       const remainingLogDate = new Date("2026-04-08T10:00:00Z");
       authMock.mockResolvedValue({ user: { id: "u1" } });
+      const { requireHouseholdAccess } = await import("@/features/household/guards");
+      vi.mocked(requireHouseholdAccess).mockResolvedValueOnce(mockGuardResult as never);
       db.wateringLog.findFirst
         .mockResolvedValueOnce({
           id: "log-2",
@@ -645,7 +693,7 @@ describe("Server Actions", () => {
       const { deleteWateringLog } = await import(
         "@/features/watering/actions"
       );
-      const result = await deleteWateringLog("log-2");
+      const result = await deleteWateringLog({ householdId: HOUSEHOLD_ID, logId: "log-2" });
 
       expect(result).toEqual({ success: true });
       expect(db.plant.update).toHaveBeenCalledWith(
