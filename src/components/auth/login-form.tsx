@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import Link from "next/link";
 import { Leaf, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
@@ -23,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 
 export function LoginForm() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginInput>({
@@ -36,22 +35,20 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginInput) {
     try {
-      const result = await signIn("credentials", {
+      // Auth.js v5 native server-side redirect: the 303 is issued AFTER the
+      // Set-Cookie header is written, so the next request carries the session
+      // cookie natively. This avoids the { redirect: false } + router.push
+      // cookie-propagation race (UAT-2).
+      await signIn("credentials", {
         email: values.email,
         password: values.password,
-        redirect: false,
+        redirect: true,
+        redirectTo: "/dashboard",
       });
-
-      if (result?.error) {
-        toast.error("Incorrect email or password. Please try again.");
-        return;
-      }
-
-      // Successful login — redirect to dashboard
-      router.push("/dashboard");
-      router.refresh();
-    } catch {
-      toast.error("Something went wrong. Please try again in a moment.");
+    } catch (error) {
+      // signIn with redirect:true throws NEXT_REDIRECT on success — re-throw
+      if (isRedirectError(error)) throw error;
+      toast.error("Incorrect email or password. Please try again.");
     }
   }
 
