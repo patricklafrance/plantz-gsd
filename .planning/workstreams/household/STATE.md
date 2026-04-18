@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 03 plan 05 complete — Wave 4 cron orchestrator + POST /api/cron/advance-cycles route handler (paused-resume + cron-route tests green; external user_setup pending)
-last_updated: "2026-04-18T04:11:41.000Z"
+status: Awaiting external cron-job.org + Vercel CRON_SECRET setup (human-action)
+stopped_at: Phase 04 context gathered (invitation-system) — 8 areas discussed, co-owner model adopted
+last_updated: "2026-04-18T16:50:46.859Z"
 last_activity: 2026-04-18
 progress:
   total_phases: 7
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 22
   completed_plans: 22
   percent: 100
@@ -88,6 +88,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-18T04:11:41.000Z
-Stopped at: Phase 03 plan 05 code complete — Wave 4 cron orchestrator (advanceAllHouseholds) + POST /api/cron/advance-cycles route handler; paused-resume + cron-route test stubs replaced with 6 real assertions; ROTA-04 + AVLB-03 + AVLB-05 requirements checked off
+Last session: 2026-04-18T16:50:46.854Z
+Stopped at: Phase 04 context gathered (invitation-system) — 8 areas discussed, co-owner model adopted
 Next step: USER human-action — (1) openssl rand -hex 32 → CRON_SECRET; (2) set CRON_SECRET in Vercel dashboard env vars (prod); (3) create cron-job.org hourly POST against https://<prod-url>/api/cron/advance-cycles with Authorization: Bearer $CRON_SECRET; (4) confirm cron targets production only. After external setup, Phase 03 is fully shippable and Phase 04 (invitations) is unblocked.
