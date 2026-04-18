@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import type { Cycle, Availability } from "@/generated/prisma/client";
 
 /**
  * D-17: Resolve a URL slug to a household identifier.
@@ -41,4 +42,35 @@ export async function getUserHouseholds(userId: string) {
     isDefault: m.isDefault,
     joinedAt: m.createdAt,
   }));
+}
+
+/**
+ * Phase 6 consumer: dashboard cycle banner reads this inside the layout chokepoint.
+ * Returns the most recent active-or-paused Cycle for the household, or null.
+ * Caller is responsible for authorization (layout ran requireHouseholdAccess).
+ */
+export async function getCurrentCycle(householdId: string): Promise<Cycle | null> {
+  return db.cycle.findFirst({
+    where: {
+      householdId,
+      status: { in: ["active", "paused"] },
+    },
+    orderBy: { cycleNumber: "desc" },
+  });
+}
+
+/**
+ * D-08: all household members can view all members' availability.
+ * Joined with `user.name` + `user.email` for display in the settings list.
+ */
+export async function getHouseholdAvailabilities(
+  householdId: string,
+): Promise<Array<Availability & { user: { name: string | null; email: string } }>> {
+  return db.availability.findMany({
+    where: { householdId },
+    include: {
+      user: { select: { name: true, email: true } },
+    },
+    orderBy: { startDate: "asc" },
+  });
 }
