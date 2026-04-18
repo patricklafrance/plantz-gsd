@@ -8,50 +8,52 @@ datasource db {
 }
 
 model User {
-  id                  String     @id @default(cuid())
-  email               String     @unique
+  id                  String   @id @default(cuid())
+  email               String   @unique
   passwordHash        String
   name                String?
-  createdAt           DateTime   @default(now()) @db.Timestamptz(3)
-  updatedAt           DateTime   @updatedAt @db.Timestamptz(3)
-  onboardingCompleted Boolean    @default(false)
+  createdAt           DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime @updatedAt @db.Timestamptz(3)
+  onboardingCompleted Boolean  @default(false)
   plantCountRange     String?
-  remindersEnabled    Boolean    @default(true)
+  remindersEnabled    Boolean  @default(true)
   timezone            String?
 
   // Existing back-relations (kept for ownership of Reminder which is per-user)
-  reminders           Reminder[]
+  reminders Reminder[]
 
   // Audit-only back-relations (D-05; SetNull on delete)
-  createdPlants       Plant[]    @relation("PlantCreatedBy")
-  createdRooms        Room[]     @relation("RoomCreatedBy")
-  performedWaterings  WateringLog[] @relation("WateringPerformedBy")
-  performedNotes      Note[]     @relation("NotePerformedBy")
+  createdPlants      Plant[]       @relation("PlantCreatedBy")
+  createdRooms       Room[]        @relation("RoomCreatedBy")
+  performedWaterings WateringLog[] @relation("WateringPerformedBy")
+  performedNotes     Note[]        @relation("NotePerformedBy")
 
   // Household milestone back-relations
-  memberships         HouseholdMember[]
-  assignedCycles      Cycle[]    @relation("CycleAssignee")
-  availabilityPeriods Availability[]
-  sentInvitations     Invitation[] @relation("InvitedBy")
-  acceptedInvitations Invitation[] @relation("AcceptedBy")
+  memberships            HouseholdMember[]
+  assignedCycles         Cycle[]                 @relation("CycleAssignee")
+  availabilityPeriods    Availability[]
+  sentInvitations        Invitation[]            @relation("InvitedBy")
+  acceptedInvitations    Invitation[]            @relation("AcceptedBy")
+  householdNotifications HouseholdNotification[] @relation("HouseholdNotificationRecipient")
 }
 
 model Household {
-  id               String           @id @default(cuid())
+  id               String   @id @default(cuid())
   name             String
-  slug             String           @unique
-  timezone         String           @default("UTC")
-  cycleDuration    Int              @default(7)
-  rotationStrategy String           @default("sequential")
-  createdAt        DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt        DateTime         @updatedAt @db.Timestamptz(3)
+  slug             String   @unique
+  timezone         String   @default("UTC")
+  cycleDuration    Int      @default(7)
+  rotationStrategy String   @default("sequential")
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @db.Timestamptz(3)
 
-  members          HouseholdMember[]
-  plants           Plant[]
-  rooms            Room[]
-  cycles           Cycle[]
+  members             HouseholdMember[]
+  plants              Plant[]
+  rooms               Room[]
+  cycles              Cycle[]
   availabilityPeriods Availability[]
-  invitations      Invitation[]
+  invitations         Invitation[]
+  notifications       HouseholdNotification[]
 }
 
 model HouseholdMember {
@@ -70,15 +72,15 @@ model HouseholdMember {
 }
 
 model Room {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   name            String
   householdId     String
   household       Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
   createdByUserId String?
-  createdBy       User?    @relation("RoomCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdBy       User?     @relation("RoomCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
   plants          Plant[]
-  createdAt       DateTime @default(now()) @db.Timestamptz(3)
-  updatedAt       DateTime @updatedAt @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(3)
 
   @@index([householdId])
 }
@@ -169,20 +171,22 @@ model Reminder {
 }
 
 model Cycle {
-  id                  String    @id @default(cuid())
+  id                  String                  @id @default(cuid())
   householdId         String
-  household           Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  household           Household               @relation(fields: [householdId], references: [id], onDelete: Cascade)
   cycleNumber         Int
-  anchorDate          DateTime  @db.Timestamptz(3)
+  anchorDate          DateTime                @db.Timestamptz(3)
   cycleDuration       Int
-  startDate           DateTime  @db.Timestamptz(3)
-  endDate             DateTime  @db.Timestamptz(3)
-  status              String    @default("active") // 'active' | 'skipped' | 'paused' | 'completed'
+  startDate           DateTime                @db.Timestamptz(3)
+  endDate             DateTime                @db.Timestamptz(3)
+  status              String                  @default("active") // 'active' | 'skipped' | 'paused' | 'completed'
+  transitionReason    String? // D-04: cycle_end | manual_skip | auto_skip_unavailable | member_left | all_unavailable_fallback | paused_resumed. NULL on active cycles.
   assignedUserId      String?
-  assignedUser        User?     @relation("CycleAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  assignedUser        User?                   @relation("CycleAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
   memberOrderSnapshot Json
-  createdAt           DateTime  @default(now()) @db.Timestamptz(3)
-  updatedAt           DateTime  @updatedAt @db.Timestamptz(3)
+  createdAt           DateTime                @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime                @updatedAt @db.Timestamptz(3)
+  notifications       HouseholdNotification[]
 
   @@unique([householdId, cycleNumber])
   @@index([householdId, status])
@@ -205,18 +209,39 @@ model Availability {
 }
 
 model Invitation {
-  id                String    @id @default(cuid())
-  householdId       String
-  household         Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
-  tokenHash         String    @unique
-  invitedByUserId   String?
-  invitedBy         User?     @relation("InvitedBy", fields: [invitedByUserId], references: [id], onDelete: SetNull)
-  invitedEmail      String?
-  revokedAt         DateTime? @db.Timestamptz(3)
-  acceptedAt        DateTime? @db.Timestamptz(3)
-  acceptedByUserId  String?
-  acceptedBy        User?     @relation("AcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
-  createdAt         DateTime  @default(now()) @db.Timestamptz(3)
+  id               String    @id @default(cuid())
+  householdId      String
+  household        Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  tokenHash        String    @unique
+  invitedByUserId  String?
+  invitedBy        User?     @relation("InvitedBy", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+  invitedEmail     String?
+  revokedAt        DateTime? @db.Timestamptz(3)
+  acceptedAt       DateTime? @db.Timestamptz(3)
+  acceptedByUserId String?
+  acceptedBy       User?     @relation("AcceptedBy", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(3)
 
   @@index([householdId])
+}
+
+// D-15, D-17, D-18, D-19: Phase 3 emits notification rows inside the transition transaction.
+// Bare-minimum shape; Phase 5 extends with readAt, payload Json?, dismissal columns.
+// Pitfall D note: cycleId is nullable, and Postgres @@unique treats NULL as distinct.
+// All Phase 3 writes have a non-null cycleId so dedupe works as intended. If Phase 5+
+// introduces cycleId=null types, switch to NULLS NOT DISTINCT (Postgres 15+) or add a
+// partial unique index.
+model HouseholdNotification {
+  id              String    @id @default(cuid())
+  householdId     String
+  household       Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  recipientUserId String
+  recipient       User      @relation("HouseholdNotificationRecipient", fields: [recipientUserId], references: [id], onDelete: Cascade)
+  type            String // D-18: cycle_started | cycle_reassigned_manual_skip | cycle_reassigned_auto_skip | cycle_reassigned_member_left | cycle_fallback_owner
+  cycleId         String?
+  cycle           Cycle?    @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+
+  @@unique([cycleId, recipientUserId, type])
+  @@index([recipientUserId, createdAt])
 }
