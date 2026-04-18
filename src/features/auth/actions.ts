@@ -68,12 +68,17 @@ export async function registerUser(data: {
         }
       } while (true);
 
+      // WR-01: single source of truth for the signup household's cycle duration.
+      // Passed to both household.create and computeInitialCycleBoundaries so a
+      // future edit cannot desync Cycle #1's boundaries from the household row.
+      const cycleDuration = 7;
+
       const household = await tx.household.create({
         data: {
           name: "My Plants",                 // D-09
           slug,                              // D-10
           timezone: detectedTimezone,        // D-12
-          cycleDuration: 7,                  // D-12
+          cycleDuration,                     // D-12
           rotationStrategy: "sequential",    // D-12
         },
       });
@@ -92,14 +97,14 @@ export async function registerUser(data: {
       const { anchorDate, startDate, endDate } = computeInitialCycleBoundaries(
         new Date(),
         detectedTimezone,
-        7, // must match household.cycleDuration above
+        cycleDuration,
       );
       await tx.cycle.create({
         data: {
           householdId: household.id,
           cycleNumber: 1,
           anchorDate,
-          cycleDuration: 7,
+          cycleDuration,
           startDate,
           endDate,
           status: "active",

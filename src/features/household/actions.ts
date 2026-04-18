@@ -63,12 +63,18 @@ export async function createHousehold(data: unknown) {
       }
     }
 
+    // WR-01: single source of truth for the new household's cycle duration +
+    // timezone. Passed to both household.create and computeInitialCycleBoundaries
+    // so a future edit cannot desync Cycle #1's boundaries from the household row.
+    const cycleDuration = 7;
+    const cycleTimezone = parsed.data.timezone ?? "UTC";
+
     const created = await tx.household.create({
       data: {
         name: parsed.data.name,
         slug,
-        timezone: parsed.data.timezone ?? "UTC",
-        cycleDuration: 7,
+        timezone: cycleTimezone,
+        cycleDuration,
         rotationStrategy: "sequential",
       },
     });
@@ -84,18 +90,17 @@ export async function createHousehold(data: unknown) {
     });
 
     // D-01: Cycle #1 eager creation. Every household always has an active cycle.
-    const cycleTimezone = parsed.data.timezone ?? "UTC";
     const { anchorDate, startDate, endDate } = computeInitialCycleBoundaries(
       new Date(),
       cycleTimezone,
-      7, // must match created.cycleDuration above
+      cycleDuration,
     );
     await tx.cycle.create({
       data: {
         householdId: created.id,
         cycleNumber: 1,
         anchorDate,
-        cycleDuration: 7,
+        cycleDuration,
         startDate,
         endDate,
         status: "active",
