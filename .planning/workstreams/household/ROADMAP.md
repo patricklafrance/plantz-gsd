@@ -113,7 +113,13 @@ Plans:
   3. A logged-in user who opens an invitation link sees a confirm screen showing household name, owner, and member count before they choose to accept
   4. User can leave any household; if they are the sole owner and last member the household and its plants are deleted after a destructive-action confirmation
   5. Owner can remove any non-owner member; owner can transfer ownership to another member
-**Plans**: TBD
+**Plans**: 6 plans
+  - [ ] 04-01-PLAN.md — Wave 0 scaffolding: crypto helper + Zod schemas + unstable_update export + 14 test stubs + phase-04 fixtures
+  - [ ] 04-02-PLAN.md — Read helpers (resolveInvitationByToken, getHouseholdInvitations, getHouseholdMembers) + mocked-Prisma unit tests
+  - [ ] 04-03-PLAN.md — Invitation write Server Actions (createInvitation, revokeInvitation, acceptInvitation with atomic updateMany + unstable_update) + unit tests
+  - [ ] 04-04-PLAN.md — Membership mutation actions (leaveHousehold, removeMember, promoteToOwner, demoteToMember) with last-OWNER guards + unit tests
+  - [ ] 04-05-PLAN.md — Auth carve-out (auth.config.ts + proxy.ts) + public /join/[token] page + AcceptForm + DestructiveLeaveDialog
+  - [ ] 04-06-PLAN.md — Real-DB integration tests (D-23 concurrency, D-14 cascade, D-27 assignee-transition, D-26 JWT refresh)
 **Pitfall flags**:
   - Pitfall 10: Token generated with `crypto.randomBytes(32).toString('hex')` only; acceptance is atomic `UPDATE WHERE acceptedAt IS NULL` with row-count check; no expiry per user decision
   - Pitfall 9: `acceptInvitation` appends new member to end of rotation; does not reset current cycle pointer
@@ -171,7 +177,7 @@ Plans:
 | 1. Schema Foundation + Data Migration | 4/4 | Complete | 2026-04-16 |
 | 2. Query + Action Layer Update | 10/13 | In progress (08/09/10 gap-closure remaining) | - |
 | 3. Rotation Engine + Availability | 4/5 | In progress (Waves 0-3 complete) | - |
-| 4. Invitation System | 0/TBD | Not started | - |
+| 4. Invitation System | 0/6 | Planned | - |
 | 5. Household Notifications | 0/TBD | Not started | - |
 | 6. Settings UI + Switcher + Dashboard | 0/TBD | Not started | - |
 | 7. Demo Mode Compatibility | 0/TBD | Not started | - |
