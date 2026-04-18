@@ -137,8 +137,16 @@ export async function updateTimezone(timezone: string) {
   if (!session?.user?.id) return;
   if (session.user.isDemo) return; // Demo mode — skip DB write
 
-  // Validate timezone is a non-empty string (IANA format — only used for display comparison)
+  // Validate timezone is a non-empty string of reasonable length.
   if (!timezone || typeof timezone !== "string" || timezone.length > 100) return;
+
+  // Validate IANA format: the value also flows into computeInitialCycleBoundaries
+  // via onboarding, where TZDate silently falls back to UTC on unknown strings.
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: timezone });
+  } catch {
+    return;
+  }
 
   // Only set timezone if not already stored (preserves "home" timezone for travel detection)
   const existing = await db.user.findUnique({
