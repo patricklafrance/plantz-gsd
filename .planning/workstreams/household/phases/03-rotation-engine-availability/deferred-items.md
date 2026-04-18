@@ -41,3 +41,25 @@ Fix shipped: `scripts/resync-migration-checksum.ts` re-syncs the DB checksum for
 Deviation classification: Rule 3 (blocking issue preventing task completion). User's explicit Option-B approval covered the household deletion, not a full DB wipe, so the less-destructive path was taken.
 
 Future guard: do NOT edit applied migration files in place; add a new migration instead. Consider a pre-commit hook that diffs applied migration files.
+
+## External cron wiring (Plan 03-05, deferred to deploy time)
+
+Discovered during: Phase 03-05 completion. Plan's `user_setup:` requires cron-job.org + Vercel env var configuration. User elected to defer external setup to deploy time (Option B at Wave 4 checkpoint) rather than wire up production cron before phase verification.
+
+Remaining steps (do these before the first production deploy that depends on cycle auto-advance):
+
+1. `openssl rand -hex 32` → record token locally (do NOT commit).
+2. Vercel → Settings → Environment Variables → add `CRON_SECRET` scoped to Production (Preview optional). Trigger a new production deploy so the secret is loaded.
+3. cron-job.org → Jobs → Create:
+   - URL: `https://<prod-domain>/api/cron/advance-cycles` (production only — not a preview subdomain)
+   - Method: `POST`
+   - Schedule: every hour at minute 0
+   - Advanced → Request headers: `Authorization: Bearer <token>`
+4. After first tick, verify Vercel logs show HTTP 200 with JSON body `{ ranAt, totalHouseholds, transitions, errors }`.
+
+Failure modes to watch:
+- Persistent 401: bearer header not sending, or `CRON_SECRET` in Vercel doesn't match what cron-job.org sends (regenerate + update both sides, redeploy).
+- HTML redirect response: `proxy.ts` `api/cron/*` exemption didn't take effect — redeploy from a commit that includes Phase 03-02 changes.
+- 500s: check Vercel function logs; likely a DB or orchestrator error surfacing through the `errors[]` array.
+
+Disposition: non-blocking for Phase 03 verification — the endpoint is unit-tested in isolation (5 tests, 401/200/D-12 shape) and the paused-resume integration test passes against real Postgres. The external trigger is a deployment concern, not a phase-gate concern.
