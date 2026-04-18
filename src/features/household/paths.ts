@@ -18,6 +18,7 @@ export const HOUSEHOLD_PATHS = {
   plantDetail: "/h/[householdSlug]/plants/[id]",
   rooms: "/h/[householdSlug]/rooms",
   roomDetail: "/h/[householdSlug]/rooms/[id]",
+  settings: "/h/[householdSlug]/settings",
 } as const;
 
 export type HouseholdPath = (typeof HOUSEHOLD_PATHS)[keyof typeof HOUSEHOLD_PATHS];
