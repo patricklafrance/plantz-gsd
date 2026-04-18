@@ -39,10 +39,10 @@ Requirements for milestone `household`. Each maps to a roadmap phase.
 
 ### Availability & skip
 
-- [ ] **AVLB-01**: Member can declare an unavailability period (start date, end date, optional reason) from their settings
-- [ ] **AVLB-02**: Member can view and delete their own availability periods; overlapping periods are collapsed to the union
-- [ ] **AVLB-03**: When the cron advances a cycle, unavailable members are auto-skipped and responsibility passes to the next available member; skipped members are not dropped from the rotation
-- [ ] **AVLB-04**: Active assignee can manually skip their current cycle from the dashboard; cycle immediately advances to the next available member and a reassignment notification fires
+- [x] **AVLB-01**: Member can declare an unavailability period (start date, end date, optional reason) from their settings
+- [x] **AVLB-02**: Member can view and delete their own availability periods; overlapping periods are collapsed to the union
+- [x] **AVLB-03**: When the cron advances a cycle, unavailable members are auto-skipped and responsibility passes to the next available member; skipped members are not dropped from the rotation
+- [x] **AVLB-04**: Active assignee can manually skip their current cycle from the dashboard; cycle immediately advances to the next available member and a reassignment notification fires
 - [ ] **AVLB-05**: When all members are unavailable, the household falls back to the owner as assignee and surfaces a banner indicating the fallback state
 
 ### Assignee-scoped notifications
@@ -130,10 +130,10 @@ Tracked but not in this roadmap.
 | ROTA-05 | Phase 3 | Pending |
 | ROTA-06 | Phase 3 | Complete |
 | ROTA-07 | Phase 3 | Pending |
-| AVLB-01 | Phase 3 | Pending |
-| AVLB-02 | Phase 3 | Pending |
-| AVLB-03 | Phase 3 | Pending |
-| AVLB-04 | Phase 3 | Pending |
+| AVLB-01 | Phase 3 | Complete |
+| AVLB-02 | Phase 3 | Complete |
+| AVLB-03 | Phase 3 | Complete |
+| AVLB-04 | Phase 3 | Complete |
 | AVLB-05 | Phase 3 | Pending |
 | HNTF-01 | Phase 5 | Pending |
 | HNTF-02 | Phase 5 | Pending |

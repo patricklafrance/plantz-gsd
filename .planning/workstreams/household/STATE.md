@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 03 plan 03 complete — Wave 2 rotation engine (transitionCycle + 7 tests green)
-last_updated: "2026-04-17T23:44:13.000Z"
-last_activity: 2026-04-17
+stopped_at: Phase 03 plan 04 complete — Wave 3 actions + Cycle #1 bootstrap (3 new actions, 2 new queries, 13 new tests)
+last_updated: "2026-04-18T04:01:37.000Z"
+last_activity: 2026-04-18
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 22
-  completed_plans: 20
-  percent: 91
+  completed_plans: 21
+  percent: 95
 ---
 
 # Project State
@@ -26,17 +26,17 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 03 (rotation-engine-availability) — EXECUTING
-Plan: 4 of 5 (Wave 3 — Actions + bootstrap)
+Plan: 5 of 5 (Wave 4 — Cron orchestrator + route handler)
 Status: Ready to execute
-Last activity: 2026-04-17
+Last activity: 2026-04-18
 
-Progress: [██████░░░░] 60% (3 of 5 Phase 03 plans complete)
+Progress: [████████░░] 80% (4 of 5 Phase 03 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 17 (14 Phase 02 + 3 Phase 03)
+- Total plans completed: 18 (14 Phase 02 + 4 Phase 03)
 - Average duration: —
 - Total execution time: —
 
@@ -45,6 +45,7 @@ Progress: [██████░░░░] 60% (3 of 5 Phase 03 plans complete)
 | 03    | 01   | ~15 min  | 3     | 20    |
 | 03    | 02   | ~30 min  | 3     | 7     |
 | 03    | 03   | ~35 min  | 2     | 12    |
+| 03    | 04   | ~11 min  | 3     | 8     |
 
 *Updated after each plan completion*
 
@@ -67,6 +68,10 @@ Progress: [██████░░░░] 60% (3 of 5 Phase 03 plans complete)
 - [Phase 03-03] findNextAssignee walker visits (n-1) positions, not n, so owner-fallback stays a distinct state per AVLB-05 — plan <behavior> contract takes precedence over verbatim RESEARCH template
 - [Phase 03-03] Single-member household short-circuit in findNextAssignee: sole member returns fallback:false (normal rotation, Pitfall 8), not owner-fallback
 - [Phase 03-03] Prisma namespace imports use `@/generated/prisma/client` (custom generator output dir), not `@prisma/client`
+- [Phase 03-04] Cycle #1 bootstrap written via tx.cycle.create INSIDE the existing registerUser/createHousehold $transaction — rollback semantics must include the Cycle #1 row, not a post-commit follow-up
+- [Phase 03-04] skipCurrentCycle delegates to transitionCycle — preserves the Wave 2 single-write-path invariant for cycle mutations; no alternate path
+- [Phase 03-04] Mocked-Prisma tests for auth()-calling actions use mockResolvedValue (not mockResolvedValueOnce) because requireHouseholdAccess calls auth() internally a second time
+- [Phase 03-04] Double-cast pattern `as unknown as Awaited<ReturnType<typeof auth>>` for session mocks in new phase-03 files — avoids adding new TS2352 errors while staying compatible with pre-existing baseline style
 
 ### Pending Todos
 
@@ -79,6 +84,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-17T23:44:13.000Z
-Stopped at: Phase 03 plan 03 complete — Wave 2 rotation engine (transitionCycle + 23 tests green across 7 files)
-Next step: Execute Phase 03 plan 04 — Cycle #1 bootstrap in registerUser/createHousehold + skipCurrentCycle/createAvailability/deleteAvailability Server Actions + getCurrentCycle/getHouseholdAvailabilities queries + 4 remaining test files populated
+Last session: 2026-04-18T04:01:37.000Z
+Stopped at: Phase 03 plan 04 complete — Wave 3 actions + Cycle #1 bootstrap (3 new Server Actions + 2 new queries + 13 new tests across 4 files; AVLB-01..04 requirements checked off)
+Next step: Execute Phase 03 plan 05 — Wave 4 cron orchestrator (advanceAllHouseholds) + POST /api/cron/advance-cycles route handler + paused-resume + cron-route tests (10 remaining test.todos)
