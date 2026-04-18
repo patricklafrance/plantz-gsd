@@ -101,4 +101,28 @@ describe("POST /api/cron/advance-cycles", () => {
     expect(res.status).toBe(401);
     expect(vi.mocked(advanceAllHouseholds)).not.toHaveBeenCalled();
   });
+
+  test("CR-01: unset CRON_SECRET → 401 even if caller sends 'Bearer undefined'", async () => {
+    delete process.env.CRON_SECRET;
+    const req = new NextRequest("http://localhost/api/cron/advance-cycles", {
+      method: "POST",
+      headers: { authorization: "Bearer undefined" },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: "unauthorized" });
+    expect(vi.mocked(advanceAllHouseholds)).not.toHaveBeenCalled();
+  });
+
+  test("CR-01: empty CRON_SECRET → 401 even if caller sends 'Bearer '", async () => {
+    process.env.CRON_SECRET = "";
+    const req = new NextRequest("http://localhost/api/cron/advance-cycles", {
+      method: "POST",
+      headers: { authorization: "Bearer " },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: "unauthorized" });
+    expect(vi.mocked(advanceAllHouseholds)).not.toHaveBeenCalled();
+  });
 });

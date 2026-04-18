@@ -19,11 +19,21 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
   // Read env inside POST (not at module scope) so test-time env mutation is
   // effective. Plain `===` per D-13; constant-time compare deferred because
   // traffic is 24 req/day from a single source.
-  const expected = `Bearer ${process.env.CRON_SECRET}`;
+  //
+  // CR-01 fail-closed: if CRON_SECRET is unset or empty, refuse to serve.
+  // Without this guard, an attacker sending `Authorization: Bearer undefined`
+  // (or the empty-suffix variant) would match the interpolated expected value.
+  const secret = process.env.CRON_SECRET;
+  if (!secret) {
+    console.error("[cron] CRON_SECRET is not configured");
+    return Response.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const authHeader = request.headers.get("authorization");
+  const expected = `Bearer ${secret}`;
 
   if (!authHeader || authHeader !== expected) {
     console.warn("[cron] unauthorized", {
