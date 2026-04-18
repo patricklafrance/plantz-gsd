@@ -4,6 +4,7 @@ import { auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { generateHouseholdSlug } from "@/lib/slug";
 import { createHouseholdSchema } from "./schema";
+import { computeInitialCycleBoundaries } from "./cycle";
 
 /**
  * HSLD-02 (D-06): Create a secondary household, atomically inserting the
@@ -69,6 +70,27 @@ export async function createHousehold(data: unknown) {
         role: "OWNER",
         rotationOrder: 0,
         isDefault: false, // secondary household — does not override existing default
+      },
+    });
+
+    // D-01: Cycle #1 eager creation. Every household always has an active cycle.
+    const cycleTimezone = parsed.data.timezone ?? "UTC";
+    const { anchorDate, startDate, endDate } = computeInitialCycleBoundaries(
+      new Date(),
+      cycleTimezone,
+      7, // must match created.cycleDuration above
+    );
+    await tx.cycle.create({
+      data: {
+        householdId: created.id,
+        cycleNumber: 1,
+        anchorDate,
+        cycleDuration: 7,
+        startDate,
+        endDate,
+        status: "active",
+        assignedUserId: userId,
+        memberOrderSnapshot: [{ userId, rotationOrder: 0 }],
       },
     });
 

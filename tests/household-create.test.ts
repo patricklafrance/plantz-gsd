@@ -36,6 +36,7 @@ describe("createHousehold (HSLD-02, D-06)", () => {
         }),
       },
       householdMember: { create: vi.fn().mockResolvedValue({}) },
+      cycle: { create: vi.fn().mockResolvedValue({}) },
     };
     vi.mocked(db.$transaction).mockImplementation(
       async (cb: (tx: typeof txMock) => unknown) => cb(txMock) as never
@@ -56,6 +57,19 @@ describe("createHousehold (HSLD-02, D-06)", () => {
           householdId: "hh_new",
           role: "OWNER",
           rotationOrder: 0,
+        }),
+      })
+    );
+    // D-01: Cycle #1 is created in the same $transaction (Phase 03-04 Task 1).
+    expect(txMock.cycle.create).toHaveBeenCalledTimes(1);
+    expect(txMock.cycle.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          householdId: "hh_new",
+          cycleNumber: 1,
+          status: "active",
+          assignedUserId: "user_1",
+          cycleDuration: 7,
         }),
       })
     );
@@ -129,6 +143,7 @@ describe("createHousehold (HSLD-02, D-06)", () => {
         create: vi.fn().mockResolvedValue({ id: "hh_new", slug: "S", name: "N" }),
       },
       householdMember: { create: vi.fn().mockResolvedValue({}) },
+      cycle: { create: vi.fn().mockResolvedValue({}) },
     };
     vi.mocked(db.$transaction).mockImplementation(
       async (cb: (tx: typeof txMock) => unknown) => cb(txMock) as never

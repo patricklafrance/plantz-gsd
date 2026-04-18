@@ -9,6 +9,7 @@ import { generateHouseholdSlug } from "@/lib/slug";
 import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { revalidatePath } from "next/cache";
+import { computeInitialCycleBoundaries } from "@/features/household/cycle";
 
 export async function registerUser(data: {
   email: string;
@@ -84,6 +85,26 @@ export async function registerUser(data: {
           role: "OWNER",                     // D-08
           rotationOrder: 0,                  // RESEARCH Open Question §2: declare now
           isDefault: true,                   // Phase 2 Q7: first-created (signup) household is the user's default
+        },
+      });
+
+      // D-01: Cycle #1 eager creation. Every household always has an active cycle.
+      const { anchorDate, startDate, endDate } = computeInitialCycleBoundaries(
+        new Date(),
+        detectedTimezone,
+        7, // must match household.cycleDuration above
+      );
+      await tx.cycle.create({
+        data: {
+          householdId: household.id,
+          cycleNumber: 1,
+          anchorDate,
+          cycleDuration: 7,
+          startDate,
+          endDate,
+          status: "active",
+          assignedUserId: user.id,
+          memberOrderSnapshot: [{ userId: user.id, rotationOrder: 0 }],
         },
       });
     });
