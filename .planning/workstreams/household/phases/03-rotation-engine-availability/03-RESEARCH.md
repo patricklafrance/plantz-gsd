@@ -1088,37 +1088,37 @@ All test files are new. Phase 3 plan must include a Wave 0 task creating:
 - A2 (cron-job.org empty body) — confirm cron-job.org job will be configured without a body.
 - A8 (zero pre-existing Cycle-less households) — run the inventory query during Wave 1 of plan execution.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **How is `Cycle.transitionReason` populated on the initial Cycle #1 write?**
    - What we know: Cycle #1 is created "fresh" (no prior cycle to transition from). `transitionReason` is set on the *outgoing* cycle at the moment its status flips.
    - What's unclear: Does Cycle #1 have `transitionReason = null` forever (since it never has an outgoing-cycle predecessor)? Presumed yes.
-   - Recommendation: Leave `transitionReason` as nullable; Cycle #1 and any cycle that is still `active` have `transitionReason = NULL`. Planner should document this invariant in `cycle.ts` JSDoc.
+   - RESOLVED: Leave `transitionReason` as nullable; Cycle #1 and any cycle that is still `active` have `transitionReason = NULL`. Planner should document this invariant in `cycle.ts` JSDoc.
 
 2. **Exact half-open vs closed-interval semantics for Availability dates (Pitfall E).**
    - What we know: D-06 wording implies closed intervals (`startDate: { lte: endDate }, endDate: { gte: startDate }`).
    - What's unclear: Phase 6 UI date-picker returns typically-inclusive dates, but timestamps stored as Timestamptz lose the "day" abstraction.
-   - Recommendation: Plan a small decision task at phase-kickoff to confirm closed-interval semantics, then normalize all incoming dates to `startOfDay(..., { in: tz(timezone) })` on write. This preserves the D-06 operators unchanged.
+   - RESOLVED: Plan a small decision task at phase-kickoff to confirm closed-interval semantics, then normalize all incoming dates to `startOfDay(..., { in: tz(timezone) })` on write. This preserves the D-06 operators unchanged.
 
 3. **cron-job.org configuration — which environment gets the cron?**
    - What we know: Phase 3 ships `CRON_SECRET` env var. Vercel preview deployments typically don't run cron against test data.
    - What's unclear: Is there a production-only / staging-only gate on which deployments the cron hits?
-   - Recommendation: Planner task — document that `cron-job.org` is pointed at prod URL only; preview/dev envs have the endpoint but no scheduled invocation.
+   - RESOLVED: Planner task — document that `cron-job.org` is pointed at prod URL only; preview/dev envs have the endpoint but no scheduled invocation.
 
 4. **When should the migration for `Cycle.transitionReason` ship?**
    - What we know: The column is needed to write new cycles; the `HouseholdNotification` model is needed to emit notifications.
    - What's unclear: Phase 1 DB flush decision means zero existing Cycle rows — migration is a simple `ADD COLUMN NULL`. But `HouseholdNotification` back-relations on User/Household/Cycle are breaking changes to three models.
-   - Recommendation: Single migration bundling both. Plan Wave 1. Test with `prisma migrate reset` on dev DB before committing.
+   - RESOLVED: Single migration bundling both. Plan Wave 1. Test with `prisma migrate reset` on dev DB before committing.
 
 5. **Audit column `skippedByUserId` on Cycle — include or defer?**
    - What we know: Claude's Discretion says "nice-to-have; add if easy."
    - What's unclear: Adding it now vs later has the same migration cost; the question is whether any Phase 3 test relies on it.
-   - Recommendation: **Include now.** Write it on the outgoing cycle during `manual_skip` and `member_left` transitions. Zero incremental cost, clean audit trail for Phase 5 notification rendering ("Alice skipped — you're up" needs to know `skippedByUserId`).
+   - RESOLVED: **Include now.** Write it on the outgoing cycle during `manual_skip` and `member_left` transitions. Zero incremental cost, clean audit trail for Phase 5 notification rendering ("Alice skipped — you're up" needs to know `skippedByUserId`).
 
 6. **Rotation order of `OWNER` in `memberOrderSnapshot`.**
    - What we know: D-02 sets owner at `rotationOrder: 0`. Phase 6 will add reorder UI.
    - What's unclear: If owner is not at rotationOrder 0 at transition time (Phase 6 reorder moved them), does fallback path still recognize them?
-   - Recommendation: `findNextAssignee` detects owner by `role === 'OWNER'`, not by rotationOrder. Pattern above already shows this.
+   - RESOLVED: `findNextAssignee` detects owner by `role === 'OWNER'`, not by rotationOrder. Pattern above already shows this.
 
 ## Security Domain
 
