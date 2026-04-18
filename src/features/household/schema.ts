@@ -57,6 +57,10 @@ export const createAvailabilitySchema = z
     message: "End date must be after start date.",
     path: ["endDate"],
   })
+  // Note: compares against server-local "today" (typically UTC on serverless).
+  // Users within ±12h are effectively unaffected; far-east users may see a
+  // one-day-off edge at wall-clock midnight. Phase 6 may thread household
+  // timezone through to make this timezone-aware.
   .refine((d) => d.startDate >= startOfDay(new Date()), {
     message: "Availability cannot start in the past.",
     path: ["startDate"],
