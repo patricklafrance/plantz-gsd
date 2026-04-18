@@ -85,9 +85,13 @@ export async function createHouseholdWithMembers(
     throw new Error("createHouseholdWithMembers: memberCount must be >= 1");
   }
 
-  // Seed users
+  // Seed users. Unique suffix per invocation so multiple calls in a test
+  // suite don't collide on the User.email unique constraint.
+  const invocationId = randomUUID().slice(0, 6);
   const userRows = await Promise.all(
-    Array.from({ length: memberCount }, (_, i) => createBareUser({ email: emailFor(`m${i}`) })),
+    Array.from({ length: memberCount }, (_, i) =>
+      createBareUser({ email: emailFor(`${invocationId}-m${i}`) }),
+    ),
   );
   const ownerId = userRows[ownerAtOrder].id;
 
