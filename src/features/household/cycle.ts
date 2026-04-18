@@ -118,6 +118,17 @@ export async function findNextAssignee(
   const sorted = [...members].sort((a, b) => a.rotationOrder - b.rotationOrder);
   if (sorted.length === 0) return null;
 
+  // Pitfall 8: single-member household — the only member is always "next"
+  // and this is the normal path (NOT owner-fallback). If they're unavailable,
+  // fall through to the null path (paused).
+  if (sorted.length === 1) {
+    const sole = sorted[0];
+    if (!unavailable.has(sole.userId)) {
+      return { userId: sole.userId, fallback: false };
+    }
+    return null;
+  }
+
   const currentIdx = sorted.findIndex((m) => m.userId === outgoing.assignedUserId);
   // Walk every OTHER position (n-1 candidates). The outgoing assignee is not
   // a candidate in the normal walker — if the walker finds no one, the post-
@@ -177,4 +188,176 @@ export function isUniqueViolation(err: unknown): boolean {
   );
 }
 
-// transitionCycle lives in Task 2 — appended below in this file.
+/**
+ * The single-write-path cycle transition function. Callers: cron orchestrator,
+ * skipCurrentCycle action, Phase 4 leaveHousehold action.
+ *
+ * Invariants (binding):
+ *  - $queryRaw with FOR UPDATE SKIP LOCKED is the FIRST statement inside the
+ *    $transaction callback. NEVER call it outside the callback (Pitfall B).
+ *  - Notification INSERT is INSIDE the same transaction (Pitfall 7 / D-15).
+ *  - P2002 from notification insert is swallowed via isUniqueViolation (D-19).
+ *  - `reason` hint from caller may be upgraded by the engine based on rotation
+ *    state (cycle_end → auto_skip_unavailable when findNextAssignee walks past
+ *    unavailable members; cycle_end → all_unavailable_fallback on owner-fallback;
+ *    cycle_end → paused_resumed when outgoing status was 'paused').
+ */
+export async function transitionCycle(
+  householdId: string,
+  hintReason: TransitionReason,
+): Promise<TransitionResult> {
+  return db.$transaction(async (tx) => {
+    // STEP 1 — Lock the outgoing cycle. SKIP LOCKED = non-blocking no-op on contention.
+    const lockedRows = await tx.$queryRaw<
+      Array<{
+        id: string;
+        householdId: string;
+        cycleNumber: number;
+        anchorDate: Date;
+        cycleDuration: number;
+        startDate: Date;
+        endDate: Date;
+        status: string;
+        assignedUserId: string | null;
+      }>
+    >`
+      SELECT id, "householdId", "cycleNumber", "anchorDate", "cycleDuration",
+             "startDate", "endDate", status, "assignedUserId"
+      FROM "Cycle"
+      WHERE "householdId" = ${householdId}
+        AND status IN ('active', 'paused')
+      ORDER BY "cycleNumber" DESC
+      LIMIT 1
+      FOR UPDATE SKIP LOCKED
+    `;
+
+    if (lockedRows.length === 0) {
+      return { skipped: true } as const;
+    }
+    const outgoing = lockedRows[0];
+
+    // STEP 2 — load household (for timezone) + live members.
+    const household = await tx.household.findUniqueOrThrow({
+      where: { id: householdId },
+      select: { id: true, timezone: true, cycleDuration: true },
+    });
+    const members = await tx.householdMember.findMany({
+      where: { householdId },
+      orderBy: { rotationOrder: "asc" },
+      select: { userId: true, rotationOrder: true, role: true },
+    });
+
+    // STEP 3 — next assignee.
+    const nextAssignee = await findNextAssignee(tx, householdId, members, {
+      assignedUserId: outgoing.assignedUserId,
+      endDate: outgoing.endDate,
+    });
+
+    // STEP 4 — compute boundaries in the household's timezone.
+    const { startDate: nextStart, endDate: nextEnd } =
+      computeNextCycleBoundaries(
+        outgoing.endDate,
+        household.timezone,
+        household.cycleDuration,
+      );
+
+    // STEP 5 — determine the final reason.
+    // Caller hints (e.g., cron passes "cycle_end") may be upgraded.
+    let finalReason: TransitionReason = hintReason;
+    if (outgoing.status === "paused" && hintReason === "cycle_end") {
+      finalReason = "paused_resumed";
+    } else if (nextAssignee?.fallback) {
+      // Owner fallback: all non-outgoing members unavailable but owner IS available
+      finalReason = "all_unavailable_fallback";
+    } else if (!nextAssignee) {
+      // Everyone — including owner — unavailable. Outgoing cycle closes with
+      // an all_unavailable_fallback label; new cycle is paused, no notification.
+      finalReason = "all_unavailable_fallback";
+    } else if (
+      hintReason === "cycle_end" &&
+      nextAssignee &&
+      !isSequentialNext(members, outgoing.assignedUserId, nextAssignee.userId)
+    ) {
+      // Walker stepped past an unavailable member (auto-skip).
+      finalReason = "auto_skip_unavailable";
+    }
+
+    // STEP 6 — write next cycle (active or paused).
+    const nextStatus: "active" | "paused" = nextAssignee ? "active" : "paused";
+    const nextAssignedUserId = nextAssignee ? nextAssignee.userId : null;
+
+    const nextCycle = await tx.cycle.create({
+      data: {
+        householdId,
+        cycleNumber: outgoing.cycleNumber + 1,
+        anchorDate: nextStart,
+        cycleDuration: household.cycleDuration,
+        startDate: nextStart,
+        endDate: nextEnd,
+        status: nextStatus,
+        assignedUserId: nextAssignedUserId,
+        memberOrderSnapshot: members.map((m) => ({
+          userId: m.userId,
+          rotationOrder: m.rotationOrder,
+        })),
+      },
+    });
+
+    // STEP 7 — close outgoing cycle.
+    const outgoingClosedStatus =
+      finalReason === "manual_skip" ||
+      finalReason === "auto_skip_unavailable" ||
+      finalReason === "member_left"
+        ? "skipped"
+        : "completed";
+    await tx.cycle.update({
+      where: { id: outgoing.id },
+      data: {
+        status: outgoingClosedStatus,
+        transitionReason: finalReason,
+      },
+    });
+
+    // STEP 8 — notification for incoming assignee (D-15 inside-same-transaction).
+    if (nextAssignedUserId) {
+      try {
+        await tx.householdNotification.create({
+          data: {
+            householdId,
+            recipientUserId: nextAssignedUserId,
+            type: mapReasonToNotificationType(finalReason),
+            cycleId: nextCycle.id,
+          },
+        });
+      } catch (err) {
+        if (!isUniqueViolation(err)) throw err;
+      }
+    }
+
+    return {
+      transitioned: true,
+      fromCycleNumber: outgoing.cycleNumber,
+      toCycleNumber: nextCycle.cycleNumber,
+      reason: finalReason,
+      assignedUserId: nextAssignedUserId,
+      status: nextStatus,
+    } as const;
+  });
+}
+
+/**
+ * Helper: detect whether `findNextAssignee` returned the rotation-sequential
+ * next member (no unavailability skip) vs. stepped past one or more unavailable
+ * members. Used to upgrade a "cycle_end" hint to "auto_skip_unavailable".
+ */
+function isSequentialNext(
+  members: Array<{ userId: string; rotationOrder: number }>,
+  outgoingAssigneeId: string | null,
+  nextAssigneeId: string,
+): boolean {
+  if (members.length === 0) return true;
+  const sorted = [...members].sort((a, b) => a.rotationOrder - b.rotationOrder);
+  const currentIdx = sorted.findIndex((m) => m.userId === outgoingAssigneeId);
+  const expectedIdx = currentIdx === -1 ? 0 : (currentIdx + 1) % sorted.length;
+  return sorted[expectedIdx]?.userId === nextAssigneeId;
+}
