@@ -18,7 +18,6 @@
  *   RESEARCH §Wave 0 Gaps — files this fixture serves
  */
 import { randomUUID } from "node:crypto";
-import { db } from "@/lib/db";
 
 export const RUN_ID = `${Date.now()}-${randomUUID().slice(0, 8)}`;
 export const EMAIL_PREFIX = `phase03-test-${RUN_ID}`;
@@ -26,6 +25,18 @@ export const EMAIL_PREFIX = `phase03-test-${RUN_ID}`;
 /** Deterministic test-email helper; keep user tags short (e.g., "owner", "m1"). */
 export function emailFor(userTag: string): string {
   return `${EMAIL_PREFIX}-${userTag}@test.local`;
+}
+
+/**
+ * [Rule 1 fix] Lazy-loaded db handle. Top-level `import { db } from "@/lib/db"` crashes
+ * at module-load time when DATABASE_URL isn't set (src/lib/db.ts:11 throws at client
+ * construction). Stubs in Wave 0 only import `EMAIL_PREFIX` for their afterAll hook —
+ * they should not pay the price of a live Prisma client during module load. Real-DB
+ * tests call `getDb()` inside their test bodies, at which point DATABASE_URL is expected.
+ */
+async function getDb() {
+  const mod = await import("@/lib/db");
+  return mod.db;
 }
 
 /**
@@ -38,6 +49,7 @@ export async function createBareUser(overrides?: {
 }): Promise<{ id: string; email: string }> {
   const email = overrides?.email ?? emailFor(`u-${randomUUID().slice(0, 4)}`);
   const name = overrides?.name ?? "Phase3 Test User";
+  const db = await getDb();
   const user = await db.user.create({
     data: {
       email,
@@ -79,6 +91,7 @@ export async function createHouseholdWithMembers(
   );
   const ownerId = userRows[ownerAtOrder].id;
 
+  const db = await getDb();
   return db.$transaction(async (tx) => {
     const household = await tx.household.create({
       data: {
