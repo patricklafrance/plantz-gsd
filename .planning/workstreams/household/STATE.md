@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 03 plan 02 complete — Wave 1 schema migration + proxy.ts matcher landed
-last_updated: "2026-04-18T03:30:50.746Z"
-last_activity: 2026-04-18
+stopped_at: Phase 03 plan 03 complete — Wave 2 rotation engine (transitionCycle + 7 tests green)
+last_updated: "2026-04-17T23:44:13.000Z"
+last_activity: 2026-04-17
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 22
-  completed_plans: 19
-  percent: 86
+  completed_plans: 20
+  percent: 91
 ---
 
 # Project State
@@ -26,26 +26,27 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 03 (rotation-engine-availability) — EXECUTING
-Plan: 3 of 5 (Wave 1 — Prisma schema + migration)
+Plan: 4 of 5 (Wave 3 — Actions + bootstrap)
 Status: Ready to execute
-Last activity: 2026-04-18
+Last activity: 2026-04-17
 
-Progress: [██░░░░░░░░] 20% (1 of 5 Phase 03 plans complete)
+Progress: [██████░░░░] 60% (3 of 5 Phase 03 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 15 (14 Phase 02 + 1 Phase 03)
+- Total plans completed: 17 (14 Phase 02 + 3 Phase 03)
 - Average duration: —
 - Total execution time: —
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 03    | 01   | ~15 min  | 3     | 20    |
+| 03    | 02   | ~30 min  | 3     | 7     |
+| 03    | 03   | ~35 min  | 2     | 12    |
 
 *Updated after each plan completion*
-| Phase 03 P02 | 30min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -63,6 +64,9 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 03 plans complete)
 - [Phase ?]: D-01 Option B: deleted 9 Cycle-less households (cascade 9 members + 5 rooms + 81 plants) to enable schema-only Phase 3 migration — user-approved for disposable dev DB
 - [Phase ?]: Prisma migration checksum drift (from edited applied migration in d675b40) resolved via non-destructive resync-migration-checksum.ts; migrate reset avoided to preserve seed data
 - [Phase ?]: Destructive data-fix pattern: outer snapshot + count drift guard + transaction with re-verify + explicit id list — never use LEFT JOIN as DELETE filter
+- [Phase 03-03] findNextAssignee walker visits (n-1) positions, not n, so owner-fallback stays a distinct state per AVLB-05 — plan <behavior> contract takes precedence over verbatim RESEARCH template
+- [Phase 03-03] Single-member household short-circuit in findNextAssignee: sole member returns fallback:false (normal rotation, Pitfall 8), not owner-fallback
+- [Phase 03-03] Prisma namespace imports use `@/generated/prisma/client` (custom generator output dir), not `@prisma/client`
 
 ### Pending Todos
 
@@ -75,6 +79,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-18T03:30:50.740Z
-Stopped at: Phase 03 plan 02 complete — Wave 1 schema migration + proxy.ts matcher landed
-Next step: Execute Phase 03 plan 02 — Prisma schema + migration (Cycle.transitionReason + HouseholdNotification model + back-relations) + proxy.ts matcher update
+Last session: 2026-04-17T23:44:13.000Z
+Stopped at: Phase 03 plan 03 complete — Wave 2 rotation engine (transitionCycle + 23 tests green across 7 files)
+Next step: Execute Phase 03 plan 04 — Cycle #1 bootstrap in registerUser/createHousehold + skipCurrentCycle/createAvailability/deleteAvailability Server Actions + getCurrentCycle/getHouseholdAvailabilities queries + 4 remaining test files populated

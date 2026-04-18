@@ -99,7 +99,7 @@ This milestone retrofits the v1.0 single-user app into a multi-household, rotati
 Plans:
 - [x] 03-01-PLAN.md — Wave 0: test stubs (14 files) + @date-fns/tz install + CRON_SECRET env + HOUSEHOLD_PATHS.settings
 - [x] 03-02-PLAN.md — Prisma schema + [BLOCKING] migration (Cycle.transitionReason + HouseholdNotification model + back-relations) + proxy.ts matcher update
-- [ ] 03-03-PLAN.md — Cycle engine (constants.ts, availability.ts, cycle.ts with FOR UPDATE SKIP LOCKED transitionCycle) + 7 engine test files green
+- [x] 03-03-PLAN.md — Cycle engine (constants.ts, availability.ts, cycle.ts with FOR UPDATE SKIP LOCKED transitionCycle) + 7 engine test files green
 - [ ] 03-04-PLAN.md — Cycle #1 bootstrap (registerUser + createHousehold) + Server Actions (skipCurrentCycle, createAvailability, deleteAvailability) + queries (getCurrentCycle, getHouseholdAvailabilities) + 4 test files green
 - [ ] 03-05-PLAN.md — Cron orchestrator (advanceAllHouseholds) + POST /api/cron/advance-cycles route handler + paused-resume + cron-route tests green
 
@@ -169,7 +169,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Schema Foundation + Data Migration | 4/4 | Complete | 2026-04-16 |
 | 2. Query + Action Layer Update | 10/13 | In progress (08/09/10 gap-closure remaining) | - |
-| 3. Rotation Engine + Availability | 1/5 | In progress (Wave 0 complete) | - |
+| 3. Rotation Engine + Availability | 3/5 | In progress (Waves 0-2 complete) | - |
 | 4. Invitation System | 0/TBD | Not started | - |
 | 5. Household Notifications | 0/TBD | Not started | - |
 | 6. Settings UI + Switcher + Dashboard | 0/TBD | Not started | - |
