@@ -86,7 +86,7 @@ This milestone retrofits the v1.0 single-user app into a multi-household, rotati
   3. A member can set an unavailability period (date range with optional reason) and see it listed; when their turn arrives during that window the cycle auto-skips to the next available member
   4. The active assignee can manually skip their current cycle; responsibility immediately moves to the next available member
   5. When all members are unavailable, the household falls back to the owner as assignee and a fallback banner is surfaced
-**Plans**: TBD
+**Plans**: 5 plans
 **Pitfall flags**:
   - Pitfall 5 + 6: All cycle date arithmetic uses `@date-fns/tz` TZDate; `endDate` is computed in household timezone before storing as UTC; DST-boundary unit test (March NY transition) is an acceptance gate
   - Pitfall 7: Every cycle transition (auto, skip, member-leave) goes through one function wrapped in `db.$transaction` with `SELECT ... FOR UPDATE SKIP LOCKED`
@@ -95,6 +95,13 @@ This milestone retrofits the v1.0 single-user app into a multi-household, rotati
   - Pitfall 11: Overlapping availability periods — validate at creation; "is member unavailable" query uses `startDate <= X AND endDate >= X` range check
   - Pitfall 12: Availability `startDate` must be >= today; reject past start dates at the Server Action level
   - ROTA-04 uses external cron (cron-job.org) hitting `/api/cron/advance-cycles`; Vercel Cron is NOT used
+
+Plans:
+- [x] 03-01-PLAN.md — Wave 0: test stubs (14 files) + @date-fns/tz install + CRON_SECRET env + HOUSEHOLD_PATHS.settings
+- [ ] 03-02-PLAN.md — Prisma schema + [BLOCKING] migration (Cycle.transitionReason + HouseholdNotification model + back-relations) + proxy.ts matcher update
+- [ ] 03-03-PLAN.md — Cycle engine (constants.ts, availability.ts, cycle.ts with FOR UPDATE SKIP LOCKED transitionCycle) + 7 engine test files green
+- [ ] 03-04-PLAN.md — Cycle #1 bootstrap (registerUser + createHousehold) + Server Actions (skipCurrentCycle, createAvailability, deleteAvailability) + queries (getCurrentCycle, getHouseholdAvailabilities) + 4 test files green
+- [ ] 03-05-PLAN.md — Cron orchestrator (advanceAllHouseholds) + POST /api/cron/advance-cycles route handler + paused-resume + cron-route tests green
 
 ### Phase 4: Invitation System
 **Goal**: Owners can generate and revoke shareable join-link tokens; recipients can join via the link regardless of login state; member removal and ownership transfer work
@@ -160,9 +167,9 @@ This milestone retrofits the v1.0 single-user app into a multi-household, rotati
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Schema Foundation + Data Migration | 0/TBD | Not started | - |
-| 2. Query + Action Layer Update | 0/6 | Not started | - |
-| 3. Rotation Engine + Availability | 0/TBD | Not started | - |
+| 1. Schema Foundation + Data Migration | 4/4 | Complete | 2026-04-16 |
+| 2. Query + Action Layer Update | 10/13 | In progress (08/09/10 gap-closure remaining) | - |
+| 3. Rotation Engine + Availability | 1/5 | In progress (Wave 0 complete) | - |
 | 4. Invitation System | 0/TBD | Not started | - |
 | 5. Household Notifications | 0/TBD | Not started | - |
 | 6. Settings UI + Switcher + Dashboard | 0/TBD | Not started | - |
