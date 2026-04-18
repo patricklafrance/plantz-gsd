@@ -35,6 +35,14 @@ export type TransitionResult =
 /**
  * ROTA-02 deterministic rotation formula.
  * Pitfall 8: single-member household returns 0 via `% 1`.
+ *
+ * NOT used by `transitionCycle` — the live write path uses `findNextAssignee`
+ * to account for availability. This pure helper exists as a standalone
+ * rotation invariant, exercised directly by `tests/phase-03/rotation-formula.test.ts`
+ * and reserved for the Phase 6+ dashboard "upcoming rotation" preview that
+ * needs a deterministic answer without touching availability. If this function
+ * ever drifts from `findNextAssignee`'s baseline (no-unavailability) behavior,
+ * the rotation-formula tests will fail.
  */
 export function computeAssigneeIndex(
   anchorDate: Date,
