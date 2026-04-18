@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 03 plan 04 complete — Wave 3 actions + Cycle #1 bootstrap (3 new actions, 2 new queries, 13 new tests)
-last_updated: "2026-04-18T04:01:37.000Z"
+stopped_at: Phase 03 plan 05 complete — Wave 4 cron orchestrator + POST /api/cron/advance-cycles route handler (paused-resume + cron-route tests green; external user_setup pending)
+last_updated: "2026-04-18T04:11:41.000Z"
 last_activity: 2026-04-18
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 22
-  completed_plans: 21
-  percent: 95
+  completed_plans: 22
+  percent: 100
 ---
 
 # Project State
@@ -25,18 +25,18 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 
 ## Current Position
 
-Phase: 03 (rotation-engine-availability) — EXECUTING
-Plan: 5 of 5 (Wave 4 — Cron orchestrator + route handler)
-Status: Ready to execute
+Phase: 03 (rotation-engine-availability) — CODE COMPLETE (external user_setup pending)
+Plan: 5 of 5 (Wave 4 — Cron orchestrator + route handler) — DONE code-side
+Status: Awaiting external cron-job.org + Vercel CRON_SECRET setup (human-action)
 Last activity: 2026-04-18
 
-Progress: [████████░░] 80% (4 of 5 Phase 03 plans complete)
+Progress: [██████████] 100% (5 of 5 Phase 03 plans complete code-side)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 18 (14 Phase 02 + 4 Phase 03)
+- Total plans completed: 19 (14 Phase 02 + 5 Phase 03)
 - Average duration: —
 - Total execution time: —
 
@@ -46,6 +46,7 @@ Progress: [████████░░] 80% (4 of 5 Phase 03 plans complete)
 | 03    | 02   | ~30 min  | 3     | 7     |
 | 03    | 03   | ~35 min  | 2     | 12    |
 | 03    | 04   | ~11 min  | 3     | 8     |
+| 03    | 05   | ~8 min   | 2     | 4     |
 
 *Updated after each plan completion*
 
@@ -72,6 +73,9 @@ Progress: [████████░░] 80% (4 of 5 Phase 03 plans complete)
 - [Phase 03-04] skipCurrentCycle delegates to transitionCycle — preserves the Wave 2 single-write-path invariant for cycle mutations; no alternate path
 - [Phase 03-04] Mocked-Prisma tests for auth()-calling actions use mockResolvedValue (not mockResolvedValueOnce) because requireHouseholdAccess calls auth() internally a second time
 - [Phase 03-04] Double-cast pattern `as unknown as Awaited<ReturnType<typeof auth>>` for session mocks in new phase-03 files — avoids adding new TS2352 errors while staying compatible with pre-existing baseline style
+- [Phase 03-05] advanceAllHouseholds passes plain `cycle_end` hint for every household; transitionCycle STEP 5 upgrades to `paused_resumed` when outgoing status is paused — single-write-path invariant keeps state-machine logic in one place
+- [Phase 03-05] Route handler reads `process.env.CRON_SECRET` INSIDE POST (not at module scope) so Vitest beforeEach env mutation is effective; pinned by case-sensitivity test
+- [Phase 03-05] Per-household try/catch sequential orchestrator pattern: `transitionCycle` skipped results are intentionally dropped from both transitions[] and errors[] — next cron tick handles lock contention naturally
 
 ### Pending Todos
 
@@ -84,6 +88,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-18T04:01:37.000Z
-Stopped at: Phase 03 plan 04 complete — Wave 3 actions + Cycle #1 bootstrap (3 new Server Actions + 2 new queries + 13 new tests across 4 files; AVLB-01..04 requirements checked off)
-Next step: Execute Phase 03 plan 05 — Wave 4 cron orchestrator (advanceAllHouseholds) + POST /api/cron/advance-cycles route handler + paused-resume + cron-route tests (10 remaining test.todos)
+Last session: 2026-04-18T04:11:41.000Z
+Stopped at: Phase 03 plan 05 code complete — Wave 4 cron orchestrator (advanceAllHouseholds) + POST /api/cron/advance-cycles route handler; paused-resume + cron-route test stubs replaced with 6 real assertions; ROTA-04 + AVLB-03 + AVLB-05 requirements checked off
+Next step: USER human-action — (1) openssl rand -hex 32 → CRON_SECRET; (2) set CRON_SECRET in Vercel dashboard env vars (prod); (3) create cron-job.org hourly POST against https://<prod-url>/api/cron/advance-cycles with Authorization: Bearer $CRON_SECRET; (4) confirm cron targets production only. After external setup, Phase 03 is fully shippable and Phase 04 (invitations) is unblocked.

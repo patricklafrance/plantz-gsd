@@ -101,7 +101,7 @@ Plans:
 - [x] 03-02-PLAN.md — Prisma schema + [BLOCKING] migration (Cycle.transitionReason + HouseholdNotification model + back-relations) + proxy.ts matcher update
 - [x] 03-03-PLAN.md — Cycle engine (constants.ts, availability.ts, cycle.ts with FOR UPDATE SKIP LOCKED transitionCycle) + 7 engine test files green
 - [x] 03-04-PLAN.md — Cycle #1 bootstrap (registerUser + createHousehold) + Server Actions (skipCurrentCycle, createAvailability, deleteAvailability) + queries (getCurrentCycle, getHouseholdAvailabilities) + 4 test files green
-- [ ] 03-05-PLAN.md — Cron orchestrator (advanceAllHouseholds) + POST /api/cron/advance-cycles route handler + paused-resume + cron-route tests green
+- [x] 03-05-PLAN.md — Cron orchestrator (advanceAllHouseholds) + POST /api/cron/advance-cycles route handler + paused-resume + cron-route tests green
 
 ### Phase 4: Invitation System
 **Goal**: Owners can generate and revoke shareable join-link tokens; recipients can join via the link regardless of login state; member removal and ownership transfer work

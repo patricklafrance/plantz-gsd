@@ -9,7 +9,7 @@
  * reason-upgrade path handles the "paused → paused_resumed" label
  * (see cycle.ts STEP 5).
  *
- * This module has no "use server" directive — it is a plain domain module
+ * This module has no server-action directive — it is a plain domain module
  * callable from Route Handlers (app/api/cron/advance-cycles/route.ts) and,
  * in principle, from Server Actions or other orchestrators.
  */
