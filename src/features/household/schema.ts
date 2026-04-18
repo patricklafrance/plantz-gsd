@@ -47,7 +47,7 @@ export type NotificationType = z.infer<typeof notificationTypeSchema>;
  */
 export const createAvailabilitySchema = z
   .object({
-    householdId: z.string().cuid(),
+    householdId: z.cuid(),
     householdSlug: z.string().min(1),
     startDate: z.coerce.date(),
     endDate: z.coerce.date(),
@@ -68,7 +68,7 @@ export type CreateAvailabilityInput = z.infer<typeof createAvailabilitySchema>;
  * revalidatePath.
  */
 export const deleteAvailabilitySchema = z.object({
-  availabilityId: z.string().cuid(),
+  availabilityId: z.cuid(),
   householdSlug: z.string().min(1),
 });
 export type DeleteAvailabilityInput = z.infer<typeof deleteAvailabilitySchema>;
@@ -77,7 +77,7 @@ export type DeleteAvailabilityInput = z.infer<typeof deleteAvailabilitySchema>;
  * D-14: skipCurrentCycle input. Hidden householdId cuid + slug (Phase 2 D-04).
  */
 export const skipCurrentCycleSchema = z.object({
-  householdId: z.string().cuid(),
+  householdId: z.cuid(),
   householdSlug: z.string().min(1),
 });
 export type SkipCurrentCycleInput = z.infer<typeof skipCurrentCycleSchema>;
