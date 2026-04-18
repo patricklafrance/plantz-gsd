@@ -32,9 +32,9 @@ Requirements for milestone `household`. Each maps to a roadmap phase.
 - [ ] **ROTA-01**: Household has an ordered rotation list of members; owner can reorder via up/down controls (v1: HTML5 drag-and-drop or numbered arrows, not a DnD library)
 - [ ] **ROTA-02**: At any time, exactly one member is the active assignee per household — computed deterministically from rotation start date, cycle duration, and member order (anchor-date formula: `floor(daysSinceAnchor / cycleDuration) % memberCount`)
 - [ ] **ROTA-03**: Cycle duration is configurable per household (preset options: 1, 3, 7, 14 days); duration changes take effect at the next cycle boundary, not mid-cycle
-- [ ] **ROTA-04**: A `/api/cron/advance-cycles` endpoint advances all households' cycles at cron trigger; protected by `CRON_SECRET` bearer-header auth, idempotent, returns JSON summary of transitions
+- [x] **ROTA-04**: A `/api/cron/advance-cycles` endpoint advances all households' cycles at cron trigger; protected by `CRON_SECRET` bearer-header auth, idempotent, returns JSON summary of transitions
 - [ ] **ROTA-05**: Cycle transitions are timezone-aware — boundaries respect the household's configured timezone; DST transitions do not skew 7-day cycles (implemented via `@date-fns/tz`)
-- [ ] **ROTA-06**: Cycle transitions are race-safe — two concurrent cron invocations or a cron + admin action cannot double-advance the same household (row-level lock or unique constraint on `(householdId, cycleNumber)`)
+- [x] **ROTA-06**: Cycle transitions are race-safe — two concurrent cron invocations or a cron + admin action cannot double-advance the same household (row-level lock or unique constraint on `(householdId, cycleNumber)`)
 - [ ] **ROTA-07**: Adding or removing a member mid-cycle does not retroactively change the current assignee; the rotation recomputes cleanly for the next cycle
 
 ### Availability & skip
@@ -126,9 +126,9 @@ Tracked but not in this roadmap.
 | ROTA-01 | Phase 6 | Pending |
 | ROTA-02 | Phase 3 | Pending |
 | ROTA-03 | Phase 3 | Pending |
-| ROTA-04 | Phase 3 | Pending |
+| ROTA-04 | Phase 3 | Complete |
 | ROTA-05 | Phase 3 | Pending |
-| ROTA-06 | Phase 3 | Pending |
+| ROTA-06 | Phase 3 | Complete |
 | ROTA-07 | Phase 3 | Pending |
 | AVLB-01 | Phase 3 | Pending |
 | AVLB-02 | Phase 3 | Pending |
