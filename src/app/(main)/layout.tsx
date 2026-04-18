@@ -34,9 +34,7 @@ export default async function MainLayout({
       </a>
       <TimezoneSync />
       <FocusHeading />
-      <main id="main-content" className="mx-auto max-w-5xl px-4 py-6 pb-20 sm:pb-6">
-        {children}
-      </main>
+      {children}
     </div>
   );
 }

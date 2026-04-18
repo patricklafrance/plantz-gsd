@@ -101,7 +101,9 @@ export default async function HouseholdLayout({
           </div>
         </nav>
       </header>
-      {children}
+      <main id="main-content" className="mx-auto max-w-5xl px-4 py-6 pb-20 sm:pb-6">
+        {children}
+      </main>
       <BottomTabBar
         householdSlug={householdSlug}
         notificationCount={reminderCount}
