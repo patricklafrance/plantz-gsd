@@ -185,7 +185,17 @@ export async function createAvailability(data: unknown) {
   // Step 3: Zod parse (refinements enforce startDate >= today + endDate > startDate)
   const parsed = createAvailabilitySchema.safeParse(data);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    // WR-03: only surface messages we authored via `.refine()` on the date
+    // fields. For base parse errors (cuid, min-length, etc.) return the
+    // generic message to avoid leaking internal Zod wording.
+    const firstIssue = parsed.error.issues[0];
+    const isDateRefinement =
+      firstIssue?.path[0] === "startDate" || firstIssue?.path[0] === "endDate";
+    return {
+      error: isDateRefinement && firstIssue?.message
+        ? firstIssue.message
+        : "Invalid input.",
+    };
   }
 
   // Step 4: live household access check
