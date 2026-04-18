@@ -134,6 +134,7 @@ Plans:
   - Pitfall 13: `getReminderCount` joins active Cycle and gates on `assignedUserId === session.user.id`; integration test verifies non-assignee gets count = 0
   - Pitfall 14: `HouseholdNotification` (cycle events) is a separate model from `Reminder` (daily per-plant preferences); they must not be merged
   - v1 tech debt: `NotificationBell` hidden on mobile and `BottomTabBar` Alerts linking to `/dashboard` must be fixed in this phase before new notification surfaces are added
+  - Phase 3 carry-over (IN-01): `HouseholdNotification.@@unique([cycleId, recipientUserId, type])` relies on Postgres's default "NULLs are distinct in unique indexes" behavior. Phase 3 always writes non-null `cycleId`, but if Phase 5 introduces notification types with `cycleId: null`, switch the index to `NULLS NOT DISTINCT` (Postgres 15+) or add a partial `CREATE UNIQUE INDEX ... WHERE cycleId IS NULL` to prevent duplicate rows per (recipient, type).
 **UI hint**: yes
 
 ### Phase 6: Settings UI + Switcher + Dashboard
