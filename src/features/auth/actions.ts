@@ -62,7 +62,9 @@ export async function registerUser(data: {
           select: { id: true },
         });
         if (!existing) break;
-        // WR-02: throw after 10 total attempts (previously 11) to match message.
+        // Throw after 10 total attempts — the `>= 9` bound with post-increment
+        // means the 10th failing findUnique triggers the error, matching the
+        // "after 10 attempts" message exactly.
         if (attempts++ >= 9) {
           throw new Error("Slug generation failed after 10 attempts");
         }

@@ -25,8 +25,9 @@ import { HOUSEHOLD_PATHS } from "./paths";
  * so there is no membership to verify. Session + demo gate + Zod parse are the
  * only precondition checks; the $transaction is atomic.
  *
- * Slug generation mirrors src/features/auth/actions.ts:54-66 — bounded
- * collision loop at 10 attempts with DB unique-constraint as final guard.
+ * Slug generation mirrors the collision loop in `registerUser`
+ * (src/features/auth/actions.ts) — bounded at 10 attempts with the DB
+ * unique-constraint as the final guard.
  */
 export async function createHousehold(data: unknown) {
   // Step 1: session
@@ -56,8 +57,9 @@ export async function createHousehold(data: unknown) {
         select: { id: true },
       });
       if (!existing) break;
-      // WR-02: throw after 10 total attempts — previously ran 11 iterations
-      // before throwing, which contradicted the "after 10 attempts" message.
+      // Throw after 10 total attempts — the `>= 9` bound with post-increment
+      // means the 10th failing findUnique triggers the error, matching the
+      // "after 10 attempts" message exactly.
       if (attempts++ >= 9) {
         throw new Error("Slug generation failed after 10 attempts");
       }
