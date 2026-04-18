@@ -40,6 +40,11 @@ export interface CronSummary {
  * - Skipped results (lock contention — another concurrent transition is in
  *   progress) are intentionally dropped: no transitions[] entry, no errors[]
  *   entry. Next cron tick picks it up.
+ *
+ * Scaling ceiling (v1, out of scope): at ~50ms per household this sequential
+ * loop fits ~200 households in Vercel's 10s hobby timeout, ~1200 in the 60s
+ * Pro cap. Phase 6+ operator planning should batch or parallelize once the
+ * household count approaches that range.
  */
 export async function advanceAllHouseholds(): Promise<CronSummary> {
   const now = new Date();
