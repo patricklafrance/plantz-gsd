@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { db } from "@/lib/db";
 import type { Cycle, Availability } from "@/generated/prisma/client";
 import { hashInvitationToken } from "@/lib/crypto";
@@ -59,6 +60,83 @@ export async function getCurrentCycle(householdId: string): Promise<Cycle | null
     orderBy: { cycleNumber: "desc" },
   });
 }
+
+/**
+ * D-28 — Badge-count query for the unified bell. Counts unread
+ * HouseholdNotification rows for the viewer whose Cycle is currently active.
+ *
+ * Consumed by src/app/(main)/h/[householdSlug]/layout.tsx alongside
+ * getReminderCount in a Promise.all to compute `totalCount = reminderCount + unreadCycleEventCount`.
+ *
+ * Wrapped with React.cache() for request-level dedup: any duplicate call
+ * within a single request (e.g. a future header subcomponent) returns the
+ * memoized Promise rather than issuing a second DB query.
+ *
+ * Security note: caller MUST resolve householdId via requireHouseholdAccess
+ * (layout chokepoint already does this). Function trusts the caller.
+ */
+export const getUnreadCycleEventCount = cache(
+  async (householdId: string, userId: string): Promise<number> => {
+    return db.householdNotification.count({
+      where: {
+        householdId,
+        recipientUserId: userId,
+        readAt: null,
+        cycle: { status: "active" },
+      },
+    });
+  },
+);
+
+/**
+ * D-29 — Banner-feeding query for the dashboard. Returns the viewer's
+ * HouseholdNotification rows for a specific cycle, with joins the four
+ * banner components need to render without extra queries:
+ *   - cycle.endDate (CycleStartBanner, ReassignmentBanner meta)
+ *   - cycle.transitionReason (FallbackBanner branch)
+ *   - cycle.household.members (prior-assignee name for reassignment, owner name for fallback)
+ *
+ * D-06 derivational banner clearing: filter on the exact cycleId passed —
+ * prior-cycle notifications are naturally excluded.
+ *
+ * Wrapped with React.cache() for request-level dedup. Plan 05-05 calls this
+ * function TWICE per dashboard request — once in the layout chokepoint
+ * (src/app/(main)/h/[householdSlug]/layout.tsx) to populate the bell's
+ * cycleEvents prop, and once in the dashboard page Server Component
+ * (src/app/(main)/h/[householdSlug]/dashboard/page.tsx) to look up the
+ * current unread event for banner rendering. Both calls pass identical
+ * args (household.id, session.user.id, currentCycle.id), so cache()
+ * collapses them to a single DB read.
+ *
+ * Security note: caller MUST resolve householdId via requireHouseholdAccess
+ * (dashboard page Server Component does this via getCurrentHousehold).
+ */
+export const getCycleNotificationsForViewer = cache(
+  async (householdId: string, userId: string, cycleId: string) => {
+    return db.householdNotification.findMany({
+      where: {
+        householdId,
+        recipientUserId: userId,
+        cycleId,
+      },
+      include: {
+        cycle: {
+          include: {
+            household: {
+              include: {
+                members: {
+                  include: { user: { select: { name: true, email: true } } },
+                  orderBy: { rotationOrder: "asc" },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  },
+);
 
 /**
  * D-08: all household members can view all members' availability.
