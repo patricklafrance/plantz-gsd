@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 04 context gathered (invitation-system) — 8 areas discussed, co-owner model adopted
-last_updated: "2026-04-19T18:02:00.165Z"
+stopped_at: Phase 05 context gathered (household-notifications) — 4 areas discussed, unified bell + readAt + merged feed adopted
+last_updated: "2026-04-19T20:47:39.593Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 7
@@ -88,6 +88,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-18T16:50:46.854Z
-Stopped at: Phase 04 context gathered (invitation-system) — 8 areas discussed, co-owner model adopted
+Last session: 2026-04-19T20:47:39.588Z
+Stopped at: Phase 05 context gathered (household-notifications) — 4 areas discussed, unified bell + readAt + merged feed adopted
 Next step: USER human-action — (1) openssl rand -hex 32 → CRON_SECRET; (2) set CRON_SECRET in Vercel dashboard env vars (prod); (3) create cron-job.org hourly POST against https://<prod-url>/api/cron/advance-cycles with Authorization: Bearer $CRON_SECRET; (4) confirm cron targets production only. After external setup, Phase 03 is fully shippable and Phase 04 (invitations) is unblocked.
