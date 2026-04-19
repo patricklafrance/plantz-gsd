@@ -191,7 +191,7 @@ export default async function JoinPage({
           </CardContent>
           <CardFooter className="flex flex-col gap-2">
             <Link
-              href={`/login?callbackUrl=/join/${token}`}
+              href={`/login?callbackUrl=${encodeURIComponent(`/join/${token}`)}`}
               className="w-full"
             >
               <Button
@@ -202,7 +202,7 @@ export default async function JoinPage({
               </Button>
             </Link>
             <Link
-              href={`/register?callbackUrl=/join/${token}`}
+              href={`/register?callbackUrl=${encodeURIComponent(`/join/${token}`)}`}
               className="w-full"
             >
               <Button
