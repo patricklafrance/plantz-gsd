@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import type { Cycle, Availability } from "@/generated/prisma/client";
+import { hashInvitationToken } from "@/lib/crypto";
 
 /**
  * D-17: Resolve a URL slug to a household identifier.
@@ -73,4 +74,149 @@ export async function getHouseholdAvailabilities(
     },
     orderBy: { startDate: "asc" },
   });
+}
+
+/**
+ * INVT-04 / D-18: Resolve a raw invitation token to its full preview payload.
+ * Hashes the raw URL segment, then findUnique by tokenHash (@unique index).
+ *
+ * Used by the public /join/[token] page Server Component to decide which of
+ * the four D-09 branches to render. No auth call — anyone with the token
+ * gets the preview (this IS the security model: possession of the token
+ * authenticates intent to view the household's name).
+ *
+ * Returns null for unknown tokens. Caller renders Branch 1 (invalid) for null;
+ * branch 2/3/4 decisions happen at the page based on invitation.revokedAt /
+ * invitation.acceptedAt / a separate householdMember.findFirst call.
+ *
+ * Owner display: the household may have multiple OWNERs (D-10 co-owner model).
+ * Preview shows the earliest-joining OWNER by createdAt ASC; if user.name is
+ * null (possible for email-registered users), falls back to user.email. Final
+ * fallback string "An owner" defends against schema edge cases.
+ */
+export async function resolveInvitationByToken(rawToken: string): Promise<{
+  invitation: {
+    id: string;
+    householdId: string;
+    tokenHash: string;
+    invitedByUserId: string | null;
+    invitedEmail: string | null;
+    revokedAt: Date | null;
+    acceptedAt: Date | null;
+    acceptedByUserId: string | null;
+    createdAt: Date;
+  };
+  household: {
+    id: string;
+    name: string;
+    slug: string;
+  };
+  ownerName: string;
+  memberCount: number;
+} | null> {
+  const tokenHash = hashInvitationToken(rawToken);
+
+  const invitation = await db.invitation.findUnique({
+    where: { tokenHash },
+    include: {
+      household: {
+        include: {
+          _count: { select: { members: true } },
+          members: {
+            where: { role: "OWNER" },
+            orderBy: { createdAt: "asc" },
+            take: 1,
+            include: { user: { select: { name: true, email: true } } },
+          },
+        },
+      },
+    },
+  });
+
+  if (!invitation) return null;
+
+  const ownerMember = invitation.household.members[0];
+  const ownerName =
+    ownerMember?.user.name ?? ownerMember?.user.email ?? "An owner";
+  const memberCount = invitation.household._count.members;
+
+  return {
+    invitation: {
+      id: invitation.id,
+      householdId: invitation.householdId,
+      tokenHash: invitation.tokenHash,
+      invitedByUserId: invitation.invitedByUserId,
+      invitedEmail: invitation.invitedEmail,
+      revokedAt: invitation.revokedAt,
+      acceptedAt: invitation.acceptedAt,
+      acceptedByUserId: invitation.acceptedByUserId,
+      createdAt: invitation.createdAt,
+    },
+    household: {
+      id: invitation.household.id,
+      name: invitation.household.name,
+      slug: invitation.household.slug,
+    },
+    ownerName,
+    memberCount,
+  };
+}
+
+/**
+ * INVT-02 / D-17: List active (non-revoked, non-accepted) invitations for a household.
+ * Ordered createdAt DESC so the most recent link appears first. Includes the
+ * inviter's display name for the Phase 6 settings UI.
+ *
+ * Security note: caller MUST enforce authorization (requireHouseholdAccess) —
+ * this helper does not. Phase 6 settings page layout already wraps in the
+ * /h/[householdSlug]/layout.tsx chokepoint, which runs the guard.
+ */
+export async function getHouseholdInvitations(householdId: string) {
+  return db.invitation.findMany({
+    where: {
+      householdId,
+      revokedAt: null,
+      acceptedAt: null,
+    },
+    orderBy: { createdAt: "desc" },
+    include: {
+      invitedBy: { select: { name: true, email: true } },
+    },
+  });
+}
+
+/**
+ * INVT-06 / D-19: List members of a household for the Phase 6 settings UI.
+ * Ordered rotationOrder ASC to match the rotation-list display order.
+ *
+ * Returns a mapped shape ({ userId, userName, userEmail, role, rotationOrder, joinedAt })
+ * rather than the raw Prisma row so consumers don't depend on the internal column
+ * naming (`createdAt` becomes the public `joinedAt`).
+ *
+ * Security note: caller MUST enforce authorization (any household member can
+ * call — role check not required). Phase 6 layout chokepoint already runs
+ * requireHouseholdAccess.
+ */
+export async function getHouseholdMembers(householdId: string): Promise<Array<{
+  userId: string;
+  userName: string | null;
+  userEmail: string;
+  role: "OWNER" | "MEMBER";
+  rotationOrder: number;
+  joinedAt: Date;
+}>> {
+  const memberships = await db.householdMember.findMany({
+    where: { householdId },
+    orderBy: { rotationOrder: "asc" },
+    include: { user: { select: { name: true, email: true } } },
+  });
+
+  return memberships.map((m) => ({
+    userId: m.userId,
+    userName: m.user.name,
+    userEmail: m.user.email,
+    role: m.role as "OWNER" | "MEMBER",
+    rotationOrder: m.rotationOrder,
+    joinedAt: m.createdAt,
+  }));
 }
