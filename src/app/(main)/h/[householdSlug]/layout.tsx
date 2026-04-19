@@ -5,6 +5,12 @@ import { auth } from "../../../../../auth";
 import { db } from "@/lib/db";
 import { getCurrentHousehold } from "@/features/household/context";
 import { getReminderCount, getReminderItems } from "@/features/reminders/queries";
+import {
+  getCurrentCycle,
+  getUnreadCycleEventCount,
+  getCycleNotificationsForViewer,
+} from "@/features/household/queries";
+import type { CycleEventItem } from "@/features/reminders/types";
 import { NotificationBell } from "@/components/reminders/notification-bell";
 import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 import { UserMenu } from "@/components/auth/user-menu";
@@ -50,10 +56,62 @@ export default async function HouseholdLayout({
   const todayStart = new Date(Date.UTC(year, month - 1, day));
   const todayEnd = new Date(Date.UTC(year, month - 1, day + 1));
 
-  const [reminderCount, reminderItems] = await Promise.all([
-    getReminderCount(household.id, todayStart, todayEnd),
-    getReminderItems(household.id, todayStart, todayEnd),
+  // D-19: 4-way Promise.all for the unified badge + dropdown feed.
+  // getCurrentCycle runs in parallel; its result feeds the subsequent
+  // getCycleNotificationsForViewer call (needs cycle.id — necessarily sequential).
+  const [reminderCount, reminderItems, unreadCycleEventCount, currentCycle] = await Promise.all([
+    getReminderCount(household.id, sessionUser.id, todayStart, todayEnd),
+    getReminderItems(household.id, sessionUser.id, todayStart, todayEnd),
+    getUnreadCycleEventCount(household.id, sessionUser.id),
+    getCurrentCycle(household.id),
   ]);
+
+  // D-19 unified badge: one number, two renders (desktop + mobile).
+  const totalCount = reminderCount + unreadCycleEventCount;
+
+  // D-29 bell dropdown feed: cycle events for the current active cycle only
+  // (D-06 derivational clearing — prior cycles' rows never surface here).
+  //
+  // Sequential hop: getCycleNotificationsForViewer needs currentCycle.id so it cannot
+  // run inside the 4-way Promise.all above. This is the only sequential fetch.
+  // The dashboard page Server Component (Plan 05-05 Task 2) also calls this function;
+  // Plan 05-02 Task 2 wraps it with React.cache(), so that second call is a
+  // request-level cache hit (zero extra DB work).
+  let cycleEvents: CycleEventItem[] = [];
+  if (currentCycle) {
+    const notificationRows = await getCycleNotificationsForViewer(
+      household.id,
+      sessionUser.id,
+      currentCycle.id,
+    );
+    cycleEvents = notificationRows.map((row) => {
+      // D-03 no payload snapshot — derive prior assignee display name at read time
+      // by finding the rotation predecessor to the current assignee. If absent, null
+      // (the bell CycleEventRow + ReassignmentBanner both fall back to "Someone").
+      const members = row.cycle?.household?.members ?? [];
+      const sorted = [...members].sort((a, b) => a.rotationOrder - b.rotationOrder);
+      const currentIdx = currentCycle.assignedUserId
+        ? sorted.findIndex((m) => m.userId === currentCycle.assignedUserId)
+        : -1;
+      const priorMember =
+        currentIdx > 0
+          ? sorted[currentIdx - 1]
+          : currentIdx === 0 && sorted.length > 1
+            ? sorted[sorted.length - 1]
+            : null;
+      const priorAssigneeName = priorMember
+        ? (priorMember.user.name ?? priorMember.user.email ?? null)
+        : null;
+
+      return {
+        notificationId: row.id,
+        type: row.type as CycleEventItem["type"],
+        createdAt: row.createdAt,
+        readAt: row.readAt,
+        priorAssigneeName,
+      };
+    });
+  }
 
   const isDemo = sessionUser.isDemo ?? false;
 
@@ -92,9 +150,12 @@ export default async function HouseholdLayout({
           <div className="flex items-center gap-4">
             <div className="hidden sm:block">
               <NotificationBell
+                variant="desktop"
+                householdId={household.id}
                 householdSlug={householdSlug}
-                count={reminderCount}
-                items={reminderItems}
+                count={totalCount}
+                reminderItems={reminderItems}
+                cycleEvents={cycleEvents}
               />
             </div>
             <UserMenu email={user?.email ?? ""} name={user?.name} />
@@ -105,9 +166,11 @@ export default async function HouseholdLayout({
         {children}
       </main>
       <BottomTabBar
+        householdId={household.id}
         householdSlug={householdSlug}
-        notificationCount={reminderCount}
+        notificationCount={totalCount}
         reminderItems={reminderItems}
+        cycleEvents={cycleEvents}
       />
     </>
   );
