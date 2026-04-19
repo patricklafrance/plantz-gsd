@@ -85,3 +85,82 @@ export const skipCurrentCycleSchema = z.object({
   householdSlug: z.string().min(1),
 });
 export type SkipCurrentCycleInput = z.infer<typeof skipCurrentCycleSchema>;
+
+/**
+ * INVT-01 / D-16: createInvitation input. OWNER-gated at the action layer.
+ * `householdSlug` surfaces in revalidatePath; `householdId` is the authz key.
+ */
+export const createInvitationSchema = z.object({
+  householdId: z.cuid(),
+  householdSlug: z.string().min(1),
+});
+export type CreateInvitationInput = z.infer<typeof createInvitationSchema>;
+
+/**
+ * INVT-02 / D-16: revokeInvitation input. Per D-16 discretion (grep-consistency),
+ * householdId is a hidden field on the form even though it could be derived
+ * from the Invitation row. OWNER-gated at the action layer.
+ */
+export const revokeInvitationSchema = z.object({
+  invitationId: z.cuid(),
+  householdId: z.cuid(),
+  householdSlug: z.string().min(1),
+});
+export type RevokeInvitationInput = z.infer<typeof revokeInvitationSchema>;
+
+/**
+ * INVT-04 / D-16: acceptInvitation input. NOT household-gated (that's the point —
+ * the caller proves membership intent by holding the raw token, not by being in
+ * the household yet). Token is an opaque string; DO NOT parse its internal structure.
+ */
+export const acceptInvitationSchema = z.object({
+  token: z.string().min(1),
+});
+export type AcceptInvitationInput = z.infer<typeof acceptInvitationSchema>;
+
+/**
+ * INVT-05 / D-16: leaveHousehold input. Caller is the subject (session.user.id);
+ * householdId is the household the caller leaves. Last-OWNER pre-check runs at
+ * the action layer (D-13).
+ */
+export const leaveHouseholdSchema = z.object({
+  householdId: z.cuid(),
+  householdSlug: z.string().min(1),
+});
+export type LeaveHouseholdInput = z.infer<typeof leaveHouseholdSchema>;
+
+/**
+ * INVT-06 / D-16: removeMember input. OWNER-gated. `targetUserId` is the member
+ * being removed. Self-target is REJECTED at the action layer — use
+ * leaveHousehold for the self case (D-16 removeMember rationale).
+ */
+export const removeMemberSchema = z.object({
+  householdId: z.cuid(),
+  householdSlug: z.string().min(1),
+  targetUserId: z.cuid(),
+});
+export type RemoveMemberInput = z.infer<typeof removeMemberSchema>;
+
+/**
+ * INVT-06 / D-11: promoteToOwner input. OWNER-gated. Idempotent at the action
+ * layer (promoting an existing OWNER is a no-op, not an error).
+ */
+export const promoteMemberSchema = z.object({
+  householdId: z.cuid(),
+  householdSlug: z.string().min(1),
+  targetUserId: z.cuid(),
+});
+export type PromoteMemberInput = z.infer<typeof promoteMemberSchema>;
+
+/**
+ * INVT-06 / D-12: demoteToMember input. OWNER-gated. Self-demote allowed only
+ * if another OWNER exists after the change (enforced at the action layer).
+ * Shape is identical to promoteMemberSchema; kept as a separate export for
+ * grep-friendliness and future divergence.
+ */
+export const demoteMemberSchema = z.object({
+  householdId: z.cuid(),
+  householdSlug: z.string().min(1),
+  targetUserId: z.cuid(),
+});
+export type DemoteMemberInput = z.infer<typeof demoteMemberSchema>;
