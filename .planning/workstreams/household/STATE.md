@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 05 Plan 01 complete — schema migration (readAt + composite index) applied to live Neon DB, CycleEventItem type added, nine phase-05 test scaffolds landed with 64 todos
-last_updated: "2026-04-19T23:17:33.854Z"
+last_updated: "2026-04-19T23:30:07.216Z"
 last_activity: 2026-04-19
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 33
-  completed_plans: 30
-  percent: 91
+  completed_plans: 31
+  percent: 94
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 5
-Plan: 2 of 5 complete
+Plan: 3 of 5 complete
 Status: Ready to execute
 Last activity: 2026-04-19
 
@@ -51,6 +51,7 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 
 *Updated after each plan completion*
 | Phase 5 P2 | 7 min | 3 tasks | 8 files |
+| Phase 05 P03 | ~7 min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 - [Phase ?]: [Phase 05-02] React.cache() wrapping on both new household queries — symmetric wrapping guards against future duplicate-call patterns; cache() is a no-op outside RSC context
 - [Phase ?]: [Phase 05-02] Row-level authz via updateMany.where.recipientUserId predicate — forged notificationIds become zero-count no-ops matching D-24, removing extra round-trip vs fetch-check-write
 - [Phase ?]: [Phase 05-02] markNotificationsRead does NOT accept recipientUserId from input — read from session to close T-05-02-02 tampering vector
+- [Phase ?]: [Phase 05-03] CycleStartBanner intentionally omits assigneeName — copy addresses viewer directly in second person; PATTERNS.md updated to match shipped 2-prop interface
+- [Phase ?]: [Phase 05-03] Banner tests use native DOM assertions + afterEach(cleanup) + local-Date constructors — @testing-library/jest-dom not installed and not needed for phase-05 coverage
 
 ### Pending Todos
 
@@ -98,6 +101,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-19T23:16:30.105Z
+Last session: 2026-04-19T23:30:07.211Z
 Stopped at: Phase 05 Plan 01 complete — schema migration (readAt + composite index) applied to live Neon DB, CycleEventItem type added, nine phase-05 test scaffolds landed with 64 todos
 Next step: Execute Phase 05 Plan 02 (server layer — markNotificationsRead, getUnreadCycleEventCount, getCycleNotificationsForViewer) — unblocked by this plan's typed Prisma client and CycleEventItem export. Plan 05-03 (banners) can run in parallel once CycleEventItem is available (also done by this plan).

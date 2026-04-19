@@ -138,7 +138,7 @@ Plans:
 **Plans**: 5 plans
   - [x] 05-01-PLAN.md — Wave 0 scaffolding: Prisma migration (readAt + index) with [BLOCKING] push + CycleEventItem type + 9 phase-05 test scaffolds
   - [x] 05-02-PLAN.md — Server layer: assignee gate (D-07..D-10) + getUnreadCycleEventCount + getCycleNotificationsForViewer + markNotificationsRead Server Action (D-20, D-28, D-29)
-  - [ ] 05-03-PLAN.md — Four dashboard banner components (CycleStart, Reassignment, PassiveStatus, Fallback) per D-12 + component tests
+  - [x] 05-03-PLAN.md — Four dashboard banner components (CycleStart, Reassignment, PassiveStatus, Fallback) per D-12 + component tests
   - [ ] 05-04-PLAN.md — Unified NotificationBell with variant prop + useTransition mark-read + BottomTabBar inline-dropdown deletion (v1 tech-debt fix; D-17..D-22)
   - [ ] 05-05-PLAN.md — Layout + dashboard wiring (totalCount, banner region in D-13 order) + Chrome DevTools MCP human-verify checkpoint
 **Pitfall flags**:
