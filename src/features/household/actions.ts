@@ -624,3 +624,98 @@ export async function leaveHousehold(data: unknown) {
   revalidatePath(HOUSEHOLD_PATHS.settings, "page");
   return { success: true as const };
 }
+
+/**
+ * INVT-06 / D-16: Remove a non-OWNER member from a household.
+ * Self-target is REJECTED — callers must use leaveHousehold for the self case
+ * so unstable_update fires correctly per D-16.5.
+ *
+ * Last-OWNER guard (Pitfall 6): OWNER count EXCLUDES the target user; if 0
+ * other OWNERs exist and target is OWNER, block. Error uses the target's
+ * display name so the toast tells the caller which member blocks.
+ */
+export async function removeMember(data: unknown) {
+  // Steps 1–3
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) {
+    return {
+      error:
+        "This action is disabled in demo mode. Sign up to get your own household.",
+    };
+  }
+  const parsed = removeMemberSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  const { householdId, targetUserId } = parsed.data;
+
+  // Self-target guard (before role check — clearer error for the common mistake)
+  if (targetUserId === session.user.id) {
+    return { error: "To leave a household, use Leave instead of Remove." };
+  }
+
+  // Step 4 + 5: live access + OWNER role gate
+  let access: Awaited<ReturnType<typeof requireHouseholdAccess>>;
+  try {
+    access = await requireHouseholdAccess(householdId);
+  } catch (err) {
+    if (err instanceof ForbiddenError) return { error: err.message };
+    throw err;
+  }
+  if (access.role !== "OWNER") {
+    return { error: "Only household owners can remove members." };
+  }
+
+  // Fetch target with role + display info
+  const target = await db.householdMember.findFirst({
+    where: { householdId, userId: targetUserId },
+    include: { user: { select: { name: true, email: true } } },
+  });
+  if (!target) return { error: "Member not found in this household." };
+
+  // Last-OWNER guard per Pitfall 6: count OWNERs excluding the target
+  if (target.role === "OWNER") {
+    const otherOwnerCount = await db.householdMember.count({
+      where: { householdId, role: "OWNER", userId: { not: targetUserId } },
+    });
+    if (otherOwnerCount === 0) {
+      const displayName =
+        target.user.name ?? target.user.email ?? "The target member";
+      return {
+        error: `${displayName} is the only owner. Promote another member before removing them.`,
+      };
+    }
+  }
+
+  // Active-assignee transition (outside own tx — RESEARCH §Pattern 5)
+  const currentCycle = await db.cycle.findFirst({
+    where: { householdId, status: { in: ["active", "paused"] } },
+    select: { assignedUserId: true },
+  });
+  if (currentCycle?.assignedUserId === targetUserId) {
+    await transitionCycle(householdId, "member_left");
+  }
+
+  // Member delete + availability cancel
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  await db.$transaction(async (tx) => {
+    await tx.availability.deleteMany({
+      where: {
+        userId: targetUserId,
+        householdId,
+        startDate: { gte: todayStart },
+      },
+    });
+    await tx.householdMember.delete({
+      where: { householdId_userId: { householdId, userId: targetUserId } },
+    });
+  });
+
+  // NO unstable_update for the removed user (D-16.5 binding) — their next
+  // request hits requireHouseholdAccess and returns ForbiddenError.
+
+  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  return { success: true as const };
+}
