@@ -5,11 +5,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Leaf, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 import { loginSchema, type LoginInput } from "@/features/auth/schemas";
+import { validateCallbackUrl } from "@/features/auth/callback-url";
 import {
   Form,
   FormControl,
@@ -24,6 +26,8 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const searchParams = useSearchParams();
+  const callbackUrl = validateCallbackUrl(searchParams.get("callbackUrl"));
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -43,7 +47,7 @@ export function LoginForm() {
         email: values.email,
         password: values.password,
         redirect: true,
-        redirectTo: "/dashboard",
+        redirectTo: callbackUrl ?? "/dashboard",
       });
     } catch (error) {
       // signIn with redirect:true throws NEXT_REDIRECT on success — re-throw

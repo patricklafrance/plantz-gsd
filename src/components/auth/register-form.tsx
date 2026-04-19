@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Leaf, Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 import { registerSchema, type RegisterInput } from "@/features/auth/schemas";
 import { registerUser } from "@/features/auth/actions";
+import { validateCallbackUrl } from "@/features/auth/callback-url";
 import {
   Form,
   FormControl,
@@ -24,6 +26,8 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const searchParams = useSearchParams();
+  const callbackUrl = validateCallbackUrl(searchParams.get("callbackUrl"));
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -48,6 +52,7 @@ export function RegisterForm() {
       password: values.password,
       confirmPassword: values.confirmPassword,
       timezone: detectedTimezone,
+      callbackUrl: callbackUrl ?? undefined,
     });
 
     // If registerUser returns (didn't throw redirect), it means there was an error

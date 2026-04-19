@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import bcryptjs from "bcryptjs";
 import { registerSchema } from "./schemas";
 import { onboardingSchema } from "./schemas";
+import { validateCallbackUrl } from "./callback-url";
 import { generateHouseholdSlug } from "@/lib/slug";
 import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
@@ -16,6 +17,7 @@ export async function registerUser(data: {
   password: string;
   confirmPassword: string;
   timezone?: string;
+  callbackUrl?: string;
 }) {
   // 1. Validate input
   const parsed = registerSchema.safeParse(data);
@@ -118,10 +120,13 @@ export async function registerUser(data: {
 
     // 5. Auto-login (preserve existing pattern verbatim — signIn throws
     // NEXT_REDIRECT on success which the catch below MUST re-throw).
+    // Server-side re-validation: never trust client-passed callbackUrl
+    // unverified, even though the form already validated it.
+    const safeCallbackUrl = validateCallbackUrl(data.callbackUrl);
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: "/dashboard",
+      redirectTo: safeCallbackUrl ?? "/dashboard",
     });
   } catch (error) {
     // CRITICAL: Re-throw redirect errors — they are NOT failures

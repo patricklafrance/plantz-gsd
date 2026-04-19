@@ -240,7 +240,9 @@ describe("registerUser transactional household creation (HSLD-01, D-08)", () => 
     const src = fs.readFileSync("src/features/auth/actions.ts", "utf8");
     expect(src).toContain("isRedirectError(error)");
     expect(src).toContain('signIn("credentials"');
-    expect(src).toContain('redirectTo: "/dashboard"');
+    // GAP-04-01: redirectTo accepts a validated callbackUrl, falling back to /dashboard.
+    // Guard that /dashboard remains the default target.
+    expect(src).toMatch(/redirectTo:.*["']\/dashboard["']/);
   });
 });
 
