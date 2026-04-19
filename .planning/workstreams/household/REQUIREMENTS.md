@@ -47,10 +47,10 @@ Requirements for milestone `household`. Each maps to a roadmap phase.
 
 ### Assignee-scoped notifications
 
-- [ ] **HNTF-01**: Only the current assignee receives daily due + overdue in-app notifications for their household's plants; non-assignees see a badge count of 0 for that household
-- [ ] **HNTF-02**: When a new cycle starts, the new assignee receives a cycle-start banner notification on their dashboard with number of due plants and cycle end date
-- [ ] **HNTF-03**: When responsibility changes mid-cycle (manual skip, auto-skip, membership change), the new assignee receives a reassignment notification; previous assignee's assignment banner is removed within the same refresh
-- [ ] **HNTF-04**: Non-assignees see a passive household status banner — e.g., "Alice is responsible this week" with next-cycle preview ("Bob is next")
+- [x] **HNTF-01**: Only the current assignee receives daily due + overdue in-app notifications for their household's plants; non-assignees see a badge count of 0 for that household
+- [x] **HNTF-02**: When a new cycle starts, the new assignee receives a cycle-start banner notification on their dashboard with number of due plants and cycle end date
+- [x] **HNTF-03**: When responsibility changes mid-cycle (manual skip, auto-skip, membership change), the new assignee receives a reassignment notification; previous assignee's assignment banner is removed within the same refresh
+- [x] **HNTF-04**: Non-assignees see a passive household status banner — e.g., "Alice is responsible this week" with next-cycle preview ("Bob is next")
 
 ### Audit trail
 
@@ -135,10 +135,10 @@ Tracked but not in this roadmap.
 | AVLB-03 | Phase 3 | Complete |
 | AVLB-04 | Phase 3 | Complete |
 | AVLB-05 | Phase 3 | Pending |
-| HNTF-01 | Phase 5 | Pending |
-| HNTF-02 | Phase 5 | Pending |
-| HNTF-03 | Phase 5 | Pending |
-| HNTF-04 | Phase 5 | Pending |
+| HNTF-01 | Phase 5 | Complete |
+| HNTF-02 | Phase 5 | Complete |
+| HNTF-03 | Phase 5 | Complete |
+| HNTF-04 | Phase 5 | Complete |
 | AUDT-01 | Phase 1 | Pending |
 | AUDT-02 | Phase 1 | Pending |
 | HSET-01 | Phase 6 | Pending |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 05 context gathered (household-notifications) — 4 areas discussed, unified bell + readAt + merged feed adopted
-last_updated: "2026-04-19T20:47:39.593Z"
-last_activity: 2026-04-19
+stopped_at: Phase 05 Plan 01 complete — schema + test scaffolds delivered; Waves 2/3 unblocked
+last_updated: "2026-04-19T23:05:00.000Z"
+last_activity: 2026-04-19 -- Phase 5 Plan 01 executed
 progress:
   total_phases: 7
   completed_phases: 4
-  total_plans: 28
-  completed_plans: 28
-  percent: 100
+  total_plans: 33
+  completed_plans: 29
+  percent: 88
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 5
-Plan: Not started
-Status: Executing Phase 04
-Last activity: 2026-04-19
+Plan: 1 of 5 complete
+Status: Ready to execute Plan 02
+Last activity: 2026-04-19 -- Phase 5 Plan 01 executed
 
-Progress: [██████████] 100% (5 of 5 Phase 03 plans complete code-side)
+Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 
 ## Performance Metrics
 
@@ -47,6 +47,7 @@ Progress: [██████████] 100% (5 of 5 Phase 03 plans complete 
 | 03    | 03   | ~35 min  | 2     | 12    |
 | 03    | 04   | ~11 min  | 3     | 8     |
 | 03    | 05   | ~8 min   | 2     | 4     |
+| 05    | 01   | ~7 min   | 4     | 12    |
 
 *Updated after each plan completion*
 
@@ -76,6 +77,10 @@ Progress: [██████████] 100% (5 of 5 Phase 03 plans complete 
 - [Phase 03-05] advanceAllHouseholds passes plain `cycle_end` hint for every household; transitionCycle STEP 5 upgrades to `paused_resumed` when outgoing status is paused — single-write-path invariant keeps state-machine logic in one place
 - [Phase 03-05] Route handler reads `process.env.CRON_SECRET` INSIDE POST (not at module scope) so Vitest beforeEach env mutation is effective; pinned by case-sensitivity test
 - [Phase 03-05] Per-household try/catch sequential orchestrator pattern: `transitionCycle` skipped results are intentionally dropped from both transitions[] and errors[] — next cron tick handles lock contention naturally
+- [Phase 05-01] CycleEventItem added as sibling type to ReminderItem (not discriminated union) so Phase 2 ReminderItem consumers remain untouched; bell dropdown renders two typed arrays in fixed buckets
+- [Phase 05-01] Phase 5 fixtures stay minimal (RUN_ID/EMAIL_PREFIX/emailFor/getDb) because D-26 rejected real-Prisma integration tests for this phase — all nine scaffold files use vi.mock
+- [Phase 05-01] Single-step additive nullable migration (no backfill) is acceptable when column has no NOT NULL target — three-step ritual only applies when column must become NOT NULL
+- [Phase 05-01] Prisma v7 client layout: grep for model types under `src/generated/prisma/models/{Model}.ts` instead of `src/generated/prisma/client/index.d.ts` (old v6 path)
 
 ### Pending Todos
 
@@ -88,6 +93,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-19T20:47:39.588Z
-Stopped at: Phase 05 context gathered (household-notifications) — 4 areas discussed, unified bell + readAt + merged feed adopted
-Next step: USER human-action — (1) openssl rand -hex 32 → CRON_SECRET; (2) set CRON_SECRET in Vercel dashboard env vars (prod); (3) create cron-job.org hourly POST against https://<prod-url>/api/cron/advance-cycles with Authorization: Bearer $CRON_SECRET; (4) confirm cron targets production only. After external setup, Phase 03 is fully shippable and Phase 04 (invitations) is unblocked.
+Last session: 2026-04-19T23:05:00.000Z
+Stopped at: Phase 05 Plan 01 complete — schema migration (readAt + composite index) applied to live Neon DB, CycleEventItem type added, nine phase-05 test scaffolds landed with 64 todos
+Next step: Execute Phase 05 Plan 02 (server layer — markNotificationsRead, getUnreadCycleEventCount, getCycleNotificationsForViewer) — unblocked by this plan's typed Prisma client and CycleEventItem export. Plan 05-03 (banners) can run in parallel once CycleEventItem is available (also done by this plan).
