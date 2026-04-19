@@ -516,7 +516,7 @@ interface BottomTabBarProps {
 **Props:**
 ```typescript
 interface CycleStartBannerProps {
-  assigneeName: string;
+  // assigneeName intentionally omitted — "You're up this cycle." addresses viewer directly
   dueCount: number;
   cycleEndDate: Date;
 }
