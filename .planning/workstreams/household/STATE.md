@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 05 Plan 01 complete — schema + test scaffolds delivered; Waves 2/3 unblocked
-last_updated: "2026-04-19T23:05:00.000Z"
-last_activity: 2026-04-19 -- Phase 5 Plan 01 executed
+stopped_at: Phase 05 Plan 01 complete — schema migration (readAt + composite index) applied to live Neon DB, CycleEventItem type added, nine phase-05 test scaffolds landed with 64 todos
+last_updated: "2026-04-19T23:17:33.854Z"
+last_activity: 2026-04-19
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 33
-  completed_plans: 29
-  percent: 88
+  completed_plans: 30
+  percent: 91
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 5
-Plan: 1 of 5 complete
-Status: Ready to execute Plan 02
-Last activity: 2026-04-19 -- Phase 5 Plan 01 executed
+Plan: 2 of 5 complete
+Status: Ready to execute
+Last activity: 2026-04-19
 
 Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 
@@ -50,6 +50,7 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 | 05    | 01   | ~7 min   | 4     | 12    |
 
 *Updated after each plan completion*
+| Phase 5 P2 | 7 min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,10 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 - [Phase 05-01] Phase 5 fixtures stay minimal (RUN_ID/EMAIL_PREFIX/emailFor/getDb) because D-26 rejected real-Prisma integration tests for this phase — all nine scaffold files use vi.mock
 - [Phase 05-01] Single-step additive nullable migration (no backfill) is acceptable when column has no NOT NULL target — three-step ritual only applies when column must become NOT NULL
 - [Phase 05-01] Prisma v7 client layout: grep for model types under `src/generated/prisma/models/{Model}.ts` instead of `src/generated/prisma/client/index.d.ts` (old v6 path)
+- [Phase ?]: [Phase 05-02] Inline early-return assignee gate (no helper) — three-line branch reads cleaner than isGated() indirection and keeps D-07..D-10 grep-able at call sites
+- [Phase ?]: [Phase 05-02] React.cache() wrapping on both new household queries — symmetric wrapping guards against future duplicate-call patterns; cache() is a no-op outside RSC context
+- [Phase ?]: [Phase 05-02] Row-level authz via updateMany.where.recipientUserId predicate — forged notificationIds become zero-count no-ops matching D-24, removing extra round-trip vs fetch-check-write
+- [Phase ?]: [Phase 05-02] markNotificationsRead does NOT accept recipientUserId from input — read from session to close T-05-02-02 tampering vector
 
 ### Pending Todos
 
@@ -93,6 +98,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-19T23:05:00.000Z
+Last session: 2026-04-19T23:16:30.105Z
 Stopped at: Phase 05 Plan 01 complete — schema migration (readAt + composite index) applied to live Neon DB, CycleEventItem type added, nine phase-05 test scaffolds landed with 64 todos
 Next step: Execute Phase 05 Plan 02 (server layer — markNotificationsRead, getUnreadCycleEventCount, getCycleNotificationsForViewer) — unblocked by this plan's typed Prisma client and CycleEventItem export. Plan 05-03 (banners) can run in parallel once CycleEventItem is available (also done by this plan).
