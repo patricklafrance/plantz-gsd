@@ -117,8 +117,8 @@ Plans:
   - [x] 04-01-PLAN.md — Wave 0 scaffolding: crypto helper + Zod schemas + unstable_update export + 14 test stubs + phase-04 fixtures
   - [x] 04-02-PLAN.md — Read helpers (resolveInvitationByToken, getHouseholdInvitations, getHouseholdMembers) + mocked-Prisma unit tests
   - [x] 04-03-PLAN.md — Invitation write Server Actions (createInvitation, revokeInvitation, acceptInvitation with atomic updateMany + unstable_update) + unit tests
-  - [ ] 04-04-PLAN.md — Membership mutation actions (leaveHousehold, removeMember, promoteToOwner, demoteToMember) with last-OWNER guards + unit tests
-  - [ ] 04-05-PLAN.md — Auth carve-out (auth.config.ts + proxy.ts) + public /join/[token] page + AcceptForm + DestructiveLeaveDialog
+  - [x] 04-04-PLAN.md — Membership mutation actions (leaveHousehold, removeMember, promoteToOwner, demoteToMember) with last-OWNER guards + unit tests
+  - [x] 04-05-PLAN.md — Auth carve-out (auth.config.ts + proxy.ts) + public /join/[token] page + AcceptForm + DestructiveLeaveDialog
   - [ ] 04-06-PLAN.md — Real-DB integration tests (D-23 concurrency, D-14 cascade, D-27 assignee-transition, D-26 JWT refresh)
 **Pitfall flags**:
   - Pitfall 10: Token generated with `crypto.randomBytes(32).toString('hex')` only; acceptance is atomic `UPDATE WHERE acceptedAt IS NULL` with row-count check; no expiry per user decision
