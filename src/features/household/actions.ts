@@ -581,8 +581,12 @@ export async function leaveHousehold(data: unknown) {
   }
 
   // Step 6: write
-  if (isSoleMember && callerIsOwner && otherOwnerCount === 0) {
-    // D-14 terminal: delete household, cascade wipes everything
+  // D-14 terminal: sole member leaves, delete the entire household.
+  // The callerIsOwner && otherOwnerCount === 0 guard is redundant when isSoleMember
+  // is true — if there's only one member and they're leaving, no one remains.
+  // The wouldBeLastOwnerBlocked pre-check (above) still correctly prevents a sole
+  // OWNER in a multi-member household from leaving without first promoting someone.
+  if (isSoleMember) {
     await db.household.delete({ where: { id: householdId } });
   } else {
     // Step 6a: if caller is the active assignee, transition cycle FIRST (own tx)
