@@ -119,7 +119,7 @@ Plans:
   - [x] 04-03-PLAN.md — Invitation write Server Actions (createInvitation, revokeInvitation, acceptInvitation with atomic updateMany + unstable_update) + unit tests
   - [x] 04-04-PLAN.md — Membership mutation actions (leaveHousehold, removeMember, promoteToOwner, demoteToMember) with last-OWNER guards + unit tests
   - [x] 04-05-PLAN.md — Auth carve-out (auth.config.ts + proxy.ts) + public /join/[token] page + AcceptForm + DestructiveLeaveDialog
-  - [ ] 04-06-PLAN.md — Real-DB integration tests (D-23 concurrency, D-14 cascade, D-27 assignee-transition, D-26 JWT refresh)
+  - [x] 04-06-PLAN.md — Real-DB integration tests (D-23 concurrency, D-14 cascade, D-27 assignee-transition, D-26 JWT refresh)
 **Pitfall flags**:
   - Pitfall 10: Token generated with `crypto.randomBytes(32).toString('hex')` only; acceptance is atomic `UPDATE WHERE acceptedAt IS NULL` with row-count check; no expiry per user decision
   - Pitfall 9: `acceptInvitation` appends new member to end of rotation; does not reset current cycle pointer
