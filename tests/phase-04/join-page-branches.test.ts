@@ -213,9 +213,10 @@ describe("/join/[token] branch logic", () => {
 
     // Branch 5a heading does NOT have trailing "?"
     expect(findText(element, "Join Alice's House")).toBe(true);
-    // callbackUrl links present
-    expect(findText(element, `/login?callbackUrl=/join/${TOKEN}`)).toBe(true);
-    expect(findText(element, `/register?callbackUrl=/join/${TOKEN}`)).toBe(true);
+    // callbackUrl links present (path is percent-encoded per WR-02)
+    const encodedCallback = encodeURIComponent(`/join/${TOKEN}`);
+    expect(findText(element, `/login?callbackUrl=${encodedCallback}`)).toBe(true);
+    expect(findText(element, `/register?callbackUrl=${encodedCallback}`)).toBe(true);
   });
 
   test("[INVT-04] valid + logged-in renders Branch 5b with Accept form", async () => {
