@@ -13,6 +13,10 @@ import {
   createInvitationSchema,
   revokeInvitationSchema,
   acceptInvitationSchema,
+  leaveHouseholdSchema,
+  removeMemberSchema,
+  promoteMemberSchema,
+  demoteMemberSchema,
 } from "./schema";
 import { generateInvitationToken, hashInvitationToken } from "@/lib/crypto";
 import { computeInitialCycleBoundaries, transitionCycle } from "./cycle";
@@ -513,4 +517,110 @@ class AcceptRaceError extends Error {
     super(message);
     Object.setPrototypeOf(this, AcceptRaceError.prototype);
   }
+}
+
+/**
+ * INVT-05 / D-13 / D-14 / D-16: Leave a household the caller is a member of.
+ * Last-OWNER in multi-member household → blocked per D-13.
+ * Sole-member + last-OWNER → terminal case: Household.delete + cascade per D-14.
+ * Active assignee leaving → transitionCycle(..., "member_left") per Phase 3 D-18.
+ * Calls unstable_update after the DB write to refresh the caller's JWT.
+ */
+export async function leaveHousehold(data: unknown) {
+  // Step 1: session
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+
+  // Step 2: demo-mode guard
+  if (session.user.isDemo) {
+    return {
+      error:
+        "This action is disabled in demo mode. Sign up to get your own household.",
+    };
+  }
+
+  // Step 3: Zod parse
+  const parsed = leaveHouseholdSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  // Step 4: live household access (caller must be a member)
+  let access: Awaited<ReturnType<typeof requireHouseholdAccess>>;
+  try {
+    access = await requireHouseholdAccess(parsed.data.householdId);
+  } catch (err) {
+    if (err instanceof ForbiddenError) return { error: err.message };
+    throw err;
+  }
+
+  const userId = session.user.id;
+  const householdId = parsed.data.householdId;
+
+  // Step 5a: last-OWNER pre-check per D-13
+  // Count OWNERs excluding the caller: if 0 and there are other members, block.
+  const otherOwnerCount = await db.householdMember.count({
+    where: {
+      householdId,
+      role: "OWNER",
+      userId: { not: userId },
+    },
+  });
+  const totalMemberCount = await db.householdMember.count({
+    where: { householdId },
+  });
+
+  const callerIsOwner = access.role === "OWNER";
+  const isSoleMember = totalMemberCount === 1;
+  const wouldBeLastOwnerBlocked =
+    callerIsOwner && otherOwnerCount === 0 && !isSoleMember;
+
+  if (wouldBeLastOwnerBlocked) {
+    return {
+      error:
+        "You're the only owner. Promote another member to owner first, then try again.",
+    };
+  }
+
+  // Step 6: write
+  if (isSoleMember && callerIsOwner && otherOwnerCount === 0) {
+    // D-14 terminal: delete household, cascade wipes everything
+    await db.household.delete({ where: { id: householdId } });
+  } else {
+    // Step 6a: if caller is the active assignee, transition cycle FIRST (own tx)
+    const currentCycle = await db.cycle.findFirst({
+      where: { householdId, status: { in: ["active", "paused"] } },
+      select: { assignedUserId: true },
+    });
+    if (currentCycle?.assignedUserId === userId) {
+      await transitionCycle(householdId, "member_left");
+    }
+
+    // Step 6b: member delete + availability cancel in a single tx
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    await db.$transaction(async (tx) => {
+      await tx.availability.deleteMany({
+        where: {
+          userId,
+          householdId,
+          startDate: { gte: todayStart },
+        },
+      });
+      await tx.householdMember.delete({
+        where: { householdId_userId: { householdId, userId } },
+      });
+    });
+  }
+
+  // Step 6.5: unstable_update — pick another household or null
+  const remaining = await db.householdMember.findFirst({
+    where: { userId, householdId: { not: householdId } },
+    select: { householdId: true },
+    orderBy: { isDefault: "desc" },
+  });
+  await unstable_update({ user: { activeHouseholdId: remaining?.householdId ?? null } });
+
+  // Step 7: revalidate
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
+  return { success: true as const };
 }
