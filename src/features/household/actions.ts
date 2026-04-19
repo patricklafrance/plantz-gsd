@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "../../../auth";
+import { auth, unstable_update } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { format as formatDate } from "date-fns";
@@ -10,7 +10,11 @@ import {
   createAvailabilitySchema,
   deleteAvailabilitySchema,
   skipCurrentCycleSchema,
+  createInvitationSchema,
+  revokeInvitationSchema,
+  acceptInvitationSchema,
 } from "./schema";
+import { generateInvitationToken, hashInvitationToken } from "@/lib/crypto";
 import { computeInitialCycleBoundaries, transitionCycle } from "./cycle";
 import { findOverlappingPeriod } from "./availability";
 import { requireHouseholdAccess, ForbiddenError } from "./guards";
@@ -284,4 +288,229 @@ export async function deleteAvailability(data: unknown) {
   // Step 7: revalidate settings
   revalidatePath(HOUSEHOLD_PATHS.settings, "page");
   return { success: true };
+}
+
+/**
+ * INVT-01 / D-16: Generate a new shareable invitation link.
+ * OWNER-gated (role check at Step 5). Writes only tokenHash (SHA-256 of raw token).
+ * Raw token is returned once and never persisted (Pitfall 10 §1 binding).
+ */
+export async function createInvitation(data: unknown) {
+  // Step 1: session
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+
+  // Step 2: demo-mode guard (Phase 4 copy per UI-SPEC)
+  if (session.user.isDemo) {
+    return {
+      error:
+        "This action is disabled in demo mode. Sign up to get your own household.",
+    };
+  }
+
+  // Step 3: Zod parse
+  const parsed = createInvitationSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  // Step 4: live household access
+  let access: Awaited<ReturnType<typeof requireHouseholdAccess>>;
+  try {
+    access = await requireHouseholdAccess(parsed.data.householdId);
+  } catch (err) {
+    if (err instanceof ForbiddenError) return { error: err.message };
+    throw err;
+  }
+
+  // Step 5: role authz (OWNER only)
+  if (access.role !== "OWNER") {
+    return { error: "Only household owners can generate invite links." };
+  }
+
+  // Step 6: write — persist tokenHash only; return raw token to caller
+  const { rawToken, tokenHash } = generateInvitationToken();
+  const invitation = await db.invitation.create({
+    data: {
+      householdId: parsed.data.householdId,
+      tokenHash,
+      invitedByUserId: session.user.id,
+    },
+    select: { id: true },
+  });
+
+  // Step 7: revalidate settings page (Phase 6 invite list consumer)
+  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
+  return {
+    success: true as const,
+    token: rawToken,
+    invitationId: invitation.id,
+  };
+}
+
+/**
+ * INVT-02 / D-16: Revoke an invitation. OWNER-gated.
+ * Per D-16: idempotent on already-revoked (returns success, no-op);
+ * errors on already-accepted with UI-SPEC verbatim copy.
+ */
+export async function revokeInvitation(data: unknown) {
+  // Step 1: session
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+
+  // Step 2: demo-mode guard
+  if (session.user.isDemo) {
+    return {
+      error:
+        "This action is disabled in demo mode. Sign up to get your own household.",
+    };
+  }
+
+  // Step 3: Zod parse
+  const parsed = revokeInvitationSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  // Step 4: live household access
+  let access: Awaited<ReturnType<typeof requireHouseholdAccess>>;
+  try {
+    access = await requireHouseholdAccess(parsed.data.householdId);
+  } catch (err) {
+    if (err instanceof ForbiddenError) return { error: err.message };
+    throw err;
+  }
+
+  // Step 5: role authz (OWNER only)
+  if (access.role !== "OWNER") {
+    return { error: "Only household owners can revoke invite links." };
+  }
+
+  // Step 6: load + branch + write
+  const existing = await db.invitation.findUnique({
+    where: { id: parsed.data.invitationId },
+    select: { id: true, householdId: true, revokedAt: true, acceptedAt: true },
+  });
+  if (!existing || existing.householdId !== parsed.data.householdId) {
+    return { error: "Invitation not found." };
+  }
+  if (existing.acceptedAt !== null) {
+    return { error: "Can't revoke an already-accepted invite." };
+  }
+  if (existing.revokedAt !== null) {
+    // Idempotent: already revoked — no-op, report success
+    return { success: true as const };
+  }
+
+  await db.invitation.update({
+    where: { id: parsed.data.invitationId },
+    data: { revokedAt: new Date() },
+  });
+
+  // Step 7: revalidate settings page
+  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
+  return { success: true as const };
+}
+
+/**
+ * INVT-04 / D-16: Accept an invitation. Atomic via updateMany + count guard
+ * (Pitfall 10 §2 binding). Appends new member to rotation end (rotationOrder =
+ * max + 1) per D-16 and Pitfall 9 §B; does NOT reset cycle pointer.
+ *
+ * Call graph:
+ *   Step 1–3: session / demo / Zod (standard 7-step)
+ *   Step 4 SKIPPED: acceptInvitation has no household scope pre-check (that's the point)
+ *   Step 5: pre-read + branch detection (unknown / revoked / used / already-member) —
+ *           returns UI-SPEC verbatim error strings per D-09
+ *   Step 6: db.$transaction { updateMany + count guard + aggregate + create }
+ *   Step 6.5 (POST-transaction): unstable_update to refresh JWT (Pitfall 16)
+ *   Step 7: revalidatePath on dashboard
+ */
+export async function acceptInvitation(data: unknown) {
+  // Steps 1–3
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) {
+    return {
+      error:
+        "This action is disabled in demo mode. Sign up to get your own household.",
+    };
+  }
+  const parsed = acceptInvitationSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  // Step 5a: branch detection (outside transaction — needed for UI-SPEC verbatim errors)
+  const tokenHash = hashInvitationToken(parsed.data.token);
+  const invitation = await db.invitation.findUnique({
+    where: { tokenHash },
+    include: { household: { select: { id: true, slug: true } } },
+  });
+  if (!invitation) return { error: "This invite link isn't valid." };
+  if (invitation.revokedAt !== null)
+    return { error: "This invite was revoked." };
+  if (invitation.acceptedAt !== null)
+    return { error: "This invite has already been used." };
+
+  // Step 5b: already-member check
+  const existingMembership = await db.householdMember.findFirst({
+    where: { householdId: invitation.householdId, userId: session.user.id },
+    select: { id: true },
+  });
+  if (existingMembership) {
+    return { error: "You're already in this household." };
+  }
+
+  // Step 6: atomic updateMany + member insert inside a single $transaction
+  const householdId = invitation.householdId;
+  const userId = session.user.id;
+  try {
+    await db.$transaction(async (tx) => {
+      const updateResult = await tx.invitation.updateMany({
+        where: { tokenHash, acceptedAt: null, revokedAt: null },
+        data: { acceptedAt: new Date(), acceptedByUserId: userId },
+      });
+      if (updateResult.count === 0) {
+        // Race loss: another concurrent call took the row (Pitfall 10 §2 guard)
+        throw new AcceptRaceError("This invite has already been used.");
+      }
+      const maxOrder = await tx.householdMember.aggregate({
+        where: { householdId },
+        _max: { rotationOrder: true },
+      });
+      const nextOrder = (maxOrder._max.rotationOrder ?? -1) + 1;
+      await tx.householdMember.create({
+        data: {
+          householdId,
+          userId,
+          role: "MEMBER",
+          rotationOrder: nextOrder,
+          isDefault: false,
+        },
+      });
+    });
+  } catch (err) {
+    if (err instanceof AcceptRaceError) {
+      return { error: err.message };
+    }
+    throw err;
+  }
+
+  // Step 6.5: JWT refresh AFTER the transaction commits (Pitfall 16 — never inside tx)
+  // activeHouseholdId lives on session.user per auth.ts callbacks.session shape.
+  await unstable_update({ user: { activeHouseholdId: householdId } });
+
+  // Step 7: revalidate dashboard (Phase 5/6 will consume the new membership immediately)
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  return {
+    success: true as const,
+    redirectTo: `/h/${invitation.household.slug}/dashboard`,
+  };
+}
+
+/**
+ * Local typed error for the $transaction short-circuit (Pitfall 10 §2 race guard).
+ * Thrown inside the transaction callback to short-circuit on concurrent-accept race loss.
+ */
+class AcceptRaceError extends Error {
+  readonly name = "AcceptRaceError" as const;
+  constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, AcceptRaceError.prototype);
+  }
 }
