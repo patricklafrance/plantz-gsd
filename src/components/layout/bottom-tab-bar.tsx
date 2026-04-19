@@ -1,30 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Leaf, DoorOpen, Bell } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { LayoutDashboard, Leaf, DoorOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import type { ReminderItem } from "@/features/reminders/types";
+import { NotificationBell } from "@/components/reminders/notification-bell";
+import type { ReminderItem, CycleEventItem } from "@/features/reminders/types";
 
 interface BottomTabBarProps {
+  householdId: string;
   householdSlug: string;
   notificationCount: number;
   reminderItems: ReminderItem[];
+  cycleEvents: CycleEventItem[];
 }
 
+/**
+ * D-21, D-22 (v1 tech debt fix): the 4th tab slot delegates to the unified
+ * <NotificationBell variant="mobile" />. Eliminates the previous inline
+ * DropdownMenu + "9+" badge regression + reminders-only dropdown content.
+ */
 export function BottomTabBar({
+  householdId,
   householdSlug,
   notificationCount,
   reminderItems,
+  cycleEvents,
 }: BottomTabBarProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
   const tabs = [
     { href: `/h/${householdSlug}/dashboard`, icon: LayoutDashboard, label: "Dashboard", exact: true },
@@ -50,7 +53,7 @@ export function BottomTabBar({
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex flex-1 flex-col items-center justify-center gap-0.5 text-xs min-h-[44px] rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-1",
-                isActive ? "text-accent" : "text-muted-foreground"
+                isActive ? "text-accent" : "text-muted-foreground",
               )}
             >
               <Icon className="h-5 w-5" aria-hidden="true" />
@@ -59,56 +62,15 @@ export function BottomTabBar({
           );
         })}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <button
-                aria-label={
-                  notificationCount > 0
-                    ? `${notificationCount} plants need attention`
-                    : "No plants need attention"
-                }
-                className="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs min-h-[44px] rounded-md text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-1 aria-expanded:text-accent"
-              >
-                <span className="relative">
-                  <Bell className="h-5 w-5" aria-hidden="true" />
-                  {notificationCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
-                      {notificationCount > 9 ? "9+" : notificationCount}
-                    </span>
-                  )}
-                </span>
-                <span>Alerts</span>
-              </button>
-            }
-          />
-          <DropdownMenuContent
-            side="top"
-            align="end"
-            className="w-72 max-h-[320px] overflow-y-auto"
-          >
-            {reminderItems.length === 0 ? (
-              <p className="px-4 py-2 text-sm text-muted-foreground">
-                No reminders &mdash; Plants that need attention will appear here.
-              </p>
-            ) : (
-              reminderItems.map((item) => (
-                <DropdownMenuItem
-                  key={item.plantId}
-                  onClick={() => router.push(`/h/${householdSlug}/plants/${item.plantId}`)}
-                  className="group/item flex cursor-pointer flex-col items-start gap-1 py-2"
-                >
-                  <span className="text-sm font-semibold text-foreground group-data-[highlighted]/item:text-accent-foreground">
-                    {item.nickname}
-                  </span>
-                  <span className="text-xs text-muted-foreground group-data-[highlighted]/item:text-accent-foreground/70">
-                    {item.roomName ?? "No room"} &middot; {item.statusLabel}
-                  </span>
-                </DropdownMenuItem>
-              ))
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* D-21, D-22: Alerts tab slot delegates to the unified bell. */}
+        <NotificationBell
+          variant="mobile"
+          householdId={householdId}
+          householdSlug={householdSlug}
+          count={notificationCount}
+          reminderItems={reminderItems}
+          cycleEvents={cycleEvents}
+        />
       </div>
     </nav>
   );
