@@ -6,7 +6,7 @@ import { authConfig } from "./auth.config";
 import { db } from "@/lib/db";
 import { DEMO_EMAIL } from "@/features/demo/seed-data";
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
+export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
   ...authConfig,
   callbacks: {
     ...authConfig.callbacks,
