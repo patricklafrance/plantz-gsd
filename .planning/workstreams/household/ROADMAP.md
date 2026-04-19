@@ -115,7 +115,7 @@ Plans:
   5. Owner can remove any non-owner member; owner can transfer ownership to another member
 **Plans**: 6 plans
   - [x] 04-01-PLAN.md — Wave 0 scaffolding: crypto helper + Zod schemas + unstable_update export + 14 test stubs + phase-04 fixtures
-  - [ ] 04-02-PLAN.md — Read helpers (resolveInvitationByToken, getHouseholdInvitations, getHouseholdMembers) + mocked-Prisma unit tests
+  - [x] 04-02-PLAN.md — Read helpers (resolveInvitationByToken, getHouseholdInvitations, getHouseholdMembers) + mocked-Prisma unit tests
   - [ ] 04-03-PLAN.md — Invitation write Server Actions (createInvitation, revokeInvitation, acceptInvitation with atomic updateMany + unstable_update) + unit tests
   - [ ] 04-04-PLAN.md — Membership mutation actions (leaveHousehold, removeMember, promoteToOwner, demoteToMember) with last-OWNER guards + unit tests
   - [ ] 04-05-PLAN.md — Auth carve-out (auth.config.ts + proxy.ts) + public /join/[token] page + AcceptForm + DestructiveLeaveDialog
