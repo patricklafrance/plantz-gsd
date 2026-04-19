@@ -17,6 +17,7 @@ import {
   removeMemberSchema,
   promoteMemberSchema,
   demoteMemberSchema,
+  markNotificationsReadSchema,
 } from "./schema";
 import { generateInvitationToken, hashInvitationToken } from "@/lib/crypto";
 import { computeInitialCycleBoundaries, transitionCycle } from "./cycle";
@@ -829,5 +830,63 @@ export async function demoteToMember(data: unknown) {
   });
 
   revalidatePath(HOUSEHOLD_PATHS.settings, "page");
+  return { success: true as const };
+}
+
+/**
+ * HNTF-01 / D-20 — Mark household notifications as read for the current user.
+ *
+ * Fired from the unified NotificationBell's DropdownMenu.onOpenChange(open=true)
+ * handler via useTransition. Idempotent: re-opens after all rows are already read
+ * match zero rows in the updateMany predicate and succeed silently.
+ *
+ * Security (D-24):
+ *  - requireHouseholdAccess gates on live membership
+ *  - updateMany `where.recipientUserId = session.user.id` filter prevents
+ *    cross-user writes even if input notificationIds include others' rows
+ *  - updateMany `where.readAt = null` filter makes replays idempotent
+ *
+ * Returns { success: true as const } on success, { error } on failure.
+ * The client fires this via startTransition and does NOT branch on the
+ * return value (fire-and-forget per UI contract); revalidatePath triggers
+ * the next-nav badge recount.
+ */
+export async function markNotificationsRead(data: unknown) {
+  // Step 1: session
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+
+  // Step 2: demo guard
+  if (session.user.isDemo) {
+    return { error: "Demo mode — sign up to save your changes." };
+  }
+
+  // Step 3: Zod parse
+  const parsed = markNotificationsReadSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  // Step 4: live household access
+  try {
+    await requireHouseholdAccess(parsed.data.householdId);
+  } catch (err) {
+    if (err instanceof ForbiddenError) return { error: err.message };
+    throw err;
+  }
+
+  // Step 5: (no role check — any member may mark their own notifications read)
+
+  // Step 6: idempotent write. recipientUserId filter prevents cross-user writes;
+  // readAt: null filter makes replays zero-count. D-20 updateMany pattern.
+  await db.householdNotification.updateMany({
+    where: {
+      id: { in: parsed.data.notificationIds },
+      recipientUserId: session.user.id,
+      readAt: null,
+    },
+    data: { readAt: new Date() },
+  });
+
+  // Step 7: revalidate the dashboard so the badge recounts on next navigation.
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
   return { success: true as const };
 }

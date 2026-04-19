@@ -165,3 +165,23 @@ export const demoteMemberSchema = z.object({
   targetUserId: z.cuid(),
 });
 export type DemoteMemberInput = z.infer<typeof demoteMemberSchema>;
+
+/**
+ * HNTF-01 / D-20 — markNotificationsRead input. Mark-read is fired via
+ * useTransition from the NotificationBell dropdown onOpenChange handler;
+ * it is NOT a form submission. householdSlug is carried for revalidatePath.
+ *
+ * notificationIds is an explicit array (Claude's Discretion resolved) —
+ * grep-ability + decoupling from cycleId filter logic in the caller.
+ * The action's updateMany predicate (`recipientUserId: session.user.id,
+ * readAt: null`) makes cross-user attempts a zero-count write, not an
+ * error, and makes re-opens safe.
+ *
+ * recipientUserId is NOT accepted from input — actions.ts reads it from session.
+ */
+export const markNotificationsReadSchema = z.object({
+  householdId: z.cuid(),
+  householdSlug: z.string().min(1),
+  notificationIds: z.array(z.cuid()).min(1),
+});
+export type MarkNotificationsReadInput = z.infer<typeof markNotificationsReadSchema>;
