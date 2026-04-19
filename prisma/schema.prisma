@@ -241,7 +241,9 @@ model HouseholdNotification {
   cycleId         String?
   cycle           Cycle?    @relation(fields: [cycleId], references: [id], onDelete: SetNull)
   createdAt       DateTime  @default(now()) @db.Timestamptz(3)
+  readAt          DateTime? @db.Timestamptz(3) // D-01: nullable — unread by default; set to now() when user opens bell dropdown
 
   @@unique([cycleId, recipientUserId, type])
   @@index([recipientUserId, createdAt])
+  @@index([recipientUserId, readAt]) // D-02: serves badge-count query (count WHERE recipientUserId=:me AND readAt IS NULL AND cycleId=:currentCycleId)
 }
