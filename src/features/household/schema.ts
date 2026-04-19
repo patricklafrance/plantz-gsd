@@ -114,7 +114,8 @@ export type RevokeInvitationInput = z.infer<typeof revokeInvitationSchema>;
  * the household yet). Token is an opaque string; DO NOT parse its internal structure.
  */
 export const acceptInvitationSchema = z.object({
-  token: z.string().min(1),
+  // Raw token is always 64 hex chars (randomBytes(32).toString("hex"))
+  token: z.string().regex(/^[0-9a-f]{64}$/, "Invalid invitation token format."),
 });
 export type AcceptInvitationInput = z.infer<typeof acceptInvitationSchema>;
 
