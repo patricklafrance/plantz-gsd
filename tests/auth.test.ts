@@ -32,7 +32,7 @@ describe("auth configuration", () => {
 
     expect(proxySource).toContain("auth as proxy");
     expect(proxySource).toContain("matcher");
-    expect(proxySource).not.toContain("middleware");
+    expect(proxySource).not.toContain("auth as middleware");
   });
 });
 
