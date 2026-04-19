@@ -617,7 +617,7 @@ export async function leaveHousehold(data: unknown) {
     select: { householdId: true },
     orderBy: { isDefault: "desc" },
   });
-  await unstable_update({ user: { activeHouseholdId: remaining?.householdId ?? null } });
+  await unstable_update({ user: { activeHouseholdId: remaining?.householdId ?? undefined } });
 
   // Step 7: revalidate
   revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
@@ -717,5 +717,113 @@ export async function removeMember(data: unknown) {
 
   revalidatePath(HOUSEHOLD_PATHS.settings, "page");
   revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  return { success: true as const };
+}
+
+/**
+ * INVT-06 / D-11: Promote a MEMBER to OWNER. OWNER-gated.
+ * Idempotent: promoting an existing OWNER is a no-op (not an error).
+ */
+export async function promoteToOwner(data: unknown) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) {
+    return {
+      error:
+        "This action is disabled in demo mode. Sign up to get your own household.",
+    };
+  }
+  const parsed = promoteMemberSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  const { householdId, targetUserId } = parsed.data;
+
+  let access: Awaited<ReturnType<typeof requireHouseholdAccess>>;
+  try {
+    access = await requireHouseholdAccess(householdId);
+  } catch (err) {
+    if (err instanceof ForbiddenError) return { error: err.message };
+    throw err;
+  }
+  if (access.role !== "OWNER") {
+    return { error: "Only household owners can promote members." };
+  }
+
+  const target = await db.householdMember.findFirst({
+    where: { householdId, userId: targetUserId },
+    select: { role: true },
+  });
+  if (!target) return { error: "Member not found in this household." };
+  if (target.role === "OWNER") {
+    // Idempotent per D-11
+    return { success: true as const };
+  }
+
+  await db.householdMember.update({
+    where: { householdId_userId: { householdId, userId: targetUserId } },
+    data: { role: "OWNER" },
+  });
+
+  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
+  return { success: true as const };
+}
+
+/**
+ * INVT-06 / D-12: Demote an OWNER to MEMBER. OWNER-gated.
+ * Blocked when it would leave 0 OWNERs in the household.
+ * Idempotent on already-MEMBER target.
+ */
+export async function demoteToMember(data: unknown) {
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+  if (session.user.isDemo) {
+    return {
+      error:
+        "This action is disabled in demo mode. Sign up to get your own household.",
+    };
+  }
+  const parsed = demoteMemberSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  const { householdId, targetUserId } = parsed.data;
+
+  let access: Awaited<ReturnType<typeof requireHouseholdAccess>>;
+  try {
+    access = await requireHouseholdAccess(householdId);
+  } catch (err) {
+    if (err instanceof ForbiddenError) return { error: err.message };
+    throw err;
+  }
+  if (access.role !== "OWNER") {
+    return { error: "Only household owners can demote other owners." };
+  }
+
+  const target = await db.householdMember.findFirst({
+    where: { householdId, userId: targetUserId },
+    select: { role: true },
+  });
+  if (!target) return { error: "Member not found in this household." };
+  if (target.role === "MEMBER") {
+    // Idempotent: already a MEMBER — no-op
+    return { success: true as const };
+  }
+
+  // Last-OWNER guard: count OWNERs excluding target
+  const otherOwnerCount = await db.householdMember.count({
+    where: { householdId, role: "OWNER", userId: { not: targetUserId } },
+  });
+  if (otherOwnerCount === 0) {
+    return {
+      error:
+        "Can't demote the last owner. Promote another member to owner first.",
+    };
+  }
+
+  await db.householdMember.update({
+    where: { householdId_userId: { householdId, userId: targetUserId } },
+    data: { role: "MEMBER" },
+  });
+
+  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
   return { success: true as const };
 }

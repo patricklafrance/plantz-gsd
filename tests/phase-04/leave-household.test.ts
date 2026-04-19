@@ -159,7 +159,7 @@ describe("leaveHousehold", () => {
     expect(mockHousehold.delete).toHaveBeenCalledWith({ where: { id: HOUSEHOLD_ID } });
     expect(mockHouseholdMember.delete).not.toHaveBeenCalled();
     expect(vi.mocked(unstable_update)).toHaveBeenCalledWith({
-      user: { activeHouseholdId: null },
+      user: { activeHouseholdId: undefined },
     });
   });
 
@@ -267,7 +267,7 @@ describe("leaveHousehold", () => {
     await leaveHousehold({ householdId: HOUSEHOLD_ID, householdSlug: HOUSEHOLD_SLUG });
 
     expect(vi.mocked(unstable_update)).toHaveBeenCalledWith({
-      user: { activeHouseholdId: null },
+      user: { activeHouseholdId: undefined },
     });
   });
 });
