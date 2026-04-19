@@ -91,7 +91,7 @@ describe("acceptInvitation", () => {
       `/h/${HOUSEHOLD_SLUG}/dashboard`,
     );
     expect(vi.mocked(unstable_update)).toHaveBeenCalledWith({
-      activeHouseholdId: HOUSEHOLD_ID,
+      user: { activeHouseholdId: HOUSEHOLD_ID },
     });
     const createCall = mockHouseholdMember.create.mock.calls[0][0] as {
       data: { rotationOrder: number; role: string };
@@ -190,7 +190,7 @@ describe("acceptInvitation", () => {
     const updateOrder = vi.mocked(unstable_update).mock.invocationCallOrder[0];
     expect(txOrder).toBeLessThan(updateOrder);
     expect(vi.mocked(unstable_update)).toHaveBeenCalledWith({
-      activeHouseholdId: HOUSEHOLD_ID,
+      user: { activeHouseholdId: HOUSEHOLD_ID },
     });
   });
 });

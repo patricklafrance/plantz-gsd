@@ -492,7 +492,8 @@ export async function acceptInvitation(data: unknown) {
   }
 
   // Step 6.5: JWT refresh AFTER the transaction commits (Pitfall 16 — never inside tx)
-  await unstable_update({ activeHouseholdId: householdId });
+  // activeHouseholdId lives on session.user per auth.ts callbacks.session shape.
+  await unstable_update({ user: { activeHouseholdId: householdId } });
 
   // Step 7: revalidate dashboard (Phase 5/6 will consume the new membership immediately)
   revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
