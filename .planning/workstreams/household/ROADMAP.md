@@ -135,7 +135,12 @@ Plans:
   2. When a new cycle starts, the new assignee receives a cycle-start banner notification on their dashboard showing due-plant count and cycle end date
   3. When responsibility changes mid-cycle (skip, auto-skip, membership change), the incoming assignee receives a reassignment notification; the previous assignee's banner clears on their next page load
   4. Non-assignees see a passive household status banner identifying the current responsible member and who is next
-**Plans**: TBD
+**Plans**: 5 plans
+  - [ ] 05-01-PLAN.md — Wave 0 scaffolding: Prisma migration (readAt + index) with [BLOCKING] push + CycleEventItem type + 9 phase-05 test scaffolds
+  - [ ] 05-02-PLAN.md — Server layer: assignee gate (D-07..D-10) + getUnreadCycleEventCount + getCycleNotificationsForViewer + markNotificationsRead Server Action (D-20, D-28, D-29)
+  - [ ] 05-03-PLAN.md — Four dashboard banner components (CycleStart, Reassignment, PassiveStatus, Fallback) per D-12 + component tests
+  - [ ] 05-04-PLAN.md — Unified NotificationBell with variant prop + useTransition mark-read + BottomTabBar inline-dropdown deletion (v1 tech-debt fix; D-17..D-22)
+  - [ ] 05-05-PLAN.md — Layout + dashboard wiring (totalCount, banner region in D-13 order) + Chrome DevTools MCP human-verify checkpoint
 **Pitfall flags**:
   - Pitfall 13: `getReminderCount` joins active Cycle and gates on `assignedUserId === session.user.id`; integration test verifies non-assignee gets count = 0
   - Pitfall 14: `HouseholdNotification` (cycle events) is a separate model from `Reminder` (daily per-plant preferences); they must not be merged
@@ -178,7 +183,7 @@ Plans:
 | 2. Query + Action Layer Update | 10/13 | In progress (08/09/10 gap-closure remaining) | - |
 | 3. Rotation Engine + Availability | 4/5 | In progress (Waves 0-3 complete) | - |
 | 4. Invitation System | 0/6 | Planned | - |
-| 5. Household Notifications | 0/TBD | Not started | - |
+| 5. Household Notifications | 0/5 | Planned | - |
 | 6. Settings UI + Switcher + Dashboard | 0/TBD | Not started | - |
 | 7. Demo Mode Compatibility | 0/TBD | Not started | - |
 
