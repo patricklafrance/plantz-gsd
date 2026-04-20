@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed Phase 06 Plan 03 — HouseholdSwitcher component + tests
-last_updated: "2026-04-20T21:44:10.619Z"
+last_updated: "2026-04-20T21:56:30.795Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 41
-  completed_plans: 36
-  percent: 88
+  completed_plans: 37
+  percent: 90
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 06 (settings-ui-switcher-dashboard) — EXECUTING
-Plan: 4 of 8
+Plan: 5 of 8
 Status: Ready to execute
 Last activity: 2026-04-20
 
@@ -55,6 +55,7 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 | Phase 05-household-notifications P04 | ~6 min | 2 tasks | 3 files |
 | Phase 06 P02 | ~20 min | 3 tasks | 7 files |
 | Phase 06 P03 | ~8 min | 2 tasks | 2 files |
+| Phase 06 P04 | 5 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,9 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 - [Phase ?]: [Phase 06-03] OWNER role pill uses pre-audited bg-muted/text-foreground fallback; un-audited amber pair (UI-SPEC §Color §Role pill) deferred to Plan 07 UAT after Chrome DevTools contrast measurement
 - [Phase ?]: [Phase 06-03] HouseholdSwitcher tests mock DropdownMenu primitives inline (same idiom as notification-bell-variant.test.tsx) — no @testing-library/user-event install; no Base UI portal in jsdom
 - [Phase ?]: [Phase 06-03] buildSwitchPath detail-route regex /^[a-z0-9]{20,}$/i tolerates future cuid-generator swaps; list-route segments ('plants', 'rooms', 'settings', 'dashboard') all safely fail the 20-char minimum
+- [Phase 06-04]: CycleCountdownBanner uses Calendar/Clock icon swap + accent/destructive palette swap on daysLeft<=1 urgency threshold; role='status' for both variants (not role='alert') per D-25 steady-state architecture
+- [Phase 06-04]: Date format 'MMM d, yyyy' (full year) for CycleCountdownBanner secondary line — distinct from 'EEE MMM d' used by sibling PassiveStatusBanner / CycleStartBanner; the cycle-end date is a time-horizon cue where the year anchor is meaningful
+- [Phase 06-04]: Caller-gating contract tests use readFileSync static greps to prove the component source does not reference hasUnreadEvent/cycle_reassigned/auth/getCurrentHousehold — this is the correct way to unit-test D-25's architectural split where the render gate lives at the Plan 07 mount site, not in the component
 
 ### Pending Todos
 
@@ -113,6 +117,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-20T21:44:10.612Z
+Last session: 2026-04-20T21:55:14.108Z
 Stopped at: Completed Phase 06 Plan 03 — HouseholdSwitcher component + tests
 Next step: Execute Phase 05 Plan 02 (server layer — markNotificationsRead, getUnreadCycleEventCount, getCycleNotificationsForViewer) — unblocked by this plan's typed Prisma client and CycleEventItem export. Plan 05-03 (banners) can run in parallel once CycleEventItem is available (also done by this plan).
