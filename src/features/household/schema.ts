@@ -185,3 +185,48 @@ export const markNotificationsReadSchema = z.object({
   notificationIds: z.array(z.cuid()).min(1),
 });
 export type MarkNotificationsReadInput = z.infer<typeof markNotificationsReadSchema>;
+
+/**
+ * HSET-02 / D-06 / D-32: input for setDefaultHousehold Server Action.
+ * Any member can mark one of their households as default — no householdSlug
+ * because revalidation targets the static HOUSEHOLD_PATHS.settings and
+ * HOUSEHOLD_PATHS.dashboard constants (per D-06 rationale in CONTEXT.md).
+ */
+export const setDefaultHouseholdSchema = z.object({
+  householdId: z.cuid(),
+});
+export type SetDefaultHouseholdInput = z.infer<typeof setDefaultHouseholdSchema>;
+
+/**
+ * HSET-03 / D-13 / D-32: input for updateHouseholdSettings Server Action.
+ * OWNER-only; cycleDuration preset per ROTA-03 (1, 3, 7, 14 days only).
+ * Timezone validated as non-empty string at this layer — server action
+ * adds defensive Intl.DateTimeFormat pre-check before write (per RESEARCH
+ * §Open Question 1).
+ */
+export const updateHouseholdSettingsSchema = z.object({
+  householdId: z.cuid(),
+  householdSlug: z.string().min(1),
+  name: z.string().min(1, "Household name is required.").max(100),
+  timezone: z.string().min(1),
+  cycleDuration: z
+    .enum(["1", "3", "7", "14"], {
+      message: "Please select a valid cycle duration (1, 3, 7, or 14 days).",
+    })
+    .transform(Number),
+});
+export type UpdateHouseholdSettingsInput = z.infer<typeof updateHouseholdSettingsSchema>;
+
+/**
+ * ROTA-01 / D-11 / D-32: input for reorderRotation Server Action.
+ * OWNER-only; atomic array-replace (not pairwise swap) with set-mismatch
+ * guard in the action body. Array is cuid strings in the desired rotation
+ * order; the action's $transaction validates length and set-equality against
+ * current HouseholdMember rows before writing.
+ */
+export const reorderRotationSchema = z.object({
+  householdId: z.cuid(),
+  householdSlug: z.string().min(1),
+  orderedMemberUserIds: z.array(z.cuid()).nonempty(),
+});
+export type ReorderRotationInput = z.infer<typeof reorderRotationSchema>;
