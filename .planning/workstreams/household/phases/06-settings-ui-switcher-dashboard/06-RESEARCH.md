@@ -800,27 +800,33 @@ All claims in this research are either [VERIFIED] against the current repo state
 
 **This table is empty — all claims in this research were verified or cited. No user confirmation needed beyond what CONTEXT.md already captured.**
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> All four questions were resolved during the planning revision pass. Resolutions cited inline per item.
 
 1. **Should `updateHouseholdSettings` pre-validate timezone with `Intl.DateTimeFormat`?**
    - What we know: Zod schema accepts any `z.string().min(1)`. Native `<select>` populated from `Intl.supportedValuesOf('timeZone')` should only produce valid zones, but a direct action call could bypass the UI.
    - What's unclear: Whether to add defense-in-depth validation server-side (recommended for graceful error UX; strict validation throws inside cron if invalid).
    - Recommendation: Add `try { new Intl.DateTimeFormat("en", { timeZone: input.timezone }); } catch { return { error: "Please select a valid timezone." }; }` at step 5.5 (between authz and write). Low cost, high value.
+   - **RESOLVED:** Plan 02 Task 1 `updateHouseholdSettings` implements this defensive `Intl.DateTimeFormat` pre-check at step 5.5 per this recommendation.
 
 2. **Where exactly does the mobile switcher's "Set as default" trigger live?**
    - What we know: D-04 mentions a "secondary tap affordance" and UI-SPEC recommends a small `Star` outline icon button on the right of each non-default row.
    - What's unclear: Whether this fits the mobile touch-target guideline (min 44px) without cluttering the row.
    - Recommendation: Try the right-side star first; fall back to a long-press context menu if QA finds it cramped. Claude's discretion per D-36/D-38.
+   - **RESOLVED:** Deferred to Claude's discretion per D-36/D-38. Plan 03 executor picks the placement; Plan 07 UAT Step 1.6 validates touch target and ergonomics.
 
 3. **For the OWNER role pill, is `text-amber-800 on bg-amber-100` compliant?**
    - What we know: UI-SPEC §Color flags this as un-audited.
    - What's unclear: Actual measured contrast ratio against the WCAG 4.5:1 baseline for 12px text.
    - Recommendation: Executor runs a contrast check (Chrome DevTools MCP has an Accessibility panel). If <4.5:1, fall back to `bg-muted text-foreground` (5.4:1, already audited). Spec'd in UI-SPEC.
+   - **RESOLVED:** Plan 07 UAT Step 3 performs the Chrome DevTools contrast check; members-list (Plan 05) defaults to the audited fallback (`bg-muted text-foreground`). UAT can upgrade to amber only if ≥4.5:1 measured.
 
 4. **Is the CycleCountdown banner visible immediately after mark-read on the bell?**
    - What we know: Phase 5 D-20 uses `useTransition` + `revalidatePath` to refresh after mark-read. The dashboard re-renders and CycleCountdown's gate (`hasUnreadEvent === false`) flips to true.
    - What's unclear: Timing — is there a frame where both the banner and the (now-cleared) CycleStart/Reassignment banner render?
    - Recommendation: Planner verifies with a playwright integration test in the UI-wiring plan. If a flash is visible, wrap the dashboard banner region in a `Suspense` boundary.
+   - **RESOLVED:** Plan 07 UAT Step 10 performs the frame-flash check (Playwright frame-step integration or manual observation). If a flash is observed, a post-phase polish ticket wraps the banner region in `<Suspense>`.
 
 ## Environment Availability
 
