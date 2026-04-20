@@ -32,8 +32,9 @@ interface NotificationBellProps {
  * D-19 — Badge shows unified count (reminderCount + unreadCycleEventCount);
  *        both variants cap at 99+ (eliminates mobile '9+' regression).
  * D-20 — Mark-read on open via `useTransition` + `markNotificationsRead`
- *        Server Action. Fire-and-forget; `revalidatePath` handles the next
- *        navigation badge recount.
+ *        Server Action. Uses async transition so React 19 tracks the full
+ *        Server Action lifecycle and defers the revalidatePath router refresh
+ *        to transition priority, preventing portal teardown races.
  */
 export function NotificationBell({
   variant,
@@ -57,10 +58,16 @@ export function NotificationBell({
   const handleOpenChange = (open: boolean) => {
     if (!open) return;
     if (unreadCycleEventIds.length === 0) return;
-    startTransition(() => {
-      // Fire-and-forget: no success/error UI per UI-SPEC; the action's
-      // revalidatePath triggers the next-nav badge recount.
-      void markNotificationsRead({
+    // D-20 fix: use async startTransition (React 19 pattern) so React tracks
+    // the Server Action's full async lifecycle. The prior `void` pattern caused
+    // startTransition to complete synchronously, leaving the revalidatePath
+    // router refresh to run as a high-priority update outside the transition.
+    // That high-priority update could interrupt the Base UI portal teardown
+    // sequence and produce a "removeChild: node is not a child" DOM error.
+    // With `await`, the router refresh is deferred to transition priority,
+    // which cannot preempt React's in-flight commit work.
+    startTransition(async () => {
+      await markNotificationsRead({
         householdId,
         householdSlug,
         notificationIds: unreadCycleEventIds,
