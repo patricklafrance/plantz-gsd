@@ -22,6 +22,7 @@ This milestone retrofits the v1.0 single-user app into a multi-household, rotati
 - [ ] **Phase 5: Household Notifications** - Assignee-scoped reminder queries, cycle-start and reassignment banners
 - [ ] **Phase 6: Settings UI + Switcher + Dashboard** - Household switcher, settings page, rotation reorder, availability form, cycle banner
 - [ ] **Phase 7: Demo Mode Compatibility** - Seed demo household with members, cycle, and availability; read-only guard coverage
+- [ ] **Phase 8: Cycle Snooze** - Assignee-only action to defer the current cycle window by N days without triggering reassignment
 
 ## Phase Details
 
@@ -175,16 +176,22 @@ Plans:
   2. All household-mutating actions (invite, skip, reorder, settings changes, member removal) are silently blocked in demo mode; the existing read-only guard pattern is used without a new code path
 **Plans**: TBD
 
-## Backlog
-
-### Phase 999.1: Cycle snooze — defer assignee window without reassignment (BACKLOG)
-
-**Goal:** [Captured for future planning] Let an assignee push their cycle out by N days without triggering reassignment. Different from `skipCurrentCycle` (which reassigns to the next rotation member); snooze keeps the same assignee but defers their window. Use case: assignee is traveling/sick for a few days but doesn't want to force a full rotation skip. Must not be available in demo mode. Requires a new Server Action + Zod schema + cycle.startDate/endDate update + optimistic UI. Scope unclear: per-cycle snooze vs per-member recurring unavailability (the latter already exists as Availability). Surface likely on dashboard banner or bell dropdown. Not scoped in Phase 5-7.
-**Requirements:** TBD
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
+### Phase 8: Cycle Snooze
+**Goal**: An active assignee can defer their current cycle window by N days without triggering reassignment. Keeps the same assignee but pushes `cycle.startDate`/`endDate`. Distinct from `skipCurrentCycle` (which reassigns to the next rotation member). Use case: assignee is traveling/sick for a few days but doesn't want to force a full rotation skip.
+**Depends on**: Phase 5 (banners + bell surface where the snooze control attaches), Phase 6 (dashboard cycle banner)
+**Requirements**: TBD — likely a new `ROTA-0X` for cycle-snooze action + `HDMO-0X` extension for demo-mode block
+**Success Criteria** (what must be TRUE):
+  1. Active assignee can snooze the current cycle by N days (N validated, bounded); non-assignees receive a `ForbiddenError`
+  2. Paused cycles cannot be snoozed — returns an error
+  3. Snooze updates `cycle.startDate` and `cycle.endDate` atomically inside a `$transaction`
+  4. Demo mode silently blocks snooze using the existing read-only guard pattern (no new code path)
+  5. Dashboard surfaces the new end date immediately after snooze (revalidatePath or optimistic UI)
+  6. Per-cycle only — no recurring snooze (members use Availability for recurring unavailability)
+**Plans**: TBD
+**Pitfall flags**:
+  - Distinction from `skipCurrentCycle` must be obvious in UI copy — "Snooze" (same person, later) vs "Skip" (next person, now)
+  - `snoozeCurrentCycle` Server Action must follow the 7-step D-12 template (session → demo guard → Zod → `requireHouseholdAccess` → assignee check → `$transaction` write → revalidatePath)
+  - Surface decision: dashboard banner meta action vs bell-dropdown action — pick one, don't duplicate
 
 ## Progress
 
@@ -197,6 +204,7 @@ Plans:
 | 5. Household Notifications | 2/5 | In Progress|  |
 | 6. Settings UI + Switcher + Dashboard | 0/TBD | Not started | - |
 | 7. Demo Mode Compatibility | 0/TBD | Not started | - |
+| 8. Cycle Snooze | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-04-16 — milestone `household`*
