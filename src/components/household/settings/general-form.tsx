@@ -136,7 +136,15 @@ export function GeneralForm({
   });
 
   async function onSubmit(values: GeneralFormValues) {
-    const result = await updateHouseholdSettings(values);
+    // The zodResolver transforms cycleDuration to a number during validation
+    // — coerce back to the pre-transform string shape the Server Action
+    // schema expects on the wire (Plan 02 D-32 updateHouseholdSettingsSchema
+    // runs the enum→Number transform server-side).
+    const payload = {
+      ...values,
+      cycleDuration: String(values.cycleDuration) as "1" | "3" | "7" | "14",
+    };
+    const result = await updateHouseholdSettings(payload);
     if ("error" in result) {
       toast.error(result.error ?? "Couldn't save settings. Try again.");
       return;
