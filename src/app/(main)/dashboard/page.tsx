@@ -24,7 +24,7 @@ async function resolveActiveHouseholdSlug(userId: string, hint?: string) {
   // Live fallback — JWT hint was stale or missing.
   const membership = await db.householdMember.findFirst({
     where: { userId },
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
     select: { household: { select: { slug: true } } },
   });
   return membership?.household.slug ?? null;

@@ -26,7 +26,7 @@ export const { auth, handlers, signIn, signOut, unstable_update } = NextAuth({
         const membership = await db.householdMember.findFirst({
           where: { userId: user.id },
           select: { householdId: true },
-          orderBy: { createdAt: "asc" },
+          orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
         });
         token.activeHouseholdId = membership?.householdId ?? null;
       }
