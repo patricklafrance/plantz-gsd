@@ -142,12 +142,20 @@ export function LoginForm() {
             Sign up
           </Link>
         </p>
-        <Link
+        {/*
+          Hard navigation (<a> not <Link>) so the browser issues a fresh GET
+          to /demo. This is a Route Handler — it runs startDemoSession() server-side,
+          sets the session cookie, and issues an HTTP 302 to /dashboard.
+          Using <a> bypasses the Next.js client-side router cache, which could
+          otherwise serve a stale redirect to a previous session's household slug
+          and produce a "page not found" on first load (UAT gap: signout-demo-404).
+        */}
+        <a
           href="/demo"
           className="text-sm text-accent hover:underline"
         >
           Explore without signing up
-        </Link>
+        </a>
       </CardFooter>
     </Card>
   );
