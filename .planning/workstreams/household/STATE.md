@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed Phase 06 Plan 05b — MembersList component + rotation-reorder tests
-last_updated: "2026-04-20T22:27:50.536Z"
+last_updated: "2026-04-20T22:42:10.141Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 41
-  completed_plans: 39
-  percent: 95
+  completed_plans: 40
+  percent: 98
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 06 (settings-ui-switcher-dashboard) — EXECUTING
-Plan: 7 of 8
+Plan: 8 of 8
 Status: Ready to execute
 Last activity: 2026-04-20
 
@@ -58,6 +58,7 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 | Phase 06 P04 | 5 min | 2 tasks | 2 files |
 | Phase 06 P05 | 9 min | 3 tasks | 3 files |
 | Phase 06 P05b | 6 min | 3 tasks | 3 files |
+| Phase 06 P06-06 | 7m | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -114,6 +115,8 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 - [Phase ?]: [Phase 06-05b] MembersList AlertDialog composition uses option 2 — dialogs rendered outside DropdownMenu as open-state portals with local DialogTarget|null state; DropdownMenuItem onClick flips state. Avoids Base UI DropdownMenu close-on-click vs AlertDialogTrigger coupling.
 - [Phase ?]: [Phase 06-05b] Base UI MenuItem exposes onClick + closeOnClick (NOT onSelect) — plan's onSelect sketch rewritten to use option 2 dialog pattern
 - [Phase ?]: [Phase 06-05b] Warning #7 split lock enforced by source-grep regression test — comments in members-list.tsx rewritten to 'self-departure' wording to avoid literal 'leave household' substring
+- [Phase ?]: Plan 06-06: Raw invitation token lives in DialogPhase state only; reset on dialog close
+- [Phase ?]: Plan 06-06: Two independent Popover+Calendar pickers for availability (D-28); no third-party date-range picker
 
 ### Pending Todos
 
@@ -126,6 +129,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-20T22:27:50.531Z
+Last session: 2026-04-20T22:40:29.367Z
 Stopped at: Completed Phase 06 Plan 05b — MembersList component + rotation-reorder tests
 Next step: Execute Phase 05 Plan 02 (server layer — markNotificationsRead, getUnreadCycleEventCount, getCycleNotificationsForViewer) — unblocked by this plan's typed Prisma client and CycleEventItem export. Plan 05-03 (banners) can run in parallel once CycleEventItem is available (also done by this plan).
