@@ -58,19 +58,24 @@ Declared values (multiples of 4, matching Tailwind v4 defaults used throughout `
 
 | Token | Value | Usage in this phase |
 |-------|-------|---------------------|
-| xs | 4px (`gap-1`, `p-1`) | Icon-to-text in role pill badges; rotation-order prefix badge; arrow button icon gap |
+| xs | 4px (`gap-1`, `p-1`) | Icon-to-text in role pill badges; arrow button icon gap |
 | sm | 8px (`gap-2`, `p-2`) | Stacked button gap in dialog footers; member row up/down arrow pair gap |
 | md | 16px (`gap-4`, `p-4`) | Card section interior padding; form field stack rhythm; settings card content padding |
 | lg | 24px (`gap-6`, `space-y-6`) | Gap between stacked settings `<Card>` sections; between banner region and dashboard H1 |
 | xl | 32px (`py-8`, `gap-8`) | Outer vertical breathing on settings page (`space-y-8`) |
 | 2xl | 64px (`py-16`) | `EmptyState` vertical padding (used in no-invitations / no-members states if needed) |
-| 3xl | 80px (`pb-20`) | Mobile bottom-tab-bar breathing room on settings page — inherited from existing layout |
 
-**Touch-target exceptions (existing, preserved):**
+### Spacing Exceptions
+
+| Pattern | Value | Justification |
+|---------|-------|---------------|
+| Settings page mobile bottom padding | 80px (`pb-20`) | **Inherited: mobile BottomTabBar clearance** — matches the `pb-20 sm:pb-8` pattern established in Phase 2 and carried through all household-scoped pages; not a spacing-scale value |
+| 3-dot member row menu trigger touch expansion | 6px (`-m-1.5 p-1.5`) | **WCAG 2.2 AA tap-target expansion — not a spacing-scale value.** Expands the `Button size="icon"` hit area to 44px on mobile without affecting layout. Matches the Phase 7 v1.0 convention for icon-only buttons |
+
+**Additional touch-target exceptions (existing, preserved):**
 - `BottomTabBar` tabs and `NotificationBell`: `min-h-[44px]` — unchanged.
 - Up/down rotation arrow buttons: `size-8` icon button. Apply `min-h-[44px] min-w-[44px]` on mobile to meet WCAG 2.2 AA tap target. Use `-m-1 p-1` expansion pattern consistent with Phase 7 v1.0 convention.
 - Switcher `DropdownMenuItem` rows: `min-h-[44px]` on mobile (existing `dropdown-menu.tsx` style is acceptable; executor must verify via Chrome DevTools MCP on mobile viewport).
-- 3-dot member row menu trigger: `Button size="icon"` — apply `-m-1.5 p-1.5` expansion (Phase 7 v1.0 convention).
 
 ---
 
@@ -78,17 +83,22 @@ Declared values (multiples of 4, matching Tailwind v4 defaults used throughout `
 
 Existing Geist scale; Phase 6 adds no new sizes or weights.
 
+**Scale: 4 sizes (Path A — aligns with Phase 5 caption scale and drops 10px micro + 16px body):**
+
 | Role | Size | Tailwind | Weight | Line Height | Where it renders in this phase |
 |------|------|----------|--------|-------------|-------------------------------|
-| Micro | 10px | `text-[10px]` | 600 (`font-semibold`) | 1 | Badge count numbers (rotation-order prefix badge) |
-| Caption | 12px | `text-xs` | 400–500 | 1.4 | Member metadata ("Owner of 3 days", creation date on invite row, cycle-end meta line in countdown banner) |
-| Body-sm | 14px | `text-sm` | 400 (`font-normal`) | 1.5 | Form helper text ("Changes take effect at the next cycle boundary"), invite-list creator+date, availability list row text, member row secondary line |
+| Caption | 12px | `text-xs` | 400–600 | 1.4 | Member metadata ("Owner for 3 days", creation date on invite row, cycle-end meta line in countdown banner); rotation-order prefix badge number (`font-semibold`) |
+| Body-sm | 14px | `text-sm` | 400 (`font-normal`) | 1.5 | Form helper text ("Changes take effect at the next cycle boundary"), invite-list creator+date, availability list row text, member row secondary line, dialog/drawer description text |
 | Body-sm emphasis | 14px | `text-sm` | 600 (`font-semibold`) | 1.5 | Assignee name in cycle-countdown banner; member name in roster; household name in switcher rows |
-| Body | 16px | `text-base` | 400 (`font-normal`) | 1.5 | Form field values, textarea notes, dialog description text |
 | Heading | 20px | `text-xl` | 600 (`font-semibold`) | ~1.2 | Settings card section titles (`<CardTitle>`); dialog/drawer titles (invite dialog, alert-dialogs) |
 | Display | 24px | `text-2xl` | 600 (`font-semibold`) | ~1.2 | Settings page `<h1>` title ("Settings") — carries existing `tabIndex={-1}` convention |
 
 **Weights (2 total):** 400 (regular) + 600 (semibold). No italic, no medium, no 500 weight introduced.
+
+**Size collapse rationale (Path A vs Path B):**
+- 10px (rotation-order prefix badge) → merged to 12px `text-xs` with `font-semibold` treatment — badge numbers are already small; 12px is the Phase 5 caption precedent for similarly compact data.
+- 16px (dialog description text) → merged to 14px `text-sm` — dialog descriptions are secondary prose rendered below a 20px heading; 14px is the established Phase 2/04/05 body-sm baseline for settings-adjacent text.
+- This path preserves Phase 5's 12px `text-xs` caption contract for banner meta lines and dropdown secondary lines. Changing to Path B (14/16/20/24) would require overriding Phase 5's explicit `text-xs` on banner meta lines, which is more disruptive.
 
 ---
 
@@ -125,6 +135,12 @@ Confirmed from `src/app/globals.css` `:root` — WCAG AA audited (v1.0 Phase 7 p
 - **Delete availability confirm button** (`AlertDialog` action) — `variant="destructive"`
 - **Cycle-countdown banner urgency variant (N ≤ 1 day)** — `bg-destructive/10 border-destructive/30 text-destructive` for the icon and meta line; body text stays `text-foreground`
 
+### Role pill color — OWNER pill contrast requirement
+
+Role pill spec: `OWNER` = `bg-amber-100 text-amber-800 text-xs px-1.5 py-0.5 rounded`; `MEMBER` = `bg-muted text-muted-foreground text-xs px-1.5 py-0.5 rounded`.
+
+**The `text-amber-800 on bg-amber-100` pairing is NOT in the project's verified OKLCH token set and has not been WCAG-audited.** Executor MUST verify contrast before shipping. Minimum required: 4.5:1 (WCAG 2.1 AA for normal text at 12px). If the measured ratio is below 4.5:1, use the fallback: `bg-muted text-foreground` for the OWNER pill. The `MEMBER` pill already uses `bg-muted text-muted-foreground` (5.4:1, verified in globals.css) — this pair is safe without verification.
+
 ---
 
 ## Component Inventory
@@ -156,6 +172,8 @@ Confirmed from `src/app/globals.css` `:root` — WCAG AA audited (v1.0 Phase 7 p
 
 ## Visual Contract: Household Switcher
 
+**Primary focal point:** Current household name in the trigger (bold wordmark in desktop header; disabled header row in mobile UserMenu).
+
 ### Desktop variant (top-nav logo slot)
 
 The current static `<Link>` in `layout.tsx:143-146` containing `<Leaf>` icon + "Plant Minder" wordmark becomes a `DropdownMenu` trigger. The leaf icon and wordmark remain visually unchanged in the trigger.
@@ -175,7 +193,7 @@ The current static `<Link>` in `layout.tsx:143-146` containing `<Leaf>` icon + "
 
 ```
 ┌─────────────────────────────────────┐
-│ My Households                       │  ← DropdownMenuLabel (caption, muted)
+│ My Households                       │  ← DropdownMenuLabel (text-xs, muted)
 ├─────────────────────────────────────┤
 │ ★ [Current Household] · OWNER   ✓  │  ← disabled (active), filled star if default
 │   [Other Household]   · MEMBER      │  ← navigable
@@ -187,7 +205,7 @@ The current static `<Link>` in `layout.tsx:143-146` containing `<Leaf>` icon + "
 └─────────────────────────────────────┘
 ```
 
-Each household row displays: `{name}` (body-sm semibold) + role pill (`OWNER` = amber `bg-amber-100 text-amber-800`; `MEMBER` = neutral `bg-muted text-muted-foreground`) as `text-xs` badge. Default indicator: filled `<Star className="h-3.5 w-3.5 fill-accent text-accent">` inline after the name.
+Each household row displays: `{name}` (`text-sm font-semibold`) + role pill (`OWNER` = amber per Color section above; `MEMBER` = neutral `bg-muted text-muted-foreground`) as `text-xs` badge. Default indicator: filled `<Star className="h-3.5 w-3.5 fill-accent text-accent">` inline after the name.
 
 "Set as default" is a sub-item (shown only for the non-active, non-default household the user is hovering/focused on). Fires `setDefaultHousehold` via `useTransition`; shows `sonner` toast on success ("Default household updated.").
 
@@ -198,9 +216,9 @@ Active/current household row: `disabled` prop on `DropdownMenuItem` — renders 
 Row order within `UserMenu` (D-04):
 
 ```
-[current household name] (disabled header, body-sm semibold text-foreground)
-[Other Household 1] → navigates (body-sm)
-[Other Household 2] → navigates (body-sm)
+[current household name] (disabled header, text-sm font-semibold text-foreground)
+[Other Household 1] → navigates (text-sm)
+[Other Household 2] → navigates (text-sm)
 ──────────────────────── separator
 Household settings → /h/{slug}/settings
 Account preferences → ...
@@ -235,6 +253,8 @@ Implemented as a utility in `src/components/household/household-switcher.tsx`. `
 
 ## Visual Contract: Settings Page
 
+**Primary focal point:** Settings H1 + first Card section title (the `<h1>` "Settings" at 24px and the first `<CardTitle>` "General" at 20px set the visual hierarchy for the page).
+
 ### Page shell
 
 ```tsx
@@ -247,7 +267,7 @@ Implemented as a utility in `src/components/household/household-switcher.tsx`. `
 </main>
 ```
 
-`max-w-2xl` (672px) — settings pages are form-heavy; wide viewport would make fields feel disconnected. `pb-20 sm:pb-8` preserves BottomTabBar breathing room on mobile.
+`max-w-2xl` (672px) — settings pages are form-heavy; wide viewport would make fields feel disconnected. `pb-20 sm:pb-8` preserves BottomTabBar breathing room on mobile (see Spacing Exceptions).
 
 ### Card section pattern (shared shell)
 
@@ -295,11 +315,11 @@ Member list sorted by `rotationOrder asc`. Card description: `"Rotation order de
 └─────────────────────────────────────────────────────────┘
 ```
 
-- Rotation-order number `[N]`: `text-xs text-muted-foreground` in a `w-6` fixed column.
+- Rotation-order number `[N]`: `text-xs text-muted-foreground font-semibold` in a `w-6` fixed column. (12px `text-xs` — merged from former 10px micro; semibold treatment retained for legibility in the compact prefix badge position.)
 - Name: `text-sm font-semibold` — `user.name ?? user.email`.
-- Role pill: `OWNER` = `bg-amber-100 text-amber-800 text-xs px-1.5 py-0.5 rounded`; `MEMBER` = `bg-muted text-muted-foreground text-xs px-1.5 py-0.5 rounded`. Both inline after name with `gap-2`.
+- Role pill: `OWNER` = `bg-amber-100 text-amber-800 text-xs px-1.5 py-0.5 rounded` (contrast must be verified — see Color section); `MEMBER` = `bg-muted text-muted-foreground text-xs px-1.5 py-0.5 rounded`. Both inline after name with `gap-2`.
 - Up/down arrows (OWNER view only): Lucide `ArrowUp` / `ArrowDown` at `h-4 w-4` inside `<Button variant="ghost" size="icon">`. Top row `ArrowUp` is `disabled`. Bottom row `ArrowDown` is `disabled`. Clicking fires optimistic reorder (D-12): local array updates immediately via `useTransition` + `reorderRotation` Server Action. On error: revert + `toast.error("Couldn't update rotation order. Try again.")`.
-- 3-dot trigger (OWNER view on all rows, or own row for any member): `<Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>`. `aria-label="Member options for {name}"`.
+- 3-dot trigger (OWNER view on all rows, or own row for any member): `<Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>`. `aria-label="Member options for {name}"`. Apply `-m-1.5 p-1.5` touch expansion on mobile (see Spacing Exceptions).
 
 **3-dot DropdownMenu items per D-18:**
 
@@ -335,6 +355,7 @@ Phase A (pre-submit):
 ```
 Title: "Invite people to {householdName}"
 Body:  "Anyone with the link can join this household. You can revoke it anytime."
+       (text-sm text-muted-foreground)
 CTA:   "Create invite link" [Button variant="default"]
 ```
 
@@ -349,6 +370,7 @@ Close: "Done" [Button variant="default"]
 Phase C (post-error):
 ```
 Body:  "Couldn't create an invite link. Try again."
+       (text-sm text-muted-foreground)
 CTA:   "Retry" [Button variant="default"]
 ```
 
@@ -421,7 +443,7 @@ Each row:
   - Title: `"Delete this availability period?"`
   - Body: `"If this was covering an upcoming turn, the rotation may reassign that cycle."`
   - Cancel: `"Keep it"` — `variant="outline"`
-  - Confirm: `"Delete"` — `variant="destructive"`
+  - Confirm: `"Delete period"` — `variant="destructive"`
 - Empty state: `<p className="text-sm text-muted-foreground">No upcoming availability periods.</p>`
 
 ### Section 5: Danger Zone
@@ -450,6 +472,8 @@ Red-tinted card to signal risk:
 ---
 
 ## Visual Contract: Cycle-Countdown Banner
+
+**Primary focal point:** Assignee name + days-left number (both rendered `font-semibold` in the banner body, drawing the eye to the two most actionable data points — "who" and "how long").
 
 ### Render condition (D-25 mutual exclusivity)
 
@@ -602,8 +626,8 @@ All action toasts in Phase 6 use `sonner` (`src/components/ui/sonner.tsx`). No o
 
 | Surface | Copy |
 |---------|------|
-| Active invitations — empty | `"No active invitations yet."` (body-sm muted, inline) |
-| Upcoming availability — empty | `"No upcoming availability periods."` (body-sm muted, inline) |
+| Active invitations — empty | `"No active invitations yet."` (text-sm muted, inline) |
+| Upcoming availability — empty | `"No upcoming availability periods."` (text-sm muted, inline) |
 | Members list — impossible (always ≥1 member) | n/a |
 
 ### Error states
@@ -627,7 +651,7 @@ All action toasts in Phase 6 use `sonner` (`src/components/ui/sonner.tsx`). No o
 |--------|-------|------|--------|---------|
 | Remove member | `"Remove {name} from {householdName}?"` | `"They'll lose access to the household and its plants. This can't be undone."` | `"Keep member"` | `"Remove member"` — destructive |
 | Revoke invite | `"Revoke this invite link?"` | `"Anyone with this link won't be able to join. You can create a new one anytime."` | `"Keep link"` | `"Revoke link"` — destructive |
-| Delete availability | `"Delete this availability period?"` | `"If this was covering an upcoming turn, the rotation may reassign that cycle."` | `"Keep it"` | `"Delete"` — destructive |
+| Delete availability | `"Delete this availability period?"` | `"If this was covering an upcoming turn, the rotation may reassign that cycle."` | `"Keep it"` | `"Delete period"` — destructive |
 | Leave household (normal — other members or multiple owners) | `"Leave {householdName}?"` | `"You'll lose access to this household and its plants. You can rejoin using an invite link if the owner sends one."` | `"Stay"` | `"Leave household"` — destructive |
 | Leave + delete (sole-OWNER, sole member) | Handled by existing `<DestructiveLeaveDialog>` (Phase 4) — copy unchanged |
 
@@ -672,7 +696,7 @@ All action toasts in Phase 6 use `sonner` (`src/components/ui/sonner.tsx`). No o
 | AlertDialog destructive actions | Focus lands on **Cancel** button when opened (shadcn Dialog default) — safety-first for destructive actions. |
 | Toast messages | `sonner` renders with `role="status"` by default — acceptable per WCAG 4.1.3. |
 | Icon-only elements | All lucide icons in new surfaces have `aria-hidden="true"`. Every interactive element has visible text label (no icon-only buttons without `aria-label`). |
-| Color contrast | All new token pairings are existing tokens already verified WCAG AA. Role pill — `text-amber-800 on bg-amber-100` requires executor to verify: minimum 4.5:1. If it fails, fall back to `bg-muted text-foreground` for OWNER pill. |
+| Color contrast | All new token pairings are existing tokens already verified WCAG AA. For the OWNER role pill (`text-amber-800 on bg-amber-100`): executor MUST verify contrast ratio before shipping. Minimum 4.5:1 required. If < 4.5:1, use fallback `bg-muted text-foreground`. See Color section for full specification. |
 | Touch targets | All new interactive elements: `min-h-[44px]` on mobile-critical paths (up/down arrows, 3-dot trigger, switcher rows) — verified via Chrome DevTools MCP after implementation. |
 | Reduced motion | No new CSS animations introduced. Optimistic reorder uses state-driven array swap (no CSS transition on list items) — safe for `prefers-reduced-motion`. |
 
@@ -692,7 +716,7 @@ No new breakpoints. Uses existing Tailwind v4 `sm:` (640px) convention:
 | AlertDialog confirms | `Drawer` on mobile | `Dialog` on desktop |
 | Member row up/down arrows | `min-h-[44px] min-w-[44px]` touch area | Standard `size-8` icon button |
 | CycleCountdownBanner | Same width as other banners; text wraps naturally | Same |
-| Settings page bottom padding | `pb-20` (BottomTabBar clearance) | `pb-8` |
+| Settings page bottom padding | `pb-20` (BottomTabBar clearance — see Spacing Exceptions) | `pb-8` |
 
 ---
 
@@ -733,11 +757,11 @@ Explicitly deferred or out of scope (do not implement):
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: All CTAs, empty states, error states, and destructive confirmations specified verbatim; tone rules explicit; server action error strings defined; no exclamation marks; no emoji
-- [ ] Dimension 2 Visuals: Three connected surfaces fully contracted with component choices, slot layout, and interaction flow; no new shadcn installs; all Phase 4/5 existing components reused correctly
-- [ ] Dimension 3 Color: 60/30/10 respected; accent reserved-for list exhaustive and explicit; destructive used only on danger-zone and confirm actions; role pill amber verified against WCAG AA; no new tokens
-- [ ] Dimension 4 Typography: 6 size levels declared (10/12/14/16/20/24px), 2 weights (400/600), Geist confirmed; display 24px on H1 only; no weight drift
-- [ ] Dimension 5 Spacing: All values multiples of 4; touch-target exceptions documented with expansion pattern; `pb-20` mobile clearance for BottomTabBar on settings page
+- [ ] Dimension 1 Copywriting: All CTAs, empty states, error states, and destructive confirmations specified verbatim; tone rules explicit; server action error strings defined; no exclamation marks; no emoji; availability delete confirm reads "Delete period"; all three destructive confirm labels are verb+noun format ("Remove member", "Revoke link", "Delete period")
+- [ ] Dimension 2 Visuals: Three connected surfaces fully contracted with component choices, slot layout, and interaction flow; each surface has an explicit "Primary focal point" declaration; no new shadcn installs; all Phase 4/5 existing components reused correctly
+- [ ] Dimension 3 Color: 60/30/10 respected; accent reserved-for list exhaustive and explicit; destructive used only on danger-zone and confirm actions; OWNER role pill amber contrast explicitly delegated to executor with fail-safe fallback (`bg-muted text-foreground`); no new tokens
+- [ ] Dimension 4 Typography: 4 size levels declared (12/14/20/24px, Path A), 2 weights (400/600), Geist confirmed; 10px micro dropped (merged to 12px `text-xs font-semibold` for rotation-order badge); 16px body dropped (merged to 14px `text-sm` for dialog descriptions and all prose); display 24px on H1 only; no weight drift; aligns with Phase 5's `text-xs` caption contract
+- [ ] Dimension 5 Spacing: All standard scale values are multiples of 4; 80px (`pb-20`) mobile clearance and 6px (`-m-1.5 p-1.5`) touch-expansion pattern relocated to Exceptions subsection with explicit justification headers; touch-target exceptions documented
 - [ ] Dimension 6 Registry Safety: No third-party registries; no new component installs; gate status timestamped
 
 **Approval:** pending
@@ -751,12 +775,13 @@ Explicitly deferred or out of scope (do not implement):
 | CONTEXT.md D-01..D-45 | All scope boundaries, component choices, action contracts, render conditions, route preservation, banner insertion, availability form binding, test strategy (reference only) |
 | REQUIREMENTS.md HSET-01/02/03, ROTA-01 | Success criteria framing all three surfaces + rotation reorder |
 | ROADMAP.md §Phase 6 pitfall flags | `command`/`sheet` not-required confirmation; no DnD library; no third-party date picker; all links under `/h/[slug]/` |
-| Phase 2 UI-SPEC | Design tokens (accent, destructive, spacing, typography, font) — zero drift |
-| Phase 4 UI-SPEC | `DestructiveLeaveDialog` usage pattern; `ResponsiveDialog` for invite dialog; destructive copy rules |
-| Phase 5 UI-SPEC | Banner shell class contract (`bg-accent/10 border-accent/30`); `role="status"` on banners; mark-read interaction; banner render-order invariant |
+| Phase 2 UI-SPEC | Design tokens (accent, destructive, spacing, font) — zero drift; typography 14/16/20/24 baseline; 16px body used on error/not-found pages (out of Phase 6 scope) |
+| Phase 4 UI-SPEC | `DestructiveLeaveDialog` usage pattern; `ResponsiveDialog` for invite dialog; destructive copy rules; typography 14/16/20 on join page |
+| Phase 5 UI-SPEC | Banner shell class contract (`bg-accent/10 border-accent/30`); `role="status"` on banners; mark-read interaction; banner render-order invariant; **12px `text-xs` caption scale** (binding for Path A collapse) |
 | v1.0 Phase 4 (dashboard) UI-SPEC | Dashboard layout context for `CycleCountdownBanner` integration; banner slot position relative to existing sections |
 | `src/components/ui/` directory scan | Confirmed present/missing components (no `command.tsx`, no `sheet.tsx`) |
 | `src/components/household/` directory scan | Confirmed four Phase 5 banners present; `cycle-countdown-banner.tsx` not yet created |
 | `src/app/globals.css` | OKLCH tokens, WCAG AA audit, `--font-sans: Geist`, `--accent: oklch(0.50 0.11 155)` |
 | `components.json` | shadcn preset `base-nova`, `baseColor: neutral`, `iconLibrary: lucide`, `registries: {}` empty |
 | User input | None — all design-contract questions answered by upstream CONTEXT.md (assumptions mode, user confirmed 2026-04-20) |
+| Checker revision (2026-04-20) | Typography collapsed to 4 sizes (Path A: 12/14/20/24); availability delete confirm changed to "Delete period"; primary focal point declared per surface; OWNER pill WCAG note rewritten with explicit fail-safe; spacing exceptions relocated to Exceptions subsection |
