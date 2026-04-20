@@ -175,6 +175,17 @@ Plans:
   2. All household-mutating actions (invite, skip, reorder, settings changes, member removal) are silently blocked in demo mode; the existing read-only guard pattern is used without a new code path
 **Plans**: TBD
 
+## Backlog
+
+### Phase 999.1: Cycle snooze — defer assignee window without reassignment (BACKLOG)
+
+**Goal:** [Captured for future planning] Let an assignee push their cycle out by N days without triggering reassignment. Different from `skipCurrentCycle` (which reassigns to the next rotation member); snooze keeps the same assignee but defers their window. Use case: assignee is traveling/sick for a few days but doesn't want to force a full rotation skip. Must not be available in demo mode. Requires a new Server Action + Zod schema + cycle.startDate/endDate update + optimistic UI. Scope unclear: per-cycle snooze vs per-member recurring unavailability (the latter already exists as Availability). Surface likely on dashboard banner or bell dropdown. Not scoped in Phase 5-7.
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
+
 ## Progress
 
 | Phase | Plans Complete | Status | Completed |
