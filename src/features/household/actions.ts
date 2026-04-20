@@ -18,6 +18,9 @@ import {
   promoteMemberSchema,
   demoteMemberSchema,
   markNotificationsReadSchema,
+  setDefaultHouseholdSchema,
+  updateHouseholdSettingsSchema,
+  reorderRotationSchema,
 } from "./schema";
 import { generateInvitationToken, hashInvitationToken } from "@/lib/crypto";
 import { computeInitialCycleBoundaries, transitionCycle } from "./cycle";
@@ -887,6 +890,229 @@ export async function markNotificationsRead(data: unknown) {
   });
 
   // Step 7: revalidate the dashboard so the badge recounts on next navigation.
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  return { success: true as const };
+}
+
+/**
+ * HSET-02 / D-06 / D-31: mark one of the caller's households as their default.
+ * Any member (OWNER or MEMBER) may call this — no role check. The $transaction
+ * atomically clears any prior `isDefault=true` row for this user before setting
+ * the target, ensuring the single-default invariant holds.
+ *
+ * NOTE: no `unstable_update` call — per D-06 the JWT does not carry `isDefault`.
+ * The auth resolver (auth.ts JWT callback) re-reads the default on each sign-in
+ * via `orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }]` (D-07). A live
+ * requireHouseholdAccess hit inside step 4 closes T-06-02-03 (IDOR).
+ */
+export async function setDefaultHousehold(data: unknown) {
+  // Step 1: session
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+
+  // Step 2: demo-mode guard
+  if (session.user.isDemo) {
+    return {
+      error:
+        "This action is disabled in demo mode. Sign up to get your own household.",
+    };
+  }
+
+  // Step 3: Zod parse
+  const parsed = setDefaultHouseholdSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  // Step 4: live household access (authoritative IDOR guard — T-06-02-03)
+  try {
+    await requireHouseholdAccess(parsed.data.householdId);
+  } catch (err) {
+    if (err instanceof ForbiddenError) return { error: err.message };
+    throw err;
+  }
+
+  // Step 5: (no role check — any member may pick their default per D-06)
+
+  // Step 6: atomic default-switch. Clearing all `isDefault=true` rows for THIS
+  // user first (not just on other households) and then setting the target is
+  // idempotent when the target was already default. The `userId: session.user.id`
+  // predicate on both writes double-constrains against cross-user tampering
+  // (T-06-02-09).
+  const userId = session.user.id;
+  await db.$transaction(async (tx) => {
+    await tx.householdMember.updateMany({
+      where: { userId, isDefault: true },
+      data: { isDefault: false },
+    });
+    await tx.householdMember.update({
+      where: {
+        householdId_userId: {
+          userId,
+          householdId: parsed.data.householdId,
+        },
+      },
+      data: { isDefault: true },
+    });
+  });
+
+  // Step 7: revalidate switcher (settings) + legacy-redirect target (dashboard).
+  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  return { success: true as const };
+}
+
+/**
+ * HSET-03 / D-13 / D-31: OWNER-only update of household general settings
+ * (name / timezone / cycleDuration). Writes ONLY the Household row — MUST NOT
+ * touch the active Cycle row (ROTA-07 / Pitfall 3). `transitionCycle` reads
+ * `household.cycleDuration` fresh at each boundary, so the new duration takes
+ * effect at the next cycle boundary naturally.
+ *
+ * Step 5.5 adds a defensive `Intl.DateTimeFormat` pre-check on the timezone
+ * string (T-06-02-05 mitigation per RESEARCH §Open Question 1) — Prisma would
+ * accept any string, but a malformed zone would later crash the cron's TZDate
+ * math for this household.
+ */
+export async function updateHouseholdSettings(data: unknown) {
+  // Step 1: session
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+
+  // Step 2: demo-mode guard
+  if (session.user.isDemo) {
+    return {
+      error:
+        "This action is disabled in demo mode. Sign up to get your own household.",
+    };
+  }
+
+  // Step 3: Zod parse (cycleDuration enum transforms string→Number here)
+  const parsed = updateHouseholdSettingsSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  // Step 4: live household access
+  let access: Awaited<ReturnType<typeof requireHouseholdAccess>>;
+  try {
+    access = await requireHouseholdAccess(parsed.data.householdId);
+  } catch (err) {
+    if (err instanceof ForbiddenError) return { error: err.message };
+    throw err;
+  }
+
+  // Step 5: role authz (OWNER only — T-06-02-01)
+  if (access.role !== "OWNER") {
+    return { error: "Only household owners can edit settings." };
+  }
+
+  // Step 5.5: defensive timezone pre-check (T-06-02-05). Intl.DateTimeFormat
+  // throws RangeError for unknown IANA zones; map to a user-friendly error
+  // before the Prisma write.
+  try {
+    new Intl.DateTimeFormat("en", { timeZone: parsed.data.timezone });
+  } catch {
+    return { error: "Please select a valid timezone." };
+  }
+
+  // Step 6: write — Household row only. NO db.cycle.* call (Pitfall 3).
+  await db.household.update({
+    where: { id: parsed.data.householdId },
+    data: {
+      name: parsed.data.name,
+      timezone: parsed.data.timezone,
+      cycleDuration: parsed.data.cycleDuration,
+    },
+  });
+
+  // Step 7: revalidate settings + dashboard. Name change will flow through the
+  // switcher on the dashboard via its own Server Component re-render.
+  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
+  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  return { success: true as const };
+}
+
+/**
+ * ROTA-01 / D-11 / D-31: OWNER-only atomic array-replace of rotation order.
+ * Input is the full desired order of userIds; the action writes `rotationOrder`
+ * as the index in that array.
+ *
+ * Stale-client-state guard (T-06-02-04): inside the $transaction, `findMany`
+ * loads the authoritative member set and asserts length + set equality against
+ * the input. If a member was added or removed between the client render and
+ * this call, the check throws `MEMBERS_CHANGED`, the transaction rolls back,
+ * and the action returns a user-friendly error so the UI can reload.
+ *
+ * The `MEMBERS_CHANGED` branch is OUTSIDE the $transaction on purpose — the
+ * throw rolls back the tx before the error string maps to the user response.
+ */
+export async function reorderRotation(data: unknown) {
+  // Step 1: session
+  const session = await auth();
+  if (!session?.user?.id) return { error: "Not authenticated." };
+
+  // Step 2: demo-mode guard
+  if (session.user.isDemo) {
+    return {
+      error:
+        "This action is disabled in demo mode. Sign up to get your own household.",
+    };
+  }
+
+  // Step 3: Zod parse (orderedMemberUserIds nonempty + cuid list)
+  const parsed = reorderRotationSchema.safeParse(data);
+  if (!parsed.success) return { error: "Invalid input." };
+
+  // Step 4: live household access
+  let access: Awaited<ReturnType<typeof requireHouseholdAccess>>;
+  try {
+    access = await requireHouseholdAccess(parsed.data.householdId);
+  } catch (err) {
+    if (err instanceof ForbiddenError) return { error: err.message };
+    throw err;
+  }
+
+  // Step 5: role authz (OWNER only — T-06-02-02)
+  if (access.role !== "OWNER") {
+    return { error: "Only household owners can reorder the rotation." };
+  }
+
+  // Step 6: atomic set-validated reorder
+  try {
+    await db.$transaction(async (tx) => {
+      const current = await tx.householdMember.findMany({
+        where: { householdId: parsed.data.householdId },
+        select: { userId: true },
+      });
+
+      const currentSet = new Set(current.map((r) => r.userId));
+      const inputSet = new Set(parsed.data.orderedMemberUserIds);
+      if (
+        current.length !== parsed.data.orderedMemberUserIds.length ||
+        currentSet.size !== inputSet.size ||
+        ![...currentSet].every((id) => inputSet.has(id))
+      ) {
+        throw new Error("MEMBERS_CHANGED");
+      }
+
+      for (let i = 0; i < parsed.data.orderedMemberUserIds.length; i++) {
+        await tx.householdMember.update({
+          where: {
+            householdId_userId: {
+              userId: parsed.data.orderedMemberUserIds[i],
+              householdId: parsed.data.householdId,
+            },
+          },
+          data: { rotationOrder: i },
+        });
+      }
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message === "MEMBERS_CHANGED") {
+      return { error: "Member list changed — reload and try again." };
+    }
+    throw err;
+  }
+
+  // Step 7: revalidate settings (members list) + dashboard (next-assignee preview).
+  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
   revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
   return { success: true as const };
 }
