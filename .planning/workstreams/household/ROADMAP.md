@@ -160,8 +160,8 @@ Plans:
   4. Owner can reorder the rotation member list using up/down controls; the new order is reflected in the rotation immediately
   5. Dashboard shows a cycle banner with current assignee identity, countdown to cycle end, and next-assignee preview
 **Plans**: 8 plans
-  - [ ] 06-01-PLAN.md — Wave 0 test scaffolds (14 files + fixtures) + 3 Zod schemas (D-32)
-  - [ ] 06-02-PLAN.md — Three new Server Actions (setDefaultHousehold, updateHouseholdSettings, reorderRotation per D-06/D-11/D-13) + auth.ts/legacy dashboard sort change (D-07/D-08)
+  - [x] 06-01-PLAN.md — Wave 0 test scaffolds (14 files + fixtures) + 3 Zod schemas (D-32)
+  - [x] 06-02-PLAN.md — Three new Server Actions (setDefaultHousehold, updateHouseholdSettings, reorderRotation per D-06/D-11/D-13) + auth.ts/legacy dashboard sort change (D-07/D-08)
   - [ ] 06-03-PLAN.md — HouseholdSwitcher component (desktop + mobile variants) + buildSwitchPath utility (D-03/D-04/D-05/D-09)
   - [ ] 06-04-PLAN.md — CycleCountdownBanner component (fifth dashboard banner per D-23/D-25)
   - [ ] 06-05-PLAN.md — Plan 05a: Settings sub-components — GeneralForm + DangerZoneCard (D-13/D-14/D-15/D-16/D-17/D-19). Split from original Plan 05 per checker warning #4.

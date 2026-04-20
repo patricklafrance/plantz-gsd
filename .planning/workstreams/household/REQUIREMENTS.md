@@ -29,7 +29,7 @@ Requirements for milestone `household`. Each maps to a roadmap phase.
 
 ### Rotation engine & cron transitions
 
-- [ ] **ROTA-01**: Household has an ordered rotation list of members; owner can reorder via up/down controls (v1: HTML5 drag-and-drop or numbered arrows, not a DnD library)
+- [x] **ROTA-01**: Household has an ordered rotation list of members; owner can reorder via up/down controls (v1: HTML5 drag-and-drop or numbered arrows, not a DnD library)
 - [ ] **ROTA-02**: At any time, exactly one member is the active assignee per household — computed deterministically from rotation start date, cycle duration, and member order (anchor-date formula: `floor(daysSinceAnchor / cycleDuration) % memberCount`)
 - [ ] **ROTA-03**: Cycle duration is configurable per household (preset options: 1, 3, 7, 14 days); duration changes take effect at the next cycle boundary, not mid-cycle
 - [x] **ROTA-04**: A `/api/cron/advance-cycles` endpoint advances all households' cycles at cron trigger; protected by `CRON_SECRET` bearer-header auth, idempotent, returns JSON summary of transitions
@@ -60,8 +60,8 @@ Requirements for milestone `household`. Each maps to a roadmap phase.
 ### Household settings & switcher UI
 
 - [ ] **HSET-01**: Authenticated routes live under `/h/<householdSlug>/...`; the layout provides a household switcher in the top nav that navigates the user between their households while preserving the current route suffix
-- [ ] **HSET-02**: User can mark any household they belong to as "default" — it becomes the active household destination on login
-- [ ] **HSET-03**: Owner can access a household settings page: edit name/timezone/cycle duration, view and reorder member list, generate/revoke invitation links, remove members, transfer ownership
+- [x] **HSET-02**: User can mark any household they belong to as "default" — it becomes the active household destination on login
+- [x] **HSET-03**: Owner can access a household settings page: edit name/timezone/cycle duration, view and reorder member list, generate/revoke invitation links, remove members, transfer ownership
 
 ### Demo mode compatibility
 
@@ -123,7 +123,7 @@ Tracked but not in this roadmap.
 | INVT-04 | Phase 4 | Pending |
 | INVT-05 | Phase 4 | Pending |
 | INVT-06 | Phase 4 | Pending |
-| ROTA-01 | Phase 6 | Pending |
+| ROTA-01 | Phase 6 | Complete |
 | ROTA-02 | Phase 3 | Pending |
 | ROTA-03 | Phase 3 | Pending |
 | ROTA-04 | Phase 3 | Complete |
@@ -142,8 +142,8 @@ Tracked but not in this roadmap.
 | AUDT-01 | Phase 1 | Pending |
 | AUDT-02 | Phase 1 | Pending |
 | HSET-01 | Phase 6 | Pending |
-| HSET-02 | Phase 6 | Pending |
-| HSET-03 | Phase 6 | Pending |
+| HSET-02 | Phase 6 | Complete |
+| HSET-03 | Phase 6 | Complete |
 | HDMO-01 | Phase 7 | Pending |
 | HDMO-02 | Phase 7 | Pending |
 

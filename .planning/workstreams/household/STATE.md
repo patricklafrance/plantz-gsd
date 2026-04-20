@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 6 UI-SPEC approved
-last_updated: "2026-04-20T20:50:12.502Z"
-last_activity: 2026-04-20 -- Phase 06 execution started
+last_updated: "2026-04-20T21:32:29.079Z"
+last_activity: 2026-04-20
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 41
-  completed_plans: 33
-  percent: 80
+  completed_plans: 35
+  percent: 85
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 06 (settings-ui-switcher-dashboard) — EXECUTING
-Plan: 1 of 8
-Status: Executing Phase 06
-Last activity: 2026-04-20 -- Phase 06 execution started
+Plan: 2 of 8
+Status: Ready to execute
+Last activity: 2026-04-20
 
 Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 
@@ -53,6 +53,7 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 | Phase 5 P2 | 7 min | 3 tasks | 8 files |
 | Phase 05 P03 | ~7 min | 2 tasks | 9 files |
 | Phase 05-household-notifications P04 | ~6 min | 2 tasks | 3 files |
+| Phase 06 P02 | ~20 min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,9 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 - [Phase ?]: [Phase 05-03] Banner tests use native DOM assertions + afterEach(cleanup) + local-Date constructors — @testing-library/jest-dom not installed and not needed for phase-05 coverage
 - [Phase ?]: Mocked DropdownMenu in notification-bell-variant tests instead of installing @testing-library/user-event — keeps phase surface self-contained
 - [Phase ?]: NotificationBell uses single variant prop ('desktop' | 'mobile') with branched trigger but shared dropdown content — not sibling components
+- [Phase ?]: [Phase 06-02] Prisma composite key is 'householdId_userId' not 'userId_householdId' — RESEARCH template had it reversed; schema is the authority
+- [Phase ?]: [Phase 06-02] dashboard-redirect tests use source-grep surrogates via readFileSync — NextAuth JWT callback + Server Component redirect() not trivially invokable; plan-recommended fallback
+- [Phase ?]: [Phase 06-02] updateHouseholdSettings has defensive Intl.DateTimeFormat pre-check — catches malformed IANA zones before Prisma write (T-06-02-05)
 
 ### Pending Todos
 
@@ -104,6 +108,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-20T16:37:21.396Z
+Last session: 2026-04-20T21:32:09.289Z
 Stopped at: Phase 6 UI-SPEC approved
 Next step: Execute Phase 05 Plan 02 (server layer — markNotificationsRead, getUnreadCycleEventCount, getCycleNotificationsForViewer) — unblocked by this plan's typed Prisma client and CycleEventItem export. Plan 05-03 (banners) can run in parallel once CycleEventItem is available (also done by this plan).
