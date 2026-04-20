@@ -50,7 +50,7 @@ export function CycleCountdownBanner({
   if (isSingleMember) {
     primaryLine = isUrgent
       ? "Last day — you're on rotation."
-      : `You're on rotation — ${formatDaysLeft(daysLeft)} left in this cycle.`;
+      : `You're on rotation — ${formatDaysLeft(daysLeft)} in this cycle.`;
   } else {
     if (isUrgent) {
       primaryLine = nextAssigneeName
