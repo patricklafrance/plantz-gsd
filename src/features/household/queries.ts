@@ -50,16 +50,27 @@ export async function getUserHouseholds(userId: string) {
  * Phase 6 consumer: dashboard cycle banner reads this inside the layout chokepoint.
  * Returns the most recent active-or-paused Cycle for the household, or null.
  * Caller is responsible for authorization (layout ran requireHouseholdAccess).
+ *
+ * Wrapped with React.cache() for request-level dedup AND snapshot consistency.
+ * Within a single dashboard request this is called up to 4x (layout chokepoint,
+ * getReminderCount, getReminderItems, dashboard page Server Component); without
+ * cache() each call issues its own SELECT, and if a Server Action transitions
+ * the cycle mid-request different call sites could observe different rows
+ * (badge count derived from one cycle, banner from another). Matches the
+ * request-caching pattern used by getUnreadCycleEventCount and
+ * getCycleNotificationsForViewer in this module.
  */
-export async function getCurrentCycle(householdId: string): Promise<Cycle | null> {
-  return db.cycle.findFirst({
-    where: {
-      householdId,
-      status: { in: ["active", "paused"] },
-    },
-    orderBy: { cycleNumber: "desc" },
-  });
-}
+export const getCurrentCycle = cache(
+  async (householdId: string): Promise<Cycle | null> => {
+    return db.cycle.findFirst({
+      where: {
+        householdId,
+        status: { in: ["active", "paused"] },
+      },
+      orderBy: { cycleNumber: "desc" },
+    });
+  },
+);
 
 /**
  * D-28 — Badge-count query for the unified bell. Counts unread
