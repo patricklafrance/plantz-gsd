@@ -59,7 +59,7 @@ Requirements for milestone `household`. Each maps to a roadmap phase.
 
 ### Household settings & switcher UI
 
-- [ ] **HSET-01**: Authenticated routes live under `/h/<householdSlug>/...`; the layout provides a household switcher in the top nav that navigates the user between their households while preserving the current route suffix
+- [x] **HSET-01**: Authenticated routes live under `/h/<householdSlug>/...`; the layout provides a household switcher in the top nav that navigates the user between their households while preserving the current route suffix
 - [x] **HSET-02**: User can mark any household they belong to as "default" — it becomes the active household destination on login
 - [x] **HSET-03**: Owner can access a household settings page: edit name/timezone/cycle duration, view and reorder member list, generate/revoke invitation links, remove members, transfer ownership
 
@@ -141,7 +141,7 @@ Tracked but not in this roadmap.
 | HNTF-04 | Phase 5 | Complete |
 | AUDT-01 | Phase 1 | Pending |
 | AUDT-02 | Phase 1 | Pending |
-| HSET-01 | Phase 6 | Pending |
+| HSET-01 | Phase 6 | Complete |
 | HSET-02 | Phase 6 | Complete |
 | HSET-03 | Phase 6 | Complete |
 | HDMO-01 | Phase 7 | Pending |

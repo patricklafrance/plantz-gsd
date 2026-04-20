@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 6 UI-SPEC approved
-last_updated: "2026-04-20T21:32:29.079Z"
+stopped_at: Completed Phase 06 Plan 03 — HouseholdSwitcher component + tests
+last_updated: "2026-04-20T21:44:10.619Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 41
-  completed_plans: 35
-  percent: 85
+  completed_plans: 36
+  percent: 88
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 06 (settings-ui-switcher-dashboard) — EXECUTING
-Plan: 2 of 8
+Plan: 4 of 8
 Status: Ready to execute
 Last activity: 2026-04-20
 
@@ -54,6 +54,7 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 | Phase 05 P03 | ~7 min | 2 tasks | 9 files |
 | Phase 05-household-notifications P04 | ~6 min | 2 tasks | 3 files |
 | Phase 06 P02 | ~20 min | 3 tasks | 7 files |
+| Phase 06 P03 | ~8 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,10 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 - [Phase ?]: [Phase 06-02] Prisma composite key is 'householdId_userId' not 'userId_householdId' — RESEARCH template had it reversed; schema is the authority
 - [Phase ?]: [Phase 06-02] dashboard-redirect tests use source-grep surrogates via readFileSync — NextAuth JWT callback + Server Component redirect() not trivially invokable; plan-recommended fallback
 - [Phase ?]: [Phase 06-02] updateHouseholdSettings has defensive Intl.DateTimeFormat pre-check — catches malformed IANA zones before Prisma write (T-06-02-05)
+- [Phase ?]: [Phase 06-03] HouseholdSwitcher mobile variant returns React fragment (not sub-component) for direct embedding in UserMenu's DropdownMenuContent — keeps surface minimal and lets Plan 07 drop it in without an extra wrapper
+- [Phase ?]: [Phase 06-03] OWNER role pill uses pre-audited bg-muted/text-foreground fallback; un-audited amber pair (UI-SPEC §Color §Role pill) deferred to Plan 07 UAT after Chrome DevTools contrast measurement
+- [Phase ?]: [Phase 06-03] HouseholdSwitcher tests mock DropdownMenu primitives inline (same idiom as notification-bell-variant.test.tsx) — no @testing-library/user-event install; no Base UI portal in jsdom
+- [Phase ?]: [Phase 06-03] buildSwitchPath detail-route regex /^[a-z0-9]{20,}$/i tolerates future cuid-generator swaps; list-route segments ('plants', 'rooms', 'settings', 'dashboard') all safely fail the 20-char minimum
 
 ### Pending Todos
 
@@ -108,6 +113,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-20T21:32:09.289Z
-Stopped at: Phase 6 UI-SPEC approved
+Last session: 2026-04-20T21:44:10.612Z
+Stopped at: Completed Phase 06 Plan 03 — HouseholdSwitcher component + tests
 Next step: Execute Phase 05 Plan 02 (server layer — markNotificationsRead, getUnreadCycleEventCount, getCycleNotificationsForViewer) — unblocked by this plan's typed Prisma client and CycleEventItem export. Plan 05-03 (banners) can run in parallel once CycleEventItem is available (also done by this plan).
