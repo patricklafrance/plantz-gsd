@@ -85,23 +85,34 @@ export default async function HouseholdLayout({
       currentCycle.id,
     );
     cycleEvents = notificationRows.map((row) => {
-      // D-03 no payload snapshot — derive prior assignee display name at read time
-      // by finding the rotation predecessor to the current assignee. If absent, null
-      // (the bell CycleEventRow + ReassignmentBanner both fall back to "Someone").
-      const members = row.cycle?.household?.members ?? [];
-      const sorted = [...members].sort((a, b) => a.rotationOrder - b.rotationOrder);
-      const currentIdx = currentCycle.assignedUserId
-        ? sorted.findIndex((m) => m.userId === currentCycle.assignedUserId)
-        : -1;
-      const priorMember =
-        currentIdx > 0
-          ? sorted[currentIdx - 1]
-          : currentIdx === 0 && sorted.length > 1
-            ? sorted[sorted.length - 1]
-            : null;
-      const priorAssigneeName = priorMember
-        ? (priorMember.user.name ?? priorMember.user.email ?? null)
-        : null;
+      // WR-02 (Phase 5 review): prefer the stored priorAssigneeUserId snapshot
+      // populated by transitionCycle at emission time — it is correct by
+      // construction regardless of subsequent rotation churn. For rows emitted
+      // BEFORE the schema change (priorAssignee: null) we fall back to the
+      // legacy rotation-predecessor walk so historical notifications still
+      // render something plausible. If both fail the row surfaces as null and
+      // the bell CycleEventRow + ReassignmentBanner render "Someone".
+      let priorAssigneeName: string | null = null;
+      if (row.priorAssignee) {
+        priorAssigneeName =
+          row.priorAssignee.name ?? row.priorAssignee.email ?? null;
+      } else {
+        // Legacy fallback: rotation predecessor of the current assignee.
+        const members = row.cycle?.household?.members ?? [];
+        const sorted = [...members].sort((a, b) => a.rotationOrder - b.rotationOrder);
+        const currentIdx = currentCycle.assignedUserId
+          ? sorted.findIndex((m) => m.userId === currentCycle.assignedUserId)
+          : -1;
+        const priorMember =
+          currentIdx > 0
+            ? sorted[currentIdx - 1]
+            : currentIdx === 0 && sorted.length > 1
+              ? sorted[sorted.length - 1]
+              : null;
+        priorAssigneeName = priorMember
+          ? (priorMember.user.name ?? priorMember.user.email ?? null)
+          : null;
+      }
 
       return {
         notificationId: row.id,

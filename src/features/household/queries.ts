@@ -131,6 +131,12 @@ export const getCycleNotificationsForViewer = cache(
         cycleId,
       },
       include: {
+        // WR-02 (Phase 5 review): prior-assignee user joined directly from the
+        // notification row for cycle_reassigned_* types. This is the authoritative
+        // source for "who skipped" copy — the cycle.household.members fallback
+        // walk is kept below for notifications emitted before the schema change
+        // (priorAssigneeUserId NULL) and single-member edge cases.
+        priorAssignee: { select: { name: true, email: true } },
         cycle: {
           include: {
             household: {

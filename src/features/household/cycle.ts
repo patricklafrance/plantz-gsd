@@ -328,13 +328,23 @@ export async function transitionCycle(
 
     // STEP 8 — notification for incoming assignee (D-15 inside-same-transaction).
     if (nextAssignedUserId) {
+      const notificationType = mapReasonToNotificationType(finalReason);
+      // WR-02 (Phase 5 review): snapshot the outgoing assignee's userId on
+      // cycle_reassigned_* rows so read-time UI renders the correct
+      // "<name> skipped / left / is unavailable" regardless of later rotation
+      // order churn. Left NULL on cycle_started + cycle_fallback_owner (no
+      // prior-assignee semantics for those types).
+      const priorAssigneeUserId = notificationType.startsWith("cycle_reassigned_")
+        ? outgoing.assignedUserId
+        : null;
       try {
         await tx.householdNotification.create({
           data: {
             householdId,
             recipientUserId: nextAssignedUserId,
-            type: mapReasonToNotificationType(finalReason),
+            type: notificationType,
             cycleId: nextCycle.id,
+            priorAssigneeUserId,
           },
         });
       } catch (err) {

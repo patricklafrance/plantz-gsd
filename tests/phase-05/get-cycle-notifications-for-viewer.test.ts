@@ -36,6 +36,9 @@ describe("getCycleNotificationsForViewer (D-29)", () => {
           cycleId: "cycle_1",
         },
         include: {
+          // WR-02: priorAssignee snapshot join — authoritative for
+          // cycle_reassigned_* names regardless of rotation churn.
+          priorAssignee: { select: { name: true, email: true } },
           cycle: {
             include: {
               household: {

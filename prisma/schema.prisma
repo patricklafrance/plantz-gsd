@@ -29,12 +29,13 @@ model User {
   performedNotes     Note[]        @relation("NotePerformedBy")
 
   // Household milestone back-relations
-  memberships            HouseholdMember[]
-  assignedCycles         Cycle[]                 @relation("CycleAssignee")
-  availabilityPeriods    Availability[]
-  sentInvitations        Invitation[]            @relation("InvitedBy")
-  acceptedInvitations    Invitation[]            @relation("AcceptedBy")
-  householdNotifications HouseholdNotification[] @relation("HouseholdNotificationRecipient")
+  memberships                    HouseholdMember[]
+  assignedCycles                 Cycle[]                 @relation("CycleAssignee")
+  availabilityPeriods            Availability[]
+  sentInvitations                Invitation[]            @relation("InvitedBy")
+  acceptedInvitations            Invitation[]            @relation("AcceptedBy")
+  householdNotifications         HouseholdNotification[] @relation("HouseholdNotificationRecipient")
+  priorAssigneeNotifications     HouseholdNotification[] @relation("HouseholdNotificationPriorAssignee")
 }
 
 model Household {
@@ -232,16 +233,24 @@ model Invitation {
 // introduces cycleId=null types, switch to NULLS NOT DISTINCT (Postgres 15+) or add a
 // partial unique index.
 model HouseholdNotification {
-  id              String    @id @default(cuid())
-  householdId     String
-  household       Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
-  recipientUserId String
-  recipient       User      @relation("HouseholdNotificationRecipient", fields: [recipientUserId], references: [id], onDelete: Cascade)
-  type            String // D-18: cycle_started | cycle_reassigned_manual_skip | cycle_reassigned_auto_skip | cycle_reassigned_member_left | cycle_fallback_owner
-  cycleId         String?
-  cycle           Cycle?    @relation(fields: [cycleId], references: [id], onDelete: SetNull)
-  createdAt       DateTime  @default(now()) @db.Timestamptz(3)
-  readAt          DateTime? @db.Timestamptz(3) // D-01: nullable — unread by default; set to now() when user opens bell dropdown
+  id                  String    @id @default(cuid())
+  householdId         String
+  household           Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  recipientUserId     String
+  recipient           User      @relation("HouseholdNotificationRecipient", fields: [recipientUserId], references: [id], onDelete: Cascade)
+  type                String // D-18: cycle_started | cycle_reassigned_manual_skip | cycle_reassigned_auto_skip | cycle_reassigned_member_left | cycle_fallback_owner
+  cycleId             String?
+  cycle               Cycle?    @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+  // WR-02 (Phase 5 review): escape hatch from D-03's "no payload snapshot" rule.
+  // Populated ONLY for cycle_reassigned_* types at emission time in transitionCycle
+  // — holds the outgoing assignee's userId so read-time UI shows the correct
+  // "Alice skipped" / "Bob is unavailable" name even when rotation order no longer
+  // reflects the actual skipper (manual out-of-order skips, chained skips).
+  // NULL on cycle_started + cycle_fallback_owner (no prior-assignee semantics).
+  priorAssigneeUserId String?
+  priorAssignee       User?     @relation("HouseholdNotificationPriorAssignee", fields: [priorAssigneeUserId], references: [id], onDelete: SetNull)
+  createdAt           DateTime  @default(now()) @db.Timestamptz(3)
+  readAt              DateTime? @db.Timestamptz(3) // D-01: nullable — unread by default; set to now() when user opens bell dropdown
 
   @@unique([cycleId, recipientUserId, type])
   @@index([recipientUserId, createdAt])

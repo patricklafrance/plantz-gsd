@@ -161,7 +161,13 @@ export default async function DashboardPage({
   // with identical args. Plan 05-02 Task 2 wraps that export with React.cache(), so this call
   // is a request-level cache hit — no duplicate DB query.
   let unreadEvent:
-    | { id: string; type: string; cycleId: string | null; readAt: Date | null }
+    | {
+        id: string;
+        type: string;
+        cycleId: string | null;
+        readAt: Date | null;
+        priorAssignee: { name: string | null; email: string } | null;
+      }
     | null = null;
   let nextAssignee: { userId: string; fallback: boolean } | null = null;
 
@@ -208,17 +214,25 @@ export default async function DashboardPage({
     ? (nextAssigneeMember.userName ?? nextAssigneeMember.userEmail ?? null)
     : null;
 
-  // Derive prior-assignee name for reassignment banner — rotation predecessor of current assignee.
-  // May be null for edge cases (e.g. single-member household reassignment — impossible under normal
-  // flow, but defended here). The banner receives "Someone" as a fallback to guarantee HNTF-03 renders.
+  // Derive prior-assignee name for reassignment banner.
+  // WR-02 (Phase 5 review): prefer the stored priorAssignee snapshot on the
+  // notification row — it is correct by construction regardless of rotation
+  // churn after emission. Fall back to the legacy rotation-predecessor walk
+  // for notifications emitted before the schema change. Final fallback is
+  // "Someone" (below), so the banner NEVER silently disappears.
   let priorAssigneeName: string | null = null;
   if (currentCycle?.assignedUserId && unreadEvent?.type.startsWith("cycle_reassigned_")) {
-    const sorted = [...members].sort((a, b) => a.rotationOrder - b.rotationOrder);
-    const idx = sorted.findIndex((m) => m.userId === currentCycle.assignedUserId);
-    const priorIdx = idx > 0 ? idx - 1 : sorted.length > 1 ? sorted.length - 1 : -1;
-    if (priorIdx >= 0) {
-      const prior = sorted[priorIdx];
-      priorAssigneeName = prior.userName ?? prior.userEmail ?? null;
+    if (unreadEvent.priorAssignee) {
+      priorAssigneeName =
+        unreadEvent.priorAssignee.name ?? unreadEvent.priorAssignee.email ?? null;
+    } else {
+      const sorted = [...members].sort((a, b) => a.rotationOrder - b.rotationOrder);
+      const idx = sorted.findIndex((m) => m.userId === currentCycle.assignedUserId);
+      const priorIdx = idx > 0 ? idx - 1 : sorted.length > 1 ? sorted.length - 1 : -1;
+      if (priorIdx >= 0) {
+        const prior = sorted[priorIdx];
+        priorAssigneeName = prior.userName ?? prior.userEmail ?? null;
+      }
     }
   }
 
