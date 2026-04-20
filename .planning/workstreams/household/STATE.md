@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed Phase 06 Plan 03 — HouseholdSwitcher component + tests
-last_updated: "2026-04-20T21:56:30.795Z"
+last_updated: "2026-04-20T22:13:07.276Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 41
-  completed_plans: 37
-  percent: 90
+  completed_plans: 38
+  percent: 93
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 06 (settings-ui-switcher-dashboard) — EXECUTING
-Plan: 5 of 8
+Plan: 6 of 8
 Status: Ready to execute
 Last activity: 2026-04-20
 
@@ -56,6 +56,7 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 | Phase 06 P02 | ~20 min | 3 tasks | 7 files |
 | Phase 06 P03 | ~8 min | 2 tasks | 2 files |
 | Phase 06 P04 | 5 min | 2 tasks | 2 files |
+| Phase 06 P05 | 9 min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,10 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 - [Phase 06-04]: CycleCountdownBanner uses Calendar/Clock icon swap + accent/destructive palette swap on daysLeft<=1 urgency threshold; role='status' for both variants (not role='alert') per D-25 steady-state architecture
 - [Phase 06-04]: Date format 'MMM d, yyyy' (full year) for CycleCountdownBanner secondary line — distinct from 'EEE MMM d' used by sibling PassiveStatusBanner / CycleStartBanner; the cycle-end date is a time-horizon cue where the year anchor is meaningful
 - [Phase 06-04]: Caller-gating contract tests use readFileSync static greps to prove the component source does not reference hasUnreadEvent/cycle_reassigned/auth/getCurrentHousehold — this is the correct way to unit-test D-25's architectural split where the render gate lives at the Plan 07 mount site, not in the component
+- [Phase ?]: [Phase 06-05] cycleDuration wire shape stays string on both client and server — zodResolver's transform runs in the browser (returns number to RHF submit), so GeneralForm coerces back to String before calling updateHouseholdSettings; server schema re-runs the enum→Number transform itself
+- [Phase ?]: [Phase 06-05] DestructiveLeaveDialog API = { open, onOpenChange, householdName, plantCount, roomCount, onConfirm } — no householdId prop; DangerZoneCard owns the trigger and wires onConfirm → leaveHousehold; no Phase 4 extension needed
+- [Phase ?]: [Phase 06-05] Base UI Trigger render-prop idiom lock: TooltipTrigger / AlertDialogTrigger / ResponsiveDialogTrigger all accept render={<Button … />} on a single line; zero asChild identifiers across both plan-authored files (checker Blocker 1)
+- [Phase ?]: [Phase 06-05] DangerZoneCard is the SINGLE home for the Leave household action (warning #7 split lock); members-list self-row in Plan 05b must not surface Leave
 
 ### Pending Todos
 
@@ -117,6 +122,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-20T21:55:14.108Z
+Last session: 2026-04-20T22:11:22.691Z
 Stopped at: Completed Phase 06 Plan 03 — HouseholdSwitcher component + tests
 Next step: Execute Phase 05 Plan 02 (server layer — markNotificationsRead, getUnreadCycleEventCount, getCycleNotificationsForViewer) — unblocked by this plan's typed Prisma client and CycleEventItem export. Plan 05-03 (banners) can run in parallel once CycleEventItem is available (also done by this plan).
