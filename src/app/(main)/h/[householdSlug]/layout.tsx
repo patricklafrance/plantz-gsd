@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
-import { Leaf } from "lucide-react";
 import { auth } from "../../../../../auth";
 import { db } from "@/lib/db";
 import { getCurrentHousehold } from "@/features/household/context";
@@ -9,11 +8,13 @@ import {
   getCurrentCycle,
   getUnreadCycleEventCount,
   getCycleNotificationsForViewer,
+  getUserHouseholds,
 } from "@/features/household/queries";
 import type { CycleEventItem } from "@/features/reminders/types";
 import { NotificationBell } from "@/components/reminders/notification-bell";
 import { BottomTabBar } from "@/components/layout/bottom-tab-bar";
 import { UserMenu } from "@/components/auth/user-menu";
+import { HouseholdSwitcher } from "@/components/household/household-switcher";
 
 /**
  * D-03 chokepoint + household-aware chrome (Q11 Option A).
@@ -59,11 +60,18 @@ export default async function HouseholdLayout({
   // D-19: 4-way Promise.all for the unified badge + dropdown feed.
   // getCurrentCycle runs in parallel; its result feeds the subsequent
   // getCycleNotificationsForViewer call (needs cycle.id — necessarily sequential).
-  const [reminderCount, reminderItems, unreadCycleEventCount, currentCycle] = await Promise.all([
+  const [
+    reminderCount,
+    reminderItems,
+    unreadCycleEventCount,
+    currentCycle,
+    userHouseholds,
+  ] = await Promise.all([
     getReminderCount(household.id, sessionUser.id, todayStart, todayEnd),
     getReminderItems(household.id, sessionUser.id, todayStart, todayEnd),
     getUnreadCycleEventCount(household.id, sessionUser.id),
     getCurrentCycle(household.id),
+    getUserHouseholds(sessionUser.id),
   ]);
 
   // D-19 unified badge: one number, two renders (desktop + mobile).
@@ -140,10 +148,20 @@ export default async function HouseholdLayout({
       )}
       <header className="border-b border-border">
         <nav aria-label="Top navigation" className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-          <Link href={`/h/${householdSlug}/dashboard`} className="flex items-center gap-2">
-            <Leaf className="h-5 w-5 text-accent" />
-            <span className="text-base font-semibold">Plant Minder</span>
-          </Link>
+          <HouseholdSwitcher
+            variant="desktop"
+            households={userHouseholds.map((uh) => ({
+              household: {
+                id: uh.household.id,
+                slug: uh.household.slug,
+                name: uh.household.name,
+              },
+              role: uh.role,
+              isDefault: uh.isDefault,
+            }))}
+            currentSlug={householdSlug}
+            currentHouseholdName={household.name}
+          />
           <div className="hidden items-center gap-4 sm:flex">
             <Link
               href={`/h/${householdSlug}/plants`}
@@ -169,7 +187,21 @@ export default async function HouseholdLayout({
                 cycleEvents={cycleEvents}
               />
             </div>
-            <UserMenu email={user?.email ?? ""} name={user?.name} />
+            <UserMenu
+              email={user?.email ?? ""}
+              name={user?.name}
+              households={userHouseholds.map((uh) => ({
+                household: {
+                  id: uh.household.id,
+                  slug: uh.household.slug,
+                  name: uh.household.name,
+                },
+                role: uh.role,
+                isDefault: uh.isDefault,
+              }))}
+              currentSlug={householdSlug}
+              currentHouseholdName={household.name}
+            />
           </div>
         </nav>
       </header>

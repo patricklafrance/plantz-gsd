@@ -2,7 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { LogOut, Settings } from "lucide-react";
+import { Home, LogOut, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,10 +11,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { HouseholdSwitcher } from "@/components/household/household-switcher";
 
 interface UserMenuProps {
   email: string;
   name?: string | null;
+  /**
+   * D-04 / Plan 07 — Household list rendered in the mobile variant of the
+   * HouseholdSwitcher, embedded directly inside this menu's DropdownMenuContent.
+   */
+  households: Array<{
+    household: { id: string; slug: string; name: string };
+    role: "OWNER" | "MEMBER";
+    isDefault: boolean;
+  }>;
+  currentSlug: string;
+  currentHouseholdName: string;
 }
 
 function getInitials(email: string, name?: string | null): string {
@@ -26,7 +38,13 @@ function getInitials(email: string, name?: string | null): string {
   return email[0].toUpperCase();
 }
 
-export function UserMenu({ email, name }: UserMenuProps) {
+export function UserMenu({
+  email,
+  name,
+  households,
+  currentSlug,
+  currentHouseholdName,
+}: UserMenuProps) {
   const router = useRouter();
   const initials = getInitials(email, name);
 
@@ -40,17 +58,34 @@ export function UserMenu({ email, name }: UserMenuProps) {
       >
         {initials}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel className="font-normal">
           <span className="text-xs text-muted-foreground">{email}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        {/* D-04: mobile HouseholdSwitcher — rows for each other household +
+            "Make default" affordance. Returns a fragment so it slots straight
+            into this DropdownMenuContent without an extra wrapper. */}
+        <HouseholdSwitcher
+          variant="mobile"
+          households={households}
+          currentSlug={currentSlug}
+          currentHouseholdName={currentHouseholdName}
+        />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => router.push(`/h/${currentSlug}/settings`)}
+          className="cursor-pointer gap-2"
+        >
+          <Home className="h-4 w-4" />
+          Household settings
+        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/preferences")}
           className="cursor-pointer gap-2"
         >
           <Settings className="h-4 w-4" />
-          Preferences
+          Account preferences
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

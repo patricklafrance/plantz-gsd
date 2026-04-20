@@ -2,6 +2,7 @@ import { auth } from "../../../../../../auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import { differenceInDays } from "date-fns";
 import { getCurrentHousehold } from "@/features/household/context";
 import { OnboardingBanner } from "@/components/onboarding/onboarding-banner";
 import { AddPlantDialog } from "@/components/plants/add-plant-dialog";
@@ -19,6 +20,7 @@ import { CycleStartBanner } from "@/components/household/cycle-start-banner";
 import { ReassignmentBanner } from "@/components/household/reassignment-banner";
 import { PassiveStatusBanner } from "@/components/household/passive-status-banner";
 import { FallbackBanner } from "@/components/household/fallback-banner";
+import { CycleCountdownBanner } from "@/components/household/cycle-countdown-banner";
 import { DashboardClient } from "@/components/watering/dashboard-client";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TimezoneWarning } from "@/components/shared/timezone-warning";
@@ -241,6 +243,23 @@ export default async function DashboardPage({
   // the banner is NEVER silently suppressed for an unread cycle_reassigned_* event.
   const resolvedPriorName = priorAssigneeName ?? "Someone";
 
+  // D-24 / D-25 — CycleCountdownBanner gate.
+  // The banner renders only when the viewer is the current cycle's assignee,
+  // the cycle is in the `active` state, AND there is no unread cycle_started
+  // or cycle_reassigned_* event pending (those render CycleStartBanner or
+  // ReassignmentBanner instead — mutual exclusion).
+  const hasUnreadCycleEvent =
+    unreadEvent !== null &&
+    unreadEvent.readAt === null &&
+    (unreadEvent.type === "cycle_started" ||
+      unreadEvent.type.startsWith("cycle_reassigned_"));
+
+  // Clamp to 0 for cycles whose endDate is already in the past but have not
+  // yet been advanced by the cron (Pitfall 9). Avoids negative countdowns.
+  const daysLeft = currentCycle
+    ? Math.max(0, differenceInDays(currentCycle.endDate, new Date()))
+    : 0;
+
   return (
     <div className="space-y-6">
       {!user?.onboardingCompleted && (
@@ -284,6 +303,21 @@ export default async function DashboardPage({
                 }
                 dueCount={reminderCountForBanner}
                 cycleEndDate={currentCycle.endDate}
+              />
+            )}
+
+          {/* D-24: CycleCountdownBanner — assignee steady-state, no unread event.
+              Slots between the reassignment-layer and the non-assignee passive
+              banner. Mutual-exclusive with CycleStart / Reassignment via the
+              `!hasUnreadCycleEvent` half of the D-25 gate. */}
+          {viewerIsAssignee &&
+            currentCycle.status === "active" &&
+            !hasUnreadCycleEvent && (
+              <CycleCountdownBanner
+                daysLeft={daysLeft}
+                nextAssigneeName={nextAssigneeName}
+                cycleEndDate={currentCycle.endDate}
+                isSingleMember={members.length === 1}
               />
             )}
 
