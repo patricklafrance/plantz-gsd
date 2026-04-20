@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed Phase 06 Plan 03 — HouseholdSwitcher component + tests
-last_updated: "2026-04-20T22:13:07.276Z"
+stopped_at: Completed Phase 06 Plan 05b — MembersList component + rotation-reorder tests
+last_updated: "2026-04-20T22:27:50.536Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 41
-  completed_plans: 38
-  percent: 93
+  completed_plans: 39
+  percent: 95
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 ## Current Position
 
 Phase: 06 (settings-ui-switcher-dashboard) — EXECUTING
-Plan: 6 of 8
+Plan: 7 of 8
 Status: Ready to execute
 Last activity: 2026-04-20
 
@@ -57,6 +57,7 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 | Phase 06 P03 | ~8 min | 2 tasks | 2 files |
 | Phase 06 P04 | 5 min | 2 tasks | 2 files |
 | Phase 06 P05 | 9 min | 3 tasks | 3 files |
+| Phase 06 P05b | 6 min | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -110,6 +111,9 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 - [Phase ?]: [Phase 06-05] DestructiveLeaveDialog API = { open, onOpenChange, householdName, plantCount, roomCount, onConfirm } — no householdId prop; DangerZoneCard owns the trigger and wires onConfirm → leaveHousehold; no Phase 4 extension needed
 - [Phase ?]: [Phase 06-05] Base UI Trigger render-prop idiom lock: TooltipTrigger / AlertDialogTrigger / ResponsiveDialogTrigger all accept render={<Button … />} on a single line; zero asChild identifiers across both plan-authored files (checker Blocker 1)
 - [Phase ?]: [Phase 06-05] DangerZoneCard is the SINGLE home for the Leave household action (warning #7 split lock); members-list self-row in Plan 05b must not surface Leave
+- [Phase ?]: [Phase 06-05b] MembersList AlertDialog composition uses option 2 — dialogs rendered outside DropdownMenu as open-state portals with local DialogTarget|null state; DropdownMenuItem onClick flips state. Avoids Base UI DropdownMenu close-on-click vs AlertDialogTrigger coupling.
+- [Phase ?]: [Phase 06-05b] Base UI MenuItem exposes onClick + closeOnClick (NOT onSelect) — plan's onSelect sketch rewritten to use option 2 dialog pattern
+- [Phase ?]: [Phase 06-05b] Warning #7 split lock enforced by source-grep regression test — comments in members-list.tsx rewritten to 'self-departure' wording to avoid literal 'leave household' substring
 
 ### Pending Todos
 
@@ -122,6 +126,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-20T22:11:22.691Z
-Stopped at: Completed Phase 06 Plan 03 — HouseholdSwitcher component + tests
+Last session: 2026-04-20T22:27:50.531Z
+Stopped at: Completed Phase 06 Plan 05b — MembersList component + rotation-reorder tests
 Next step: Execute Phase 05 Plan 02 (server layer — markNotificationsRead, getUnreadCycleEventCount, getCycleNotificationsForViewer) — unblocked by this plan's typed Prisma client and CycleEventItem export. Plan 05-03 (banners) can run in parallel once CycleEventItem is available (also done by this plan).
