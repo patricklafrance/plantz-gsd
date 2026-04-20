@@ -44,3 +44,22 @@ app/generated/
 
 # Claude code
 .claude/worktrees/
+
+# get-shit-done
+# -> runtime / state
+.planning/HANDOFF.json
+.planning/*.handoff.json
+.planning/*.state.json
+
+# -> Caches / temp
+.planning/tmp/
+.planning/cache/
+.planning/.cache/
+.planning/logs/
+
+# -> Agent runs
+.planning/runs/
+.planning/agents/
+
+# -> If each devs run on different workstream
+#.planning/workstreams/

@@ -779,7 +779,7 @@ describe("getReminderCount assignee gate (D-07/D-08/D-09/D-10)", () => {
 
 **Note on A3:** Postgres's documented default is `NULLS LAST` for ASC and `NULLS FIRST` for DESC. The example above is INCORRECT as written — the planner should use `orderBy: [{ readAt: "asc" }]` with an explicit `nulls: "first"` option, OR flip the order logic. Prisma 7 supports `{ readAt: { sort: "asc", nulls: "first" } }`. This is an implementation detail the planner should call out as a Wave 1 verification point.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the passive status banner be suppressed when the viewer is the sole member of a single-member household?**
    - What we know: CONTEXT.md §Claude's Discretion says "Recommend hiding the 'is next' line when `memberCount === 1`; consider suppressing the whole banner when you're the sole member and you're the assignee."

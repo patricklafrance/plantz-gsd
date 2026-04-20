@@ -24,7 +24,7 @@
     "ui_safety_gate": true,
     "text_mode": false,
     "research_before_questions": false,
-    "discuss_mode": "discuss",
+    "discuss_mode": "assumptions",
     "skip_discuss": false,
     "code_review": true,
     "code_review_depth": "standard",
@@ -35,7 +35,18 @@
   },
   "project_code": null,
   "phase_naming": "sequential",
-  "agent_skills": {},
+  "agent_skills": {
+    "gsd-executor": [
+      "skills/execution-validation-policy",
+      "skills/human-validation-handoff"
+    ],
+    "gsd-verifier": [
+      "skills/human-validation-handoff"
+    ],
+    "gsd-checker": [
+      "skills/human-validation-handoff"
+    ]
+  },
   "mode": "yolo",
   "granularity": "standard"
 }

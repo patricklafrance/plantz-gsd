@@ -85,6 +85,6 @@ Reference context docs:
 
 - root_cause: "`void markNotificationsRead(...)` inside `startTransition(() => { void ... })` caused the transition to complete synchronously. The Server Action's `revalidatePath` then triggered a high-priority router refresh outside any transition context, which could interrupt Base UI's portal teardown sequence and produce the removeChild DOM error."
 - fix: "Changed `startTransition(() => { void markNotificationsRead(...) })` to `startTransition(async () => { await markNotificationsRead(...) })` in `notification-bell.tsx`. React 19 tracks the full async lifecycle of the transition, deferring the revalidatePath router refresh to transition priority so it cannot preempt React's in-flight commit work."
-- verification: "TypeScript clean (0 src/ errors). UI verification via Chrome DevTools MCP pending."
+- verification: "TypeScript clean (0 src/ errors). Chrome DevTools MCP: dashboard /h/tAn97yhW/dashboard exercised with 3 stress patterns (15× open/close, 12× bell-open + SPA popstate nav, 10× bell-open + real Next.js Link click). Zero console errors, zero removeChild errors, zero hydration warnings across all cycles. list_console_messages confirmed clean at end."
 - files_changed:
     - src/components/reminders/notification-bell.tsx

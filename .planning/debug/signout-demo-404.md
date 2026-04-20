@@ -106,7 +106,7 @@ Reference context docs:
     2. Changed <Link href="/demo"> to <a href="/demo"> in src/components/auth/login-form.tsx.
        A Route Handler must be reached via hard navigation (browser GET), not soft navigation.
        This also ensures the router cache is cleared before the demo flow begins.
-- verification: Type-checks pass for src/ (pre-existing test-file TS errors are unrelated).
+- verification: Type-checks pass for src/ (pre-existing test-file TS errors unrelated). Chrome DevTools MCP: after extensive prior authenticated navigation (populated router cache with /h/tAn97yhW/* entries — exact precondition of the original bug), ran 2 full cycles of sign-out → click "Explore without signing up" → verified landing. Both cycles: first-click landed directly on /h/tAn97yhW/dashboard, no intermediate 404, no reload needed. list_console_messages clean throughout.
 - files_changed:
     - src/app/(auth)/demo/page.tsx (deleted)
     - src/app/(auth)/demo/route.ts (created)
