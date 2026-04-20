@@ -167,7 +167,7 @@ Plans:
   - [x] 06-05-PLAN.md — Plan 05a: Settings sub-components — GeneralForm + DangerZoneCard (D-13/D-14/D-15/D-16/D-17/D-19). Split from original Plan 05 per checker warning #4.
   - [x] 06-05b-PLAN.md — Plan 05b: Settings sub-components — MembersList (reorder + 3-dot role matrix) (D-10/D-11/D-12/D-18). Split from original Plan 05 per checker warning #4.
   - [x] 06-06-PLAN.md — Settings sub-components: InvitationsCard + AvailabilitySection (D-20/D-21/D-22/D-27/D-28/D-29/D-30)
-  - [ ] 06-07-PLAN.md — Settings page assembly + layout/user-menu/dashboard wiring + D-35 concurrency test + Pitfall 17 links audit + D-25 gate behavioral test (warning #5) + Chrome DevTools MCP UAT checkpoint
+  - [x] 06-07-PLAN.md — Settings page assembly + layout/user-menu/dashboard wiring + D-35 concurrency test + Pitfall 17 links audit + D-25 gate behavioral test (warning #5) + Chrome DevTools MCP UAT checkpoint
 **Pitfall flags**:
   - Pitfall 17: URL routing is established in Phase 1; this phase implements the full client navigation — ensure all internal links use `/h/[slug]/` prefix, not absolute paths without slug
   - shadcn/ui components to verify before installing: `calendar`, `popover`, `command`, `sheet` — check `src/components/ui/` first

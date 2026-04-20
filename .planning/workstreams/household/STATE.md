@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed Phase 06 Plan 05b — MembersList component + rotation-reorder tests
-last_updated: "2026-04-20T22:42:10.141Z"
+status: verifying
+stopped_at: Completed Phase 06 Plan 07 — composition + tests; UAT awaiting human verification
+last_updated: "2026-04-20T23:05:03.440Z"
 last_activity: 2026-04-20
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 41
-  completed_plans: 40
-  percent: 98
+  completed_plans: 41
+  percent: 100
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 
 Phase: 06 (settings-ui-switcher-dashboard) — EXECUTING
 Plan: 8 of 8
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-20
 
 Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
@@ -59,6 +59,7 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 | Phase 06 P05 | 9 min | 3 tasks | 3 files |
 | Phase 06 P05b | 6 min | 3 tasks | 3 files |
 | Phase 06 P06-06 | 7m | 3 tasks | 4 files |
+| Phase 06 P07 | ~35 min | 4 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -117,6 +118,9 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 - [Phase ?]: [Phase 06-05b] Warning #7 split lock enforced by source-grep regression test — comments in members-list.tsx rewritten to 'self-departure' wording to avoid literal 'leave household' substring
 - [Phase ?]: Plan 06-06: Raw invitation token lives in DialogPhase state only; reset on dialog close
 - [Phase ?]: Plan 06-06: Two independent Popover+Calendar pickers for availability (D-28); no third-party date-range picker
+- [Phase ?]: [Phase 06-07] Settings page composed as a Server Component — reshapes Prisma join rows into client-component row contracts (InvitationRow, AvailabilityRow) at the server boundary; Promise.all fans out 4 queries + counts; getCurrentHousehold dedups via React.cache against the layout's identical call
+- [Phase ?]: [Phase 06-07] Links-audit ALLOWED_PREFIXES includes /dashboard — the legacy /app/(main)/dashboard/page.tsx redirects to /h/<default>/dashboard and is the safe post-ForbiddenError landing target used by error.tsx and not-found.tsx
+- [Phase ?]: [Phase 06-07] D-35 concurrency test uses serialize-then-reorder pattern — deterministic proof that the reorderRotation transaction set-mismatch guard catches stale client state after another tx committed; tampered-non-member case added as a second scenario
 
 ### Pending Todos
 
@@ -129,6 +133,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-20T22:40:29.367Z
-Stopped at: Completed Phase 06 Plan 05b — MembersList component + rotation-reorder tests
+Last session: 2026-04-20T23:05:03.435Z
+Stopped at: Completed Phase 06 Plan 07 — composition + tests; UAT awaiting human verification
 Next step: Execute Phase 05 Plan 02 (server layer — markNotificationsRead, getUnreadCycleEventCount, getCycleNotificationsForViewer) — unblocked by this plan's typed Prisma client and CycleEventItem export. Plan 05-03 (banners) can run in parallel once CycleEventItem is available (also done by this plan).
