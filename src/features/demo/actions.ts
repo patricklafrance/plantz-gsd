@@ -3,127 +3,31 @@
 import { signIn, auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_PLANTS, STARTER_PLANTS } from "./seed-data";
-import { generateHouseholdSlug } from "@/lib/slug";
+import { DEMO_EMAIL, DEMO_PASSWORD, STARTER_PLANTS } from "./seed-data";
 import { requireHouseholdAccess } from "@/features/household/guards";
 import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 
 /**
- * Ensures the demo user exists in the database, creating it with a Household,
- * HouseholdMember, and sample plants if needed, then signs in and redirects.
- * Called from the /demo route page — fully self-bootstrapping.
+ * Signs the demo user in and redirects to the dashboard (D-11).
+ *
+ * The demo user + Demo Household + Cycle + Availability + plants are seeded
+ * by `prisma/seed.ts` (HDMO-01). If the demo user is missing from the DB,
+ * returns a seed-missing error and the `/demo` route redirects to the login
+ * page with `?error=demo_failed`.
+ *
+ * This function is the demo entry point itself — it is intentionally NOT
+ * guarded against `session.user.isDemo` (there is no session yet). The static
+ * guard audit test at `tests/phase-07/demo-guard-audit.test.ts` lists
+ * `startDemoSession` in SKIP_FUNCTIONS for this reason.
  */
 export async function startDemoSession() {
   try {
-    // Auto-create demo user if it doesn't exist yet
-    const existing = await db.user.findUnique({ where: { email: DEMO_EMAIL } });
-    if (!existing) {
-      const bcryptjs = (await import("bcryptjs")).default;
-      const { subDays, addDays } = await import("date-fns");
-      const passwordHash = await bcryptjs.hash(DEMO_PASSWORD, 12);
-
-      // Create user + household + householdMember atomically
-      const { demoUser, household } = await db.$transaction(async (tx) => {
-        const demoUser = await tx.user.create({
-          data: {
-            email: DEMO_EMAIL,
-            passwordHash,
-            name: "Demo User",
-            onboardingCompleted: true,
-            remindersEnabled: true,
-          },
-        });
-
-        // Slug collision loop (mirrors auth/actions.ts pattern)
-        let slug: string;
-        let attempts = 0;
-        do {
-          slug = generateHouseholdSlug();
-          const existingHousehold = await tx.household.findUnique({
-            where: { slug },
-            select: { id: true },
-          });
-          if (!existingHousehold) break;
-          // WR-02: throw after 10 total attempts (previously 11) to match message.
-          if (attempts++ >= 9) {
-            throw new Error("Slug generation failed after 10 attempts");
-          }
-        } while (true);
-
-        const household = await tx.household.create({
-          data: {
-            name: "Demo Plants",
-            slug: slug!,
-            timezone: "UTC",
-            cycleDuration: 7,
-            rotationStrategy: "sequential",
-          },
-        });
-
-        await tx.householdMember.create({
-          data: {
-            userId: demoUser.id,
-            householdId: household.id,
-            role: "OWNER",
-            rotationOrder: 0,
-            isDefault: true, // demo user's only household is their default
-          },
-        });
-
-        return { demoUser, household };
-      });
-
-      // Create rooms outside the transaction (non-critical if partial failure)
-      const livingRoom = await db.room.create({
-        data: {
-          name: "Living Room",
-          householdId: household.id,
-          createdByUserId: demoUser.id,
-        },
-      });
-      const bedroom = await db.room.create({
-        data: {
-          name: "Bedroom",
-          householdId: household.id,
-          createdByUserId: demoUser.id,
-        },
-      });
-      const rooms = [livingRoom, bedroom];
-      const now = new Date();
-
-      for (let i = 0; i < DEMO_PLANTS.length; i++) {
-        const dp = DEMO_PLANTS[i];
-        const careProfile = await db.careProfile.findUnique({
-          where: { name: dp.catalogName },
-        });
-        const lastWateredAt = subDays(now, dp.daysAgoWatered);
-        const nextWateringAt = addDays(lastWateredAt, dp.intervalDays);
-
-        const plant = await db.plant.create({
-          data: {
-            nickname: dp.nickname,
-            species: careProfile?.species ?? dp.catalogName,
-            roomId: rooms[i % rooms.length].id,
-            wateringInterval: dp.intervalDays,
-            careProfileId: careProfile?.id ?? null,
-            householdId: household.id,      // CHANGED: was userId
-            createdByUserId: demoUser.id,   // AUDT-02
-            lastWateredAt,
-            nextWateringAt,
-            reminders: {
-              create: { userId: demoUser.id, enabled: true }, // D-13: per-user
-            },
-          },
-        });
-
-        await db.wateringLog.create({
-          data: {
-            plantId: plant.id,
-            wateredAt: lastWateredAt,
-            performedByUserId: demoUser.id, // AUDT-01
-          },
-        });
-      }
+    const demo = await db.user.findUnique({ where: { email: DEMO_EMAIL } });
+    if (!demo) {
+      return {
+        error:
+          "Demo data not found. Run `npx prisma db seed` to set up the demo.",
+      };
     }
 
     await signIn("credentials", {
@@ -133,7 +37,9 @@ export async function startDemoSession() {
     });
   } catch (error) {
     // signIn throws NEXT_REDIRECT on success — re-throw it
-    const { isRedirectError } = await import("next/dist/client/components/redirect-error");
+    const { isRedirectError } = await import(
+      "next/dist/client/components/redirect-error"
+    );
     if (isRedirectError(error)) {
       throw error;
     }
