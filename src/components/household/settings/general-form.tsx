@@ -62,9 +62,14 @@ export function GeneralForm({
   householdSlug,
   viewerRole,
 }: GeneralFormProps) {
-  // Node 20+ (Next.js 16 minimum) supports Intl.supportedValuesOf per RESEARCH
-  // §Environment Availability. The try/catch + ["UTC"] fallback prevents an
-  // empty select if a runtime unexpectedly returns an empty array.
+  // BUG-01 fix: Intl.supportedValuesOf("timeZone") does NOT include "UTC" — it
+  // returns 418 IANA zones (Africa/*, America/*, …, Pacific/*) only. Households
+  // seeded with timezone: "UTC" (the default in prisma/seed.ts) would have no
+  // matching <option>, and the native select would silently fall back to the
+  // first option (Africa/Abidjan). Saving the form then overwrote the real
+  // stored value. Fix: seed "UTC" unconditionally, and preserve the current
+  // stored household.timezone value so the select has a matching option on
+  // first render regardless of what the platform returns. Dedup via Set.
   const timezones = useMemo(() => {
     try {
       const zones =
@@ -73,11 +78,21 @@ export function GeneralForm({
             supportedValuesOf?: (key: string) => string[];
           }
         ).supportedValuesOf?.("timeZone") ?? [];
-      return zones.length > 0 ? zones.slice().sort() : ["UTC"];
+      const ianaSorted = zones.slice().sort();
+      const unique = new Set<string>(["UTC", ...ianaSorted]);
+      if (household.timezone) unique.add(household.timezone);
+      // Sort with "UTC" pinned to the top, everything else alphabetical.
+      return Array.from(unique).sort((a, b) => {
+        if (a === "UTC") return -1;
+        if (b === "UTC") return 1;
+        return a.localeCompare(b);
+      });
     } catch {
-      return ["UTC"];
+      const fallback = new Set<string>(["UTC"]);
+      if (household.timezone) fallback.add(household.timezone);
+      return Array.from(fallback);
     }
-  }, []);
+  }, [household.timezone]);
 
   // MEMBER view: three labelled read-only rows, no <Form> wrapper.
   if (viewerRole !== "OWNER") {
