@@ -159,7 +159,7 @@ Plans:
   3. Owner can edit household name, timezone, and cycle duration from the settings page; changes take effect at the next cycle boundary
   4. Owner can reorder the rotation member list using up/down controls; the new order is reflected in the rotation immediately
   5. Dashboard shows a cycle banner with current assignee identity, countdown to cycle end, and next-assignee preview
-**Plans**: 8 plans
+**Plans**: 9 plans (8 original + 1 gap-closure for BUG-01)
   - [x] 06-01-PLAN.md — Wave 0 test scaffolds (14 files + fixtures) + 3 Zod schemas (D-32)
   - [x] 06-02-PLAN.md — Three new Server Actions (setDefaultHousehold, updateHouseholdSettings, reorderRotation per D-06/D-11/D-13) + auth.ts/legacy dashboard sort change (D-07/D-08)
   - [x] 06-03-PLAN.md — HouseholdSwitcher component (desktop + mobile variants) + buildSwitchPath utility (D-03/D-04/D-05/D-09)
@@ -168,6 +168,7 @@ Plans:
   - [x] 06-05b-PLAN.md — Plan 05b: Settings sub-components — MembersList (reorder + 3-dot role matrix) (D-10/D-11/D-12/D-18). Split from original Plan 05 per checker warning #4.
   - [x] 06-06-PLAN.md — Settings sub-components: InvitationsCard + AvailabilitySection (D-20/D-21/D-22/D-27/D-28/D-29/D-30)
   - [x] 06-07-PLAN.md — Settings page assembly + layout/user-menu/dashboard wiring + D-35 concurrency test + Pitfall 17 links audit + D-25 gate behavioral test (warning #5) + Chrome DevTools MCP UAT checkpoint
+  - [x] 06-08-PLAN.md — Gap closure: BUG-01 (timezone silent overwrite) — client useMemo fix + server schema defense-in-depth + regression test
 **Pitfall flags**:
   - Pitfall 17: URL routing is established in Phase 1; this phase implements the full client navigation — ensure all internal links use `/h/[slug]/` prefix, not absolute paths without slug
   - shadcn/ui components to verify before installing: `calendar`, `popover`, `command`, `sheet` — check `src/components/ui/` first

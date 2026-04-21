@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: verifying
 stopped_at: Completed Phase 06 Plan 07 — composition + tests; UAT awaiting human verification
-last_updated: "2026-04-20T23:05:03.440Z"
-last_activity: 2026-04-20
+last_updated: "2026-04-21T00:33:20.583Z"
+last_activity: 2026-04-21
 progress:
   total_phases: 8
   completed_phases: 6
-  total_plans: 41
-  completed_plans: 41
+  total_plans: 42
+  completed_plans: 42
   percent: 100
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-16)
 Phase: 06 (settings-ui-switcher-dashboard) — EXECUTING
 Plan: 8 of 8
 Status: Phase complete — ready for verification
-Last activity: 2026-04-20
+Last activity: 2026-04-21
 
 Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 
@@ -60,6 +60,7 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 | Phase 06 P05b | 6 min | 3 tasks | 3 files |
 | Phase 06 P06-06 | 7m | 3 tasks | 4 files |
 | Phase 06 P07 | ~35 min | 4 tasks | 7 files |
+| Phase 06 P08 | 6m | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -121,6 +122,9 @@ Progress: [██░░░░░░░░] 20% (1 of 5 Phase 05 plans complete)
 - [Phase ?]: [Phase 06-07] Settings page composed as a Server Component — reshapes Prisma join rows into client-component row contracts (InvitationRow, AvailabilityRow) at the server boundary; Promise.all fans out 4 queries + counts; getCurrentHousehold dedups via React.cache against the layout's identical call
 - [Phase ?]: [Phase 06-07] Links-audit ALLOWED_PREFIXES includes /dashboard — the legacy /app/(main)/dashboard/page.tsx redirects to /h/<default>/dashboard and is the safe post-ForbiddenError landing target used by error.tsx and not-found.tsx
 - [Phase ?]: [Phase 06-07] D-35 concurrency test uses serialize-then-reorder pattern — deterministic proof that the reorderRotation transaction set-mismatch guard catches stale client state after another tx committed; tampered-non-member case added as a second scenario
+- [Phase ?]: [Phase 06-08] BUG-01 two-layer fix: client useMemo seeds UTC + preserves household.timezone; server schema refines timezone against KNOWN_TIMEZONES (IANA ∪ UTC) — defense in depth
+- [Phase ?]: [Phase 06-08] KNOWN_TIMEZONES computed once via module-scoped IIFE shared across the refine; fallback Set(['UTC']) is narrower than the pre-fix z.string().min(1) even on a runtime missing Intl.supportedValuesOf
+- [Phase ?]: [Phase 06-08] HSET-03 invalid-timezone action test updated: Zod refine now short-circuits at Step 3 (Invalid input.) before the action body Step 5.5 (Please select a valid timezone.)
 
 ### Pending Todos
 
@@ -133,6 +137,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-04-20T23:05:03.435Z
+Last session: 2026-04-21T00:32:44.277Z
 Stopped at: Completed Phase 06 Plan 07 — composition + tests; UAT awaiting human verification
 Next step: Execute Phase 05 Plan 02 (server layer — markNotificationsRead, getUnreadCycleEventCount, getCycleNotificationsForViewer) — unblocked by this plan's typed Prisma client and CycleEventItem export. Plan 05-03 (banners) can run in parallel once CycleEventItem is available (also done by this plan).
