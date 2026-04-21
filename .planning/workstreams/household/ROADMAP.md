@@ -183,7 +183,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Demo mode starts with a pre-seeded "Demo Household" containing sample members, an active cycle, and a sample availability period — all visible without authentication
   2. All household-mutating actions (invite, skip, reorder, settings changes, member removal) are silently blocked in demo mode; the existing read-only guard pattern is used without a new code path
-**Plans**: TBD
+**Plans**: 2 plans
+  - [ ] 07-01-PLAN.md — Seed expansion: DEMO_SAMPLE_MEMBERS constant + prisma/seed.ts seedDemoHousehold (3 members, mid-window Cycle, future Availability) — HDMO-01
+  - [ ] 07-02-PLAN.md — startDemoSession simplification (D-11) + static demo-guard audit test (HDMO-02 regression gate) + seed-structure source-grep test
 
 ### Phase 8: Cycle Snooze
 **Goal**: An active assignee can defer their current cycle window by N days without triggering reassignment. Keeps the same assignee but pushes `cycle.startDate`/`endDate`. Distinct from `skipCurrentCycle` (which reassigns to the next rotation member). Use case: assignee is traveling/sick for a few days but doesn't want to force a full rotation skip.
