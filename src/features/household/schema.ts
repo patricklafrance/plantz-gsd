@@ -3,6 +3,32 @@ import { startOfDay } from "date-fns";
 import { TRANSITION_REASONS, NOTIFICATION_TYPES } from "./constants";
 
 /**
+ * BUG-01 defense-in-depth: known-set of acceptable timezone values.
+ * `Intl.supportedValuesOf("timeZone")` returns 418 IANA zones but does NOT
+ * include "UTC" or "Etc/UTC" — households seeded with timezone: "UTC" (the
+ * prisma/seed.ts default) need it whitelisted. This set is computed once at
+ * module load and shared by the schema-level refine in
+ * updateHouseholdSettingsSchema below.
+ *
+ * Fallback: if a runtime ever lacks Intl.supportedValuesOf, collapse to just
+ * ["UTC"] — still stricter than z.string().min(1) and matches the client-side
+ * useMemo fallback in general-form.tsx.
+ */
+const KNOWN_TIMEZONES: ReadonlySet<string> = (() => {
+  try {
+    const zones =
+      (
+        Intl as typeof Intl & {
+          supportedValuesOf?: (key: string) => string[];
+        }
+      ).supportedValuesOf?.("timeZone") ?? [];
+    return new Set<string>(["UTC", ...zones]);
+  } catch {
+    return new Set<string>(["UTC"]);
+  }
+})();
+
+/**
  * Household member role. Used by Phase 2 (createHousehold/membership actions),
  * Phase 4 (invitation accept), Phase 6 (settings UI), and Phase 7 (demo seed).
  * Mirrors the `role` string column on HouseholdMember (Plan 02 schema).
@@ -208,7 +234,16 @@ export const updateHouseholdSettingsSchema = z.object({
   householdId: z.cuid(),
   householdSlug: z.string().min(1),
   name: z.string().min(1, "Household name is required.").max(100),
-  timezone: z.string().min(1),
+  // BUG-01 defense-in-depth: reject arbitrary strings that aren't a known
+  // IANA zone or "UTC". Prevents client-side bugs or forged requests from
+  // persisting invalid timezones that would later throw `RangeError: Invalid
+  // time zone specified` in downstream date formatting.
+  timezone: z
+    .string()
+    .min(1)
+    .refine((tz) => KNOWN_TIMEZONES.has(tz), {
+      message: "Unknown timezone. Pick a valid IANA zone or UTC.",
+    }),
   cycleDuration: z
     .enum(["1", "3", "7", "14"], {
       message: "Please select a valid cycle duration (1, 3, 7, or 14 days).",

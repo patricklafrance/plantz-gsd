@@ -145,15 +145,20 @@ describe("updateHouseholdSettings (HSET-03 / D-13)", () => {
     expect(mockHousehold.update).not.toHaveBeenCalled();
   });
 
-  test("HSET-03 invalid timezone: Intl.DateTimeFormat pre-check returns user-friendly error", async () => {
+  test("HSET-03 invalid timezone: schema refine rejects unknown IANA zone (BUG-01 defense-in-depth)", async () => {
+    // BUG-01 gap-closure (Plan 06-08): updateHouseholdSettingsSchema.timezone
+    // is now narrowed via a .refine against `Intl.supportedValuesOf("timeZone")
+    // ∪ {"UTC"}`. Arbitrary strings are rejected at Step 3 (Zod parse) with
+    // "Invalid input." — Step 5.5's Intl.DateTimeFormat pre-check is still
+    // in place as belt-and-braces but unreachable for this input.
     mockSession();
-    mockRoleAccess("OWNER");
 
     const result = await updateHouseholdSettings(
       validInput({ timezone: "Not/A_Real_Zone" }),
     );
 
-    expect(result).toEqual({ error: "Please select a valid timezone." });
+    expect(result).toEqual({ error: "Invalid input." });
+    expect(vi.mocked(requireHouseholdAccess)).not.toHaveBeenCalled();
     expect(mockHousehold.update).not.toHaveBeenCalled();
   });
 
