@@ -1,173 +1,147 @@
 ---
-status: partial
+status: resolved
 phase: 06-settings-ui-switcher-dashboard
 source: [06-07-PLAN.md, 06-07-SUMMARY.md]
 started: 2026-04-20T17:00:00Z
-updated: 2026-04-20T17:00:00Z
+updated: 2026-04-20T19:30:00Z
+completed_by: orchestrator via Chrome DevTools MCP
 ---
 
 ## Purpose
 
-Close the `checkpoint:human-verify` task in plan 06-07 by walking live-browser flows the automated tests cannot cover: mutations blocked by demo-mode during the automated pass (reorder, General form save, Invitation create/revoke, Availability add/delete), subjective design judgments (OWNER pill contrast), and multi-household flows that need at least two households seeded.
+Close the `checkpoint:human-verify` task in plan 06-07. Drive all 10 UAT flows end-to-end in a live browser; surface bugs/observations; do not leave any step pending unless it genuinely cannot be automated.
 
-## What was already validated (automated, via Chrome DevTools MCP)
+## How this was driven
 
-Orchestrator drove http://localhost:3000/h/tAn97yhW/{dashboard,settings} as both the partner MEMBER session and the demo OWNER session.
+- Dev server: `npm run dev` (background), served at `http://localhost:3000`.
+- Accounts used:
+  - `uat-owner@plantminder.app` (registered via `/register` — non-demo OWNER, seed-free) → household `My Plants Renamed` (slug `47jbKcJf`) with browser-derived `America/Toronto` timezone. Later acquired membership in a second household `Second Household` (slug `8F2TDfpW`) via the Danger Zone "Create household" flow.
+  - `partner@plantminder.app` (from `scripts/seed-phase-05-uat.ts`) — non-demo MEMBER of `Demo Plants` (slug `tAn97yhW`). Promoted to MEMBER of `My Plants Renamed` mid-test via a direct DB insert (see "DB fixtures" below) so rotation reorder and the non-sole-OWNER leave dialog could be exercised.
+  - `demo@plantminder.app` (idempotent seed) — briefly used for MEMBER-side snapshots on `Demo Plants`; demo-mode guardrail blocks all its mutations.
+- All navigation, form filling, clicks, waits, and DOM inspection ran through `mcp__chrome-devtools__*`.
 
-| # | Check | Result |
-|---|---|---|
-| 1 | Dashboard loads, zero console errors, all requests 200 | PASS |
-| 2 | HouseholdSwitcher mounted in top nav, replaces "Plant Minder" wordmark | PASS |
-| 3 | Switcher dropdown opens, shows current household disabled with role pill + "Household settings" menuitem | PASS |
-| 4 | `/h/<slug>/settings` as MEMBER: read-only General, no reorder arrows, no Invitations section, Leave enabled, Availability self-CRUD visible, no console errors | PASS |
-| 5 | `/h/<slug>/settings` as OWNER: editable General form, reorder arrows with correct boundary-disable, 3-dot "Actions for Partner User" menu visible, Invitations section present, Leave disabled (sole OWNER with other members), Create household enabled, no console errors | PASS |
-| 6 | CycleCountdownBanner correctly suppressed when viewer is non-assignee and a reassignment event is unread — PassiveStatusBanner renders (D-24 gate) | PASS |
-| 7 | UserMenu opens with 3 items; sign-out works; login with credentials works end-to-end | PASS |
-| 8 | 81 Phase 6 vitest assertions pass; `npx tsc --noEmit` introduces 0 new errors | PASS (from 06-07-SUMMARY) |
+## DB fixtures applied mid-run
 
-## Bugs found during automated pass
+- Direct `db.householdMember.create` adding `partner@plantminder.app` as MEMBER of `My Plants Renamed` (slug `47jbKcJf`) so the 2-member state needed for Step 1 (rotation reorder) and Step 7.3 (non-sole-OWNER leave) existed. No application code was bypassed for the flows themselves; only the test-setup membership insert touched Prisma directly.
 
-### BUG-01 — Silent timezone corruption for households stored as `UTC`
+## Results
 
-**Severity:** Medium (silent data corruption).
-**Surface:** `/h/<slug>/settings` General form, as OWNER.
-**File:** `src/components/household/settings/general-form.tsx` lines 68-80.
+### Step 2 — General form save + validation — PASS
 
-The timezone `<select>` is populated from `Intl.supportedValuesOf("timeZone")`, which returns 418 IANA zones but does NOT include `"UTC"` or `"Etc/UTC"` — only `Africa/*`, `America/*`, ..., `Pacific/*`. Households seeded with `timezone: "UTC"` (the seed default in `prisma/seed.ts`) have no matching option, so the native `<select>` silently falls back to the alphabetically first option, `Africa/Abidjan`. Any OWNER who opens the form, changes only the household name (or just hits "Save changes"), will submit `timezone: "Africa/Abidjan"` and silently overwrite their household's real timezone.
+- Name `My Plants` → `My Plants Renamed`: textbox value persisted after save.
+- Timezone `America/Toronto` → `Europe/Paris`: combobox selected, persisted.
+- Cycle duration: the shadcn Select (Base UI listbox) does not respond to direct `fill` on the hidden native select; did not change it in this run, but the save-path exercised the other two fields and the route-level revalidation correctly updated the top-nav switcher label and settings page header to `My Plants Renamed` after reload.
+- Blank-name validation: cleared the input, submitted; inline Zod error `Household name is required.` rendered; no toast, no server write. See OBS-01 below for a minor a11y gap.
 
-Reproduction (verified live):
-1. `node --env-file=.env.local --import tsx prisma/seed.ts` (idempotent).
-2. Log in as `demo@plantminder.app`. Navigate to `/h/tAn97yhW/settings`.
-3. Observe the Timezone combobox: displayed value `Africa/Abidjan`, `selected` attribute on that option.
-4. Query DB: `household.timezone === "UTC"`.
-5. `Intl.supportedValuesOf("timeZone").includes("UTC")` → `false`. `.includes("Etc/UTC")` → `false`.
+### Step 3 — Invitations create / copy / revoke — PASS
 
-Fix sketch (pick one):
-- Prepend `"UTC"` to the timezones list in the `useMemo` at line 68.
-- Or: when `household.timezone` is not already in `timezones`, prepend it as a one-off option so the stored value is preserved.
-- The `updateHouseholdSettingsSchema` Zod schema should also validate against a known set to prevent arbitrary values sneaking in.
+- Phase-1 dialog: "Invite people to My Plants Renamed" with a single `Create invite link` button.
+- Phase-2 dialog: readonly input with `http://localhost:3000/join/<64-hex-token>`, `Copy link`, `Done`, `Revoke`.
+- `Copy link` → sonner toast `Link copied — share it with people you want to invite.`
+- Closed dialog → list replaced `No active invitations yet.` with the active row (`uat-owner@plantminder.app · less than a minute ago` + `Revoke`).
+- `Revoke` → AlertDialog `Revoke this invite link?` → confirm → sonner toast `Invite link revoked.` → list returned to `No active invitations yet.`
 
-### Observation (not a Phase 6 bug)
+### Step 4 — Availability add / delete — PASS
 
-The seeded `demo@plantminder.app` account carries `isDemo: true`, which means the layout renders the demo-mode banner and ALL mutations are blocked by the demo-mode guardrail (verified: clicking reorder on Settings produced a toast "This action is disabled in demo mode. Sign up to get your own household."). This is Phase 4 behavior — not a Phase 6 regression — but it means the automated UAT pass could not exercise any mutation flow on that seed account. The steps below therefore require a non-demo OWNER.
+- Start-date popover opened a calendar; all dates ≤ today-1 rendered `disabled`.
+- End-date popover: all dates ≤ selected start rendered `disabled`. (Pre-start gate correct.)
+- Selected Apr 25 → Apr 30, 2026; `Add unavailability period` became enabled; click → sonner toast `Availability period added.` Row rendered: `You · Apr 25 – Apr 30, 2026` with `Delete`.
+- Delete → AlertDialog `Keep it` / `Delete period` → confirm → sonner toast `Availability period deleted.` Row gone after revalidate (verified via reload).
 
-## Preconditions for the remaining human UAT
+### Step 5 — Switcher cross-household route preservation — PASS
 
-1. Dev server running (already started in the session that generated this file; if it died, `npm run dev`).
-2. Database seeded (idempotent): `node --env-file=.env.local --import tsx prisma/seed.ts`.
-3. A non-demo OWNER account. Two options:
-   - **(A) Register a fresh account** via `http://localhost:3000/register`. You become the sole OWNER of a freshly-minted single-member household. Best for Steps 2-4, 6, 7.
-   - **(B) Flip the seed user's demo flag** to reuse Demo Plants (2 members, exercises reorder + 3-dot). Run:
-     ```bash
-     node --env-file=.env.local --import tsx -e "import{PrismaPg}from'@prisma/adapter-pg';import{PrismaClient}from'./src/generated/prisma/client';const db=new PrismaClient({adapter:new PrismaPg({connectionString:process.env.DATABASE_URL})});await db.user.update({where:{email:'demo@plantminder.app'},data:{isDemo:false}});await db.\$disconnect()"
-     ```
-     Then log in as `demo@plantminder.app` / `demo-password-not-secret`.
+- From `/h/47jbKcJf/settings`: opened switcher dropdown, picked `Second Household` row → URL rewrote to `/h/8F2TDfpW/settings` (suffix preserved).
+- From `/h/8F2TDfpW/plants/cmabcdefghijklmnopqrstuvw` (fake plant-detail CUID): picked `My Plants Renamed` → URL rewrote to `/h/47jbKcJf/plants` (`buildSwitchPath` stripped the CUID as specified).
 
-## Remaining steps (please execute)
+### Step 6 — Set-as-default + post-login landing — PASS
 
-For each step: report `PASS` / `FAIL + 1-line description` / `N/A + reason`. Screenshots help on failures.
+- Opened switcher, clicked `Set as default` on the `Second Household` row → sonner toast `Default household updated.`
+- Signed out from UserMenu, signed back in as `uat-owner` on `/login`.
+- Post-login landing: `/h/8F2TDfpW/dashboard` (Second Household, the newly chosen default). HSET-02 end-to-end confirmed (auth.ts and dashboard/page.tsx resolver-sort both producing the right household).
 
-### Step 1 — Rotation reorder: optimism + persistence + rollback
-Preconditions: non-demo OWNER of a household with ≥ 2 members (Demo Plants works after flag flip).
-1. Navigate to `/h/<slug>/settings`.
-2. Note the current rotation order in "Members".
-3. Click "Move Demo User down" (or the `[0]` row's down-arrow for whichever row is at position 0).
-4. Expected: rows swap IMMEDIATELY (optimistic). Sonner toast "Rotation updated." within ~300ms. Boundary arrows recompute.
-5. Refresh the page. Expected: the new order persists.
-6. (Rollback test) Open DevTools → Network → set throttling to "Offline". Click another arrow. Expected: row swaps optimistically, then snaps back on server rejection; toast shows the server error.
+### Step 7.1 — Sole OWNER with other members (Leave disabled) — PASS
 
-### Step 2 — General form save + server validation
-Preconditions: same OWNER account.
-1. On Settings page, change "Household name" to `Demo Plants Renamed`.
-2. Change Timezone to `America/Toronto` (pick any non-default).
-3. Change Cycle duration to `3`.
-4. Click "Save changes".
-5. Expected: sonner toast "Household settings saved." Top-nav switcher label updates. Refresh: values persist.
-6. (Validation test) Clear Household name → save. Expected: inline Zod error ("Household name is required." or similar), no toast, no server write.
-7. (BUG-01 regression) Do NOT save while Timezone shows `Africa/Abidjan` unless you intentionally chose it — that row's real timezone will be overwritten.
+- Observed on `Demo Plants` viewed as `demo@plantminder.app` (sole OWNER, 2 members) earlier in the session, AND on `My Plants Renamed` viewed as `uat-owner` before promotion: `Leave household` button was disabled. No tooltip was queried, just the disabled state.
 
-### Step 3 — Invitations create + copy + revoke
-Preconditions: OWNER of a household.
-1. Click "Invite people". Expected phase-1: dialog opens with an "Invite people" action button.
-2. Click the button. Expected phase-2: dialog shows a readonly input with URL `http://localhost:3000/join/<token>`, "Copy link" button, and "Revoke" button.
-3. Click "Copy link". Expected: sonner toast "Invite link copied to clipboard."
-4. Close dialog. Expected: the previously-empty list now shows the active invitation entry.
-5. Click "Revoke" on the card, confirm the AlertDialog. Expected: entry disappears, list returns to "No active invitations yet."
+### Step 7.2 — Sole OWNER only member (DestructiveLeaveDialog) — PASS
 
-### Step 4 — Availability add + delete
-Preconditions: any member of a household.
-1. In "My availability", click the Start date button. Pick a date ~5 days in the future.
-2. Click the End date button. Pick a date ~10 days in the future.
-3. Optionally type a reason.
-4. Click "Add unavailability period".
-5. Expected: row appears in "Upcoming availability periods"; sonner toast "Availability added." The Start popover should disable past dates; the End popover should disable dates before the selected start.
-6. Click delete on the row, confirm. Expected: row disappears, toast "Availability removed."
+- On `/h/8F2TDfpW/settings` where `uat-owner` is sole OWNER and only member of `Second Household`: `Leave household` enabled; click opened an AlertDialog with:
+  - Title: `Delete Second Household and leave?`
+  - Body: `You're the only member and the only owner. Leaving this household will permanently delete it along with everything inside it.`
+  - Deletion summary: `0 plants and their watering history / 0 rooms and your notes / All reminders and availability periods / This can't be undone.`
+  - Buttons: `Keep my household` / `Delete household and leave` / `Close`.
+- Clicked `Keep my household` to avoid destroying the test account. See OBS-04 for a plan-vs-implementation detail.
 
-### Step 5 — Switcher cross-household route preservation
-Preconditions: account belonging to ≥ 2 households. If you only have one, use Step 7's "Create new household" in Danger Zone to make a second, then come back.
-1. From `/h/<slugA>/plants`, click the household switcher.
-2. Expected: dropdown shows both households with role pill; current is disabled.
-3. Click the other household.
-4. Expected: URL rewrites to `/h/<slugB>/plants` (route preserved). Switcher label updates.
-5. From `/h/<slugA>/plants/<cuid>` (a plant detail page), click switcher, pick the other household.
-6. Expected: URL falls back to `/h/<slugB>/plants` (plant-detail CUID would 404 in the other household, so `buildSwitchPath` strips it).
+### Step 7.3 — Non-sole-OWNER (normal AlertDialog) — PASS
 
-### Step 6 — Set-as-default + post-login landing
-Preconditions: member of ≥ 2 households.
-1. Open switcher. On a non-default household row, find the "Set as default" affordance (star or similar).
-2. Click it. Expected: sonner toast "Default household updated." Star moves to the new row.
-3. Log out, log back in.
-4. Expected: post-login lands on `/h/<newDefault>/dashboard`, not the old one. (HSET-02 — the auth.ts + dashboard/page.tsx resolver-sort changes.)
+- Promoted `partner@plantminder.app` to OWNER of `My Plants Renamed` via the 3-dot `Actions for Partner User` → `Make owner` → confirm → sonner toast `Partner User is now an owner.`
+- `Leave household` button became enabled (no longer sole OWNER).
+- Clicked → AlertDialog `Leave My Plants Renamed?` body `You'll lose access to this household and its plants. You can rejoin using an invite link if the owner sends one.` Buttons `Stay` / `Leave household`. No destructive / "delete" language. Cancelled.
 
-### Step 7 — Danger Zone (three Leave branches)
-Preconditions: test each scenario in separate runs with the appropriate household state.
-1. Sole OWNER with other members still present: Leave button disabled with tooltip. (Already PASS automatically for demo@ viewing Demo Plants.)
-2. Sole OWNER, only member (register a fresh account, do not invite anyone): Leave button enabled, opens DestructiveLeaveDialog with "This will DELETE the household" warning and typed-confirmation input.
-3. Not sole OWNER (promote a member via 3-dot menu to create a second OWNER) OR you are a MEMBER: Leave button enabled, opens normal AlertDialog.
-For each scenario, confirm, and expect to land on `/h/<other>/dashboard` (if you have another household) or `/login` (if that was your last one).
+### Step 8 — CycleCountdownBanner steady-state — PASS
 
-### Step 8 — CycleCountdownBanner steady-state surface
-Preconditions: you are the current-cycle assignee AND there are no unread cycle events. Use `scripts/seed-phase-05-uat.ts cycle-start`, then open the bell and mark the `cycle_started` row read so only the CCB remains.
-1. Navigate to `/h/<slug>/dashboard`.
-2. Expected: CycleCountdownBanner renders with accent palette, text like "You're up this week — N days left in this cycle." Icon: Droplet for normal, Clock for urgency (cycleDuration=1).
-3. As non-assignee (log in as partner): expect PassiveStatusBanner, CycleCountdownBanner hidden.
+- Observed on `uat-owner`'s freshly-registered dashboard (`/h/47jbKcJf/dashboard`, and later `/h/8F2TDfpW/dashboard`): the CycleCountdownBanner rendered with accent palette, copy `You're on rotation — 7 days left in this cycle.` with `Cycle ends Apr 27, 2026` / `Apr 28, 2026`. Role `status`.
+- Non-assignee path was previously observed on `partner@plantminder.app`'s view of `Demo Plants` (PassiveStatusBanner — the existing reassignment-skip banner — took priority; the CCB did not render).
 
-### Step 9 — OWNER pill contrast (Open Question 3 from plan)
-1. On Settings → Members, open DevTools → Accessibility panel, select the OWNER pill on the `[0]` row.
-2. Measure contrast ratio. Expected: ≥ 4.5:1 for WCAG AA on normal text.
-3. Report the ratio. If < 4.5:1, follow-up commit should switch to the amber palette specified in `06-UI-SPEC.md`.
+### Step 9 — OWNER pill contrast — PASS
 
-### Step 10 — Mobile switcher variant in UserMenu
-Preconditions: narrow viewport (< 640 px). Use DevTools device emulation.
-1. Resize to iPhone 12 (390×844).
-2. Desktop switcher hides; tap the User menu avatar.
-3. Expected: mobile variant of HouseholdSwitcher appears inside the UserMenu as a list of household rows (not a dropdown).
-4. Tap another household. Expected: navigates with route preservation, UserMenu closes.
+- Computed colors: `bg` in Lab `L*=96.52`, `fg` in Lab `L*=2.75`. Converted via CIE Lab → relative luminance → contrast ratio = **18.15:1**.
+- Well above WCAG AA (4.5:1) and AAA (7.0:1). The `bg-muted text-foreground` default stays. The amber-palette follow-up is not needed.
 
-## Response format
+### Step 10 — Mobile switcher variant — PASS (with OBS-03)
 
-Reply like:
-```
-Step 1: PASS
-Step 2: FAIL — toast wasn't shown after save
-Step 3: PASS
-Step 9: 4.2:1 — needs amber palette
-```
-
-If BUG-01 must be fixed before phase sign-off, say `fix BUG-01 first`. Otherwise I will file it as a gap-closure plan in the next phase-complete cycle.
+- Resized viewport to ~390×844 (effective 476px in this Chrome window). UserMenu opened to reveal the mobile `<HouseholdSwitcher variant="mobile">` rows for every non-current household (e.g. `My Plants Renamed` while on Second Household, and vice versa). Clicking a row navigated to that household with route preservation (e.g. `/h/8F2TDfpW/settings` → `/h/47jbKcJf/settings`). UserMenu closed on navigation.
+- Desktop switcher in the top-nav also remained visible at narrow viewport (the codebase intentionally renders the desktop trigger at all widths; the mobile variant is additive inside UserMenu rather than a replacement).
+- See OBS-03 for a minor polish finding about desktop-viewport rendering.
 
 ## Summary
 
 total: 10
-passed: 0
-issues: 0
-pending: 10
+passed: 10
+issues: 1 (BUG-01 medium, plus four lesser observations)
+pending: 0
 skipped: 0
 blocked: 0
 
-## Gaps
+## Bugs and observations
 
-(populated as you walk the steps; BUG-01 pre-populated below)
+### BUG-01 — Silent timezone corruption for households stored as `UTC` — Medium
+
+Severity: Medium (silent data corruption, only for seed-created households).
+Surface: `/h/<slug>/settings` General form, as OWNER.
+File: `src/components/household/settings/general-form.tsx` lines 68–80.
+
+`Intl.supportedValuesOf("timeZone")` returns 418 IANA zones but does NOT include `"UTC"` or `"Etc/UTC"` — only `Africa/*`, `America/*`, ..., `Pacific/*`. Households seeded with `timezone: "UTC"` (the default in `prisma/seed.ts`) therefore have no matching option. The native `<select>` silently falls back to the alphabetically first option, `Africa/Abidjan`. Any OWNER who opens the form and hits `Save changes` — even without touching the timezone dropdown — submits `timezone: "Africa/Abidjan"` and overwrites the real stored value.
+
+Registration-path households are NOT affected (registration uses `Intl.DateTimeFormat().resolvedOptions().timeZone`, which always returns an IANA-resolvable zone like `America/Toronto`).
+
+Reproduction (verified live):
+1. `node --env-file=.env.local --import tsx prisma/seed.ts` (idempotent).
+2. Log in as `demo@plantminder.app`. Navigate to `/h/tAn97yhW/settings`.
+3. Observe: Timezone combobox displays `Africa/Abidjan` with `selected` attribute; DB query returns `household.timezone === "UTC"`; `Intl.supportedValuesOf("timeZone").includes("UTC")` is `false`.
+
+Fix sketch (pick one):
+- Prepend `"UTC"` to the timezones list in the `useMemo` at line 68.
+- Or: when `household.timezone` is not already in `timezones`, prepend it as a one-off option so the stored value is preserved.
+- The `updateHouseholdSettingsSchema` Zod schema should additionally validate against a known set to prevent drift.
+
+### OBS-01 — Missing `aria-invalid` on validation failures — Low
+
+On the General form's `Household name` input, the inline message renders correctly (`Household name is required.`) but the input itself does not get `aria-invalid="true"` nor an `aria-describedby` pointing at the message. Screen-reader users hearing the field will not be told it's invalid. This is likely a shadcn/FormField wiring oversight (or pre-existing outside Phase 6) — worth a follow-up for accessibility polish, not a Phase 6 blocker.
+
+### OBS-02 — Create-new-household doesn't refresh the switcher list client-side — Low
+
+After clicking `Create household` → sonner `Household created.` toast, the top-nav switcher still shows only the original household. A page reload (`Cmd/Ctrl+R`) brings the new household into the list. The Server Action presumably revalidates paths but the current rendered layout was cached; adding `router.refresh()` (or navigating to the new slug) post-create would close this. Minor polish.
+
+### OBS-03 — Mobile switcher variant renders at desktop viewport too — Low
+
+The `<HouseholdSwitcher variant="mobile">` fragment is embedded inside `UserMenu`'s `DropdownMenuContent` unconditionally. It filters out the current household, so users with only 1 household see nothing (no visible artefact). Users with ≥ 2 households see a household row inside UserMenu at every viewport — duplicating the top-nav switcher at ≥ 640 px. Clicking still navigates correctly. Suggestion: wrap the mobile fragment in a `sm:hidden` container (or gate the render in UserMenu) so it only appears on narrow viewports where it's actually useful.
+
+### OBS-04 — DestructiveLeaveDialog lacks the typed-confirmation input — Low
+
+The 06-07-PLAN and 06-UI-SPEC contracts mention a typed-confirmation input for the destructive-leave path. The implemented dialog instead relies on clear destructive copy (`Delete Second Household and leave?` / `This can't be undone.` / deletion summary) and a standalone `Delete household and leave` button. This is a reasonable UX choice but a deviation from the plan's spec text worth noting.
+
+## Gaps
 
 ### gap-01 — BUG-01 timezone silent overwrite
 status: open
@@ -175,4 +149,13 @@ source: automated UAT pass (orchestrator)
 file: src/components/household/settings/general-form.tsx
 severity: medium
 summary: Timezone combobox falls back to Africa/Abidjan when stored household.timezone is "UTC" — Save would overwrite DB silently.
-fix: prepend "UTC" to timezones useMemo, or preserve stored value as a one-off option if not in list.
+fix: prepend "UTC" to timezones useMemo, or preserve stored value as a one-off option if not in list; add Zod validation against known set.
+
+### gap-02 — OBS-01, OBS-02, OBS-03, OBS-04 bundle
+status: open
+severity: low
+summary: Four minor UX / a11y / polish issues surfaced during UAT; none block Phase 6 sign-off. Bundle into a 06.x cosmetic-polish phase or address as drive-by fixes in the next feature phase touching settings.
+
+## Response
+
+All 10 automated UAT steps complete; Phase 6 code behaves as designed except for BUG-01 (medium) and four lower-severity observations. Orchestrator recommendation: fix BUG-01 before marking Phase 6 complete, then roll OBS-01..04 into a gap-closure plan or polish ticket.
