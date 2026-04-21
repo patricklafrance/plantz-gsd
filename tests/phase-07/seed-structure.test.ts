@@ -3,6 +3,13 @@
  *
  * Source-grep behavioral surrogates — same pattern as tests/phase-06/dashboard-redirect.test.ts.
  * No runtime DB required; reads source files as text.
+ *
+ * Covers:
+ *   - HDMO-01 — Plan 07-01 seed expansion (DEMO_SAMPLE_MEMBERS, Cycle, Availability).
+ *   - HDMO-02 — Plan 07-02 startDemoSession simplification (lazy bootstrap removed).
+ *
+ * startDemoSession is on the demo-guard-audit SKIP_FUNCTIONS allowlist, so this
+ * file is the regression gate that locks its simplified shape.
  */
 import { describe, test, expect } from "vitest";
 import { readFileSync } from "node:fs";
@@ -43,6 +50,11 @@ describe("Phase 7 seed-data.ts assertions (HDMO-01)", () => {
   test("seed-data.ts has rotationOrder: 2 for bob", () => {
     const src = readSource("src/features/demo/seed-data.ts");
     expect(src).toContain("rotationOrder: 2");
+  });
+
+  test("seed-data.ts keeps DEMO_EMAIL as the canonical demo user email (T-07-02: sample emails must NOT equal DEMO_EMAIL)", () => {
+    const src = readSource("src/features/demo/seed-data.ts");
+    expect(src).toContain('DEMO_EMAIL = "demo@plantminder.app"');
   });
 });
 
@@ -156,9 +168,41 @@ describe("Phase 7 seed.ts assertions (HDMO-01)", () => {
     expect(matches).not.toBeNull();
     expect(matches!.length).toBe(2);
   });
+});
 
-  test("startDemoSession no longer contains lazy-creation inline bcryptjs import", () => {
+describe("Phase 7 startDemoSession simplification (HDMO-02 — D-11 lazy bootstrap removed)", () => {
+  test("actions.ts no longer contains lazy-creation inline bcryptjs import", () => {
     const src = readSource("src/features/demo/actions.ts");
     expect(src).not.toContain('await import("bcryptjs")');
+  });
+
+  test("actions.ts no longer creates households in the demo entry point", () => {
+    const src = readSource("src/features/demo/actions.ts");
+    expect(src).not.toContain("tx.household.create");
+    expect(src).not.toContain("tx.householdMember.create");
+  });
+
+  test("actions.ts no longer imports generateHouseholdSlug or DEMO_PLANTS (lazy bootstrap artefacts)", () => {
+    const src = readSource("src/features/demo/actions.ts");
+    expect(src).not.toContain("generateHouseholdSlug");
+    expect(src).not.toContain("DEMO_PLANTS");
+  });
+
+  test("startDemoSession has the simplified shape: findUnique → signIn → redirect", () => {
+    const src = readSource("src/features/demo/actions.ts");
+    expect(src).toContain(
+      "db.user.findUnique({ where: { email: DEMO_EMAIL } })",
+    );
+    expect(src).toContain('signIn("credentials"');
+  });
+
+  test("startDemoSession surfaces a seed-missing error pointing to `npx prisma db seed`", () => {
+    const src = readSource("src/features/demo/actions.ts");
+    expect(src).toContain("Demo data not found. Run `npx prisma db seed`");
+  });
+
+  test("seedStarterPlants retains its session.user.isDemo guard (the one legitimate isDemo check in this module)", () => {
+    const src = readSource("src/features/demo/actions.ts");
+    expect(src).toContain("session.user.isDemo");
   });
 });
