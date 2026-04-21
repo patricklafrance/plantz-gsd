@@ -28,3 +28,25 @@ These failures reproduce on `main` prior to Plan 07's commits (4de1476,
 
 `npx vitest run tests/phase-06/` passes 14/14 files, 81/81 tests, 0 todos
 on the same environment. Plan 07 introduces zero regressions.
+
+## 2026-04-20 (Plan 06-08 execution)
+
+Plan 06-08 (BUG-01 gap closure) ran `npx vitest run tests/phase-06/` without
+`DATABASE_URL` set. One additional file-level failure surfaced:
+
+| File                                                 | Failure Count | Notes                                                    |
+| ---------------------------------------------------- | ------------- | -------------------------------------------------------- |
+| tests/phase-06/reorder-rotation-concurrency.test.ts  | (file-level)  | Real-DB integration test; imports `@/features/household/actions` which transitively creates a Prisma client at module load. Requires `DATABASE_URL` — reproduces identically on pre-Plan-06-08 commit. Not caused by this plan. |
+
+Plan 06-08 touched files (`general-form.tsx`, `schema.ts`, new
+`settings-general-form-utc.test.tsx`) — zero new failures in files modified
+by this plan. All three targeted test files pass:
+
+- `tests/phase-06/settings-general-form.test.tsx` — 5/5 pass
+- `tests/phase-06/update-household-settings.test.ts` — 8/8 pass (1 test
+  updated to reflect new schema refine semantics — see Plan 06-08 SUMMARY)
+- `tests/phase-06/settings-general-form-utc.test.tsx` — 7/7 pass (new)
+
+TypeScript baseline: pre-existing `TS2352` errors in
+`tests/reminders.test.ts`, `tests/rooms.test.ts`, `tests/watering.test.ts`
+are unrelated to Plan 06-08 (NextMiddleware cast pattern predates this plan).
