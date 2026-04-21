@@ -107,31 +107,34 @@ export async function seedStarterPlants(plantCountRange?: string, householdId?: 
     return { error: "Starter plant catalog is empty. Run `npx prisma db seed` to populate it." };
   }
 
-  const createdPlants: string[] = [];
-
+  // WR-02: Wrap plant creation in $transaction so a failure mid-loop (e.g. unique
+  // constraint, transient DB error) rolls back all partial writes. Prior shape used
+  // a sequential for-loop calling db.plant.create, which left the collection with a
+  // random subset of starter plants on failure — particularly user-visible during
+  // onboarding.
   // requireHouseholdAccess is invoked earlier (WR-03) — before any DB reads.
-  for (const profile of allProfiles) {
-    const plant = await db.plant.create({
-      data: {
-        nickname: profile.name,
-        species: profile.species,
-        wateringInterval: profile.wateringInterval,
-        careProfileId: profile.id,
-        householdId: targetHouseholdId,   // CHANGED: was userId
-        createdByUserId: session.user.id, // AUDT-02
-        lastWateredAt: now,
-        nextWateringAt: addDays(now, profile.wateringInterval),
-        reminders: {
-          create: {
-            userId: session.user.id, // D-13: per-user
-            enabled: true,
+  const createdPlants = await db.$transaction(
+    allProfiles.map((profile) =>
+      db.plant.create({
+        data: {
+          nickname: profile.name,
+          species: profile.species,
+          wateringInterval: profile.wateringInterval,
+          careProfileId: profile.id,
+          householdId: targetHouseholdId,   // CHANGED: was userId
+          createdByUserId: session.user.id, // AUDT-02
+          lastWateredAt: now,
+          nextWateringAt: addDays(now, profile.wateringInterval),
+          reminders: {
+            create: {
+              userId: session.user.id, // D-13: per-user
+              enabled: true,
+            },
           },
         },
-      },
-    });
-
-    createdPlants.push(plant.id);
-  }
+      }),
+    ),
+  );
 
   revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
   revalidatePath(HOUSEHOLD_PATHS.plants, "page");
