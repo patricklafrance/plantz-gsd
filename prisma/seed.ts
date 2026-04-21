@@ -61,6 +61,12 @@ async function main() {
       12,
     );
 
+    // Single `now` used by both the $transaction callback (cycle/availability date math)
+    // and the plant loop below. Hoisted here to prevent shadowing (WR-01) — a future
+    // refactor that merges the plant loop into the transaction would otherwise silently
+    // reuse a stale inner `now`, causing subtle clock skew.
+    const now = new Date();
+
     // Create demo user + 2 sample users + household + 3 members + Cycle #1 + Availability atomically
     const { demoUser, household, aliceUser, bobUser } = await db.$transaction(
       async (tx) => {
@@ -155,7 +161,7 @@ async function main() {
         // anchorDate correctness, then override startDate/endDate for the mid-window shift.
         // Pitfall 2: anchorDate MUST stay as "tomorrow UTC" (drives computeAssigneeIndex
         // for future cycle transitions) — only startDate/endDate are shifted.
-        const now = new Date();
+        // `now` is declared in the outer scope (before $transaction) — see WR-01.
         const { anchorDate } = computeInitialCycleBoundaries(now, "UTC", 7);
         const cycleStartDate = subDays(now, 3);
         const cycleEndDate = addDays(now, 4);
@@ -210,7 +216,7 @@ async function main() {
     });
 
     const rooms = [livingRoom, bedroom];
-    const now = new Date();
+    // `now` reuses the outer-scope declaration hoisted before $transaction (WR-01).
 
     for (let i = 0; i < DEMO_PLANTS.length; i++) {
       const demoPlant = DEMO_PLANTS[i];
