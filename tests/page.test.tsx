@@ -19,6 +19,12 @@ vi.mock("../auth", () => ({
   auth: vi.fn().mockResolvedValue(null),
 }));
 
+// Page now resolves the active household before redirecting; mock the
+// query module so importing the page doesn't reach into Prisma/db.
+vi.mock("@/features/household/queries", () => ({
+  resolveActiveHouseholdSlug: vi.fn().mockResolvedValue(null),
+}));
+
 test("home page module exports a default async function", async () => {
   const { default: HomePage } = await import("../src/app/page");
   expect(typeof HomePage).toBe("function");

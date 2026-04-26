@@ -16,26 +16,24 @@ function readSource(relative: string) {
   return readFileSync(resolve(projectRoot, relative), "utf8");
 }
 
-describe("Legacy /dashboard redirect stub (D-08)", () => {
+describe("Active-household resolver (D-08)", () => {
+  // The resolver was extracted from src/app/(main)/dashboard/page.tsx into
+  // src/features/household/queries.ts so the root page can reuse it and skip
+  // the /dashboard hop. The legacy stub still calls it via import.
   test("HSET-02 orderBy [isDefault desc, createdAt asc]: picks isDefault=true membership first", () => {
-    const src = readSource("src/app/(main)/dashboard/page.tsx");
+    const src = readSource("src/features/household/queries.ts");
     expect(src).toContain(
       'orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }]',
     );
   });
 
   test("HSET-02 no default set: falls back to oldest membership by createdAt asc (secondary sort key present)", () => {
-    const src = readSource("src/app/(main)/dashboard/page.tsx");
-    // Secondary sort is createdAt asc; when no isDefault=true row exists,
-    // Prisma applies the second key so behavior collapses to the pre-plan
-    // oldest-membership selection.
+    const src = readSource("src/features/household/queries.ts");
     expect(src).toMatch(/createdAt:\s*"asc"/);
   });
 
   test("HSET-02 no memberships: redirects to /login?error=no_household (pre-existing behavior unchanged)", () => {
     const src = readSource("src/app/(main)/dashboard/page.tsx");
-    // The null-fallback redirect path must still exist so brand-new users
-    // without any membership aren't silently bounced (WR-03 binding).
     expect(src).toContain("/login?error=no_household");
   });
 });
