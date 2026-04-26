@@ -3,7 +3,7 @@
 import { auth, signIn } from "../../../auth";
 import { db } from "@/lib/db";
 import bcryptjs from "bcryptjs";
-import { registerSchema } from "./schemas";
+import { loginSchema, registerSchema } from "./schemas";
 import { onboardingSchema } from "./schemas";
 import { validateCallbackUrl } from "./callback-url";
 import { generateHouseholdSlug } from "@/lib/slug";
@@ -11,6 +11,56 @@ import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { revalidatePath } from "next/cache";
 import { computeInitialCycleBoundaries } from "@/features/household/cycle";
+
+/**
+ * Server-action login. Resolves the user's default household slug *before*
+ * calling signIn so the redirect target is the final URL
+ * (`/h/{slug}/dashboard`) — eliminates the /dashboard intermediate redirect
+ * that produces a URL-bar flicker.
+ *
+ * Also surfaces "Incorrect email or password" via the return value so the
+ * login form can render an inline error (Auth.js client-side `redirect:true`
+ * would otherwise produce a `?error=CredentialsSignin` URL with no UI hook).
+ */
+export async function loginUser(input: {
+  email: string;
+  password: string;
+  callbackUrl?: string;
+}) {
+  const parsed = loginSchema.safeParse({
+    email: input.email,
+    password: input.password,
+  });
+  if (!parsed.success) {
+    return { error: "Invalid input." };
+  }
+
+  // Pre-resolve the default-household slug. The lookup is by email only, so
+  // any value (existing or not) returns the same shape — no account-existence
+  // oracle. If the password is wrong, signIn rejects and we surface the
+  // generic "Incorrect" message identical to the no-account branch.
+  const member = await db.householdMember.findFirst({
+    where: { user: { email: parsed.data.email } },
+    select: { household: { select: { slug: true } } },
+    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+  });
+
+  const safeCallbackUrl = validateCallbackUrl(input.callbackUrl);
+  const finalUrl =
+    safeCallbackUrl ??
+    (member ? `/h/${member.household.slug}/dashboard` : "/dashboard");
+
+  try {
+    await signIn("credentials", {
+      email: parsed.data.email,
+      password: parsed.data.password,
+      redirectTo: finalUrl,
+    });
+  } catch (error) {
+    if (isRedirectError(error)) throw error;
+    return { error: "Incorrect email or password. Please try again." };
+  }
+}
 
 export async function registerUser(data: {
   email: string;

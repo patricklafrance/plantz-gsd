@@ -3,15 +3,13 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Leaf, Loader2, Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner";
 
 import { loginSchema, type LoginInput } from "@/features/auth/schemas";
 import { validateCallbackUrl } from "@/features/auth/callback-url";
+import { loginUser } from "@/features/auth/actions";
 import {
   Form,
   FormControl,
@@ -26,6 +24,7 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const callbackUrl = validateCallbackUrl(searchParams.get("callbackUrl"));
   const errorParam = searchParams.get("error");
@@ -39,21 +38,19 @@ export function LoginForm() {
   });
 
   async function onSubmit(values: LoginInput) {
-    try {
-      // Auth.js v5 native server-side redirect: the 303 is issued AFTER the
-      // Set-Cookie header is written, so the next request carries the session
-      // cookie natively. This avoids the { redirect: false } + router.push
-      // cookie-propagation race (UAT-2).
-      await signIn("credentials", {
-        email: values.email,
-        password: values.password,
-        redirect: true,
-        redirectTo: callbackUrl ?? "/dashboard",
-      });
-    } catch (error) {
-      // signIn with redirect:true throws NEXT_REDIRECT on success — re-throw
-      if (isRedirectError(error)) throw error;
-      toast.error("Incorrect email or password. Please try again.");
+    setSubmitError(null);
+    // Server action pre-resolves the user's default household slug and
+    // redirects directly to /h/{slug}/dashboard — avoids the /dashboard
+    // intermediate redirect flicker. The success branch throws NEXT_REDIRECT
+    // (re-thrown internally) and never returns; the failure branch returns
+    // a generic { error } message we render inline.
+    const result = await loginUser({
+      email: values.email,
+      password: values.password,
+      callbackUrl: callbackUrl ?? undefined,
+    });
+    if (result?.error) {
+      setSubmitError(result.error);
     }
   }
 
@@ -75,6 +72,14 @@ export function LoginForm() {
             Couldn&apos;t start the demo session — the demo data is missing.
             Run <code className="font-mono">npx prisma db seed</code> to set
             it up, then try again.
+          </div>
+        )}
+        {submitError && (
+          <div
+            role="alert"
+            className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+          >
+            {submitError}
           </div>
         )}
         <Form {...form}>
