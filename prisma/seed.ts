@@ -6,10 +6,14 @@ import crypto from "node:crypto";
 import { addDays, subDays } from "date-fns";
 import {
   DEMO_EMAIL,
-  DEMO_PASSWORD,
   DEMO_PLANTS,
   DEMO_SAMPLE_MEMBERS,
 } from "../src/features/demo/seed-data";
+
+// IN-01: Local constant — kept out of any importable app-layer module so the
+// value never enters a client bundle. Must match the literal in
+// `src/features/demo/actions.ts`.
+const DEMO_PASSWORD = "demo-password-not-secret";
 import { generateHouseholdSlug } from "../src/lib/slug";
 import { computeInitialCycleBoundaries } from "../src/features/household/cycle";
 

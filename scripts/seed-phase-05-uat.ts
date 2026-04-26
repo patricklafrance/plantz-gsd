@@ -24,7 +24,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { addDays } from "date-fns";
 import bcryptjs from "bcryptjs";
-import { DEMO_EMAIL, DEMO_PASSWORD } from "../src/features/demo/seed-data";
+import { DEMO_EMAIL } from "../src/features/demo/seed-data";
 
 const PARTNER_EMAIL = "partner@plantminder.app";
 const PARTNER_PASSWORD = "partner-password-not-secret";

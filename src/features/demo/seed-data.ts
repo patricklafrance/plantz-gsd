@@ -1,5 +1,8 @@
 export const DEMO_EMAIL = "demo@plantminder.app";
-export const DEMO_PASSWORD = "demo-password-not-secret";
+// DEMO_PASSWORD is intentionally NOT exported from this app-layer module to keep
+// it out of any client bundle (IN-01). It is duplicated as a local constant in
+// `prisma/seed.ts` (hash creation) and `src/features/demo/actions.ts` (signIn).
+// If you change the value, update both places — they must match.
 
 /**
  * HDMO-01 — Sample household members seeded alongside the demo user.

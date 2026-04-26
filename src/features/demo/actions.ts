@@ -3,7 +3,12 @@
 import { signIn, auth } from "../../../auth";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
-import { DEMO_EMAIL, DEMO_PASSWORD, STARTER_PLANTS } from "./seed-data";
+import { DEMO_EMAIL, STARTER_PLANTS } from "./seed-data";
+
+// IN-01: Local constant — not imported from seed-data.ts so the value never
+// enters a client bundle even if seed-data.ts is accidentally imported by a
+// client component. Must match the literal in `prisma/seed.ts`.
+const DEMO_PASSWORD = "demo-password-not-secret";
 import { requireHouseholdAccess } from "@/features/household/guards";
 import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 

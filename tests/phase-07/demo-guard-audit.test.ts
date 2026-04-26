@@ -14,7 +14,7 @@
  */
 import { describe, test, expect } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 /**
  * Function names that are legitimately guard-free.
@@ -28,6 +28,7 @@ import { join } from "node:path";
 const SKIP_FUNCTIONS = new Set<string>([
   "startDemoSession",
   "registerUser",
+  "loginUser",
   "loadMoreWateringHistory",
   "loadMoreTimeline",
 ]);
@@ -99,12 +100,33 @@ function extractFunctionBodies(
     }
     if (openBrace === -1) continue;
 
-    // Track brace depth from the opening { of the function body
+    // Track brace depth from the opening { of the function body. Skip over
+    // string and template literals so braces inside them (e.g. `return { error:
+    // "Use { braces }" }`) don't fool the depth counter (IN-02).
     let depth = 0;
     let k = openBrace;
     while (k < src.length) {
-      if (src[k] === "{") depth++;
-      else if (src[k] === "}") {
+      const ch = src[k];
+      if (ch === '"' || ch === "'" || ch === "`") {
+        const quote = ch;
+        k++;
+        while (k < src.length) {
+          if (src[k] === "\\") {
+            k += 2;
+            continue;
+          }
+          if (src[k] === quote) break;
+          k++;
+        }
+      } else if (ch === "/" && src[k + 1] === "/") {
+        while (k < src.length && src[k] !== "\n") k++;
+      } else if (ch === "/" && src[k + 1] === "*") {
+        k += 2;
+        while (k < src.length && !(src[k] === "*" && src[k + 1] === "/")) k++;
+        k++;
+      } else if (ch === "{") {
+        depth++;
+      } else if (ch === "}") {
         depth--;
         if (depth === 0) break;
       }
@@ -117,7 +139,8 @@ function extractFunctionBodies(
 
 describe("HDMO-02 — demo guard audit", () => {
   test("Every exported async function in features/**/actions.ts contains session.user.isDemo", () => {
-    const featuresRoot = "src/features";
+    // IN-03: Anchor on __dirname so the walk works regardless of Vitest cwd.
+    const featuresRoot = resolve(__dirname, "..", "..", "src", "features");
     const actionFiles = walk(featuresRoot).filter((f) =>
       f.replace(/\\/g, "/").endsWith("/actions.ts"),
     );
