@@ -154,27 +154,18 @@ export default async function SettingsPage({ params }: PageProps) {
         </Card>
       )}
 
-      {/* Section 4: Danger Zone. */}
-      <Card className="border-destructive/30">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold text-destructive">
-            Danger zone
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <DangerZoneCard
-            viewerRole={role}
-            viewerUserId={session.user.id}
-            householdId={household.id}
-            householdSlug={householdSlug}
-            householdName={household.name}
-            plantCount={counts.plantCount}
-            roomCount={counts.roomCount}
-            ownerCount={ownerCount}
-            memberCount={memberCount}
-          />
-        </CardContent>
-      </Card>
+      {/* Section 4: Danger Zone — DangerZoneCard renders its own Card + header. */}
+      <DangerZoneCard
+        viewerRole={role}
+        viewerUserId={session.user.id}
+        householdId={household.id}
+        householdSlug={householdSlug}
+        householdName={household.name}
+        plantCount={counts.plantCount}
+        roomCount={counts.roomCount}
+        ownerCount={ownerCount}
+        memberCount={memberCount}
+      />
     </main>
   );
 }
