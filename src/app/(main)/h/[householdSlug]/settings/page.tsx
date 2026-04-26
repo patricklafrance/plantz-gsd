@@ -10,14 +10,12 @@ import {
 } from "@/components/ui/card";
 import { getCurrentHousehold } from "@/features/household/context";
 import {
-  getHouseholdAvailabilities,
   getHouseholdInvitations,
   getHouseholdMembers,
 } from "@/features/household/queries";
 import { GeneralForm } from "@/components/household/settings/general-form";
 import { MembersList } from "@/components/household/settings/members-list";
 import { InvitationsCard } from "@/components/household/settings/invitations-card";
-import { AvailabilitySection } from "@/components/household/settings/availability-section";
 import { DangerZoneCard } from "@/components/household/settings/danger-zone-card";
 
 /**
@@ -53,9 +51,8 @@ export default async function SettingsPage({ params }: PageProps) {
   // the parent layout's identical call (D-03 chokepoint invariant).
   const { household, role } = await getCurrentHousehold(householdSlug);
 
-  const [members, availabilities, invitations, counts] = await Promise.all([
+  const [members, invitations, counts] = await Promise.all([
     getHouseholdMembers(household.id),
-    getHouseholdAvailabilities(household.id),
     role === "OWNER"
       ? getHouseholdInvitations(household.id)
       : Promise.resolve([]),
@@ -78,17 +75,6 @@ export default async function SettingsPage({ params }: PageProps) {
     id: inv.id,
     createdAt: inv.createdAt,
     creatorName: inv.invitedBy?.name ?? inv.invitedBy?.email ?? null,
-  }));
-
-  // Reshape availabilities for AvailabilitySection's AvailabilityRow contract.
-  const availabilityRows = availabilities.map((a) => ({
-    id: a.id,
-    userId: a.userId,
-    userName: a.user.name,
-    userEmail: a.user.email,
-    startDate: a.startDate,
-    endDate: a.endDate,
-    reason: a.reason,
   }));
 
   return (
@@ -168,29 +154,7 @@ export default async function SettingsPage({ params }: PageProps) {
         </Card>
       )}
 
-      {/* Section 4: My Availability. */}
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">
-            My availability
-          </CardTitle>
-          <CardDescription>
-            Tell your household when you&apos;re unavailable. The rotation will
-            skip your turn during these dates.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <AvailabilitySection
-            availabilities={availabilityRows}
-            viewerUserId={session.user.id}
-            viewerRole={role}
-            householdId={household.id}
-            householdSlug={householdSlug}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Section 5: Danger Zone. */}
+      {/* Section 4: Danger Zone. */}
       <Card className="border-destructive/30">
         <CardHeader>
           <CardTitle className="text-xl font-semibold text-destructive">
