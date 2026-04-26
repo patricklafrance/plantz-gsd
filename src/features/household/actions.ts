@@ -961,9 +961,11 @@ export async function setDefaultHousehold(data: unknown) {
     });
   });
 
-  // Step 7: revalidate switcher (settings) + legacy-redirect target (dashboard).
-  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
-  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  // Step 7: revalidate the household layout — the switcher's default-star is
+  // driven by getUserHouseholds() which is fetched in the layout, and the
+  // /dashboard legacy redirect resolves through getUserHouseholds too. "page"
+  // mode would leave both stale until a hard reload.
+  revalidatePath("/h/[householdSlug]", "layout");
   return { success: true as const };
 }
 

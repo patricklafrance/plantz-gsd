@@ -12,11 +12,13 @@ import { getCurrentHousehold } from "@/features/household/context";
 import {
   getHouseholdInvitations,
   getHouseholdMembers,
+  getUserHouseholds,
 } from "@/features/household/queries";
 import { GeneralForm } from "@/components/household/settings/general-form";
 import { MembersList } from "@/components/household/settings/members-list";
 import { InvitationsCard } from "@/components/household/settings/invitations-card";
 import { DangerZoneCard } from "@/components/household/settings/danger-zone-card";
+import { DefaultHouseholdButton } from "@/components/household/settings/default-household-button";
 
 /**
  * HSET-03 / D-01 / D-02 — Settings page composition.
@@ -51,7 +53,7 @@ export default async function SettingsPage({ params }: PageProps) {
   // the parent layout's identical call (D-03 chokepoint invariant).
   const { household, role } = await getCurrentHousehold(householdSlug);
 
-  const [members, invitations, counts] = await Promise.all([
+  const [members, invitations, counts, userHouseholds] = await Promise.all([
     getHouseholdMembers(household.id),
     role === "OWNER"
       ? getHouseholdInvitations(household.id)
@@ -63,7 +65,15 @@ export default async function SettingsPage({ params }: PageProps) {
       db.plant.count({ where: { householdId: household.id } }),
       db.room.count({ where: { householdId: household.id } }),
     ]).then(([plantCount, roomCount]) => ({ plantCount, roomCount })),
+    getUserHouseholds(session.user.id),
   ]);
+
+  // "Default household" card visible only when the user belongs to 2+
+  // households — otherwise there's nothing to switch the default to.
+  const showDefaultCard = userHouseholds.length >= 2;
+  const isCurrentDefault =
+    userHouseholds.find((uh) => uh.household.id === household.id)?.isDefault ??
+    false;
 
   const ownerCount = members.filter((m) => m.role === "OWNER").length;
   const memberCount = members.length;
@@ -104,6 +114,29 @@ export default async function SettingsPage({ params }: PageProps) {
           />
         </CardContent>
       </Card>
+
+      {/* Section 1.5: Default household — only when user has 2+ households,
+          since there's nothing to swap to with a single membership. */}
+      {showDefaultCard && (
+        <Card>
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-semibold">
+              Default household
+            </CardTitle>
+            <CardDescription>
+              Your default household opens first when you sign in or follow a
+              dashboard link.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DefaultHouseholdButton
+              householdId={household.id}
+              householdName={household.name}
+              isDefault={isCurrentDefault}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Section 2: Members + Rotation. */}
       <Card>
