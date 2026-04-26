@@ -54,6 +54,8 @@ interface MembersListProps {
   householdSlug: string;
   householdName: string;
   ownerCount: number;
+  /** userId of the currently-watering assignee, or null when no active cycle. */
+  activeAssigneeUserId: string | null;
 }
 
 /**
@@ -70,6 +72,7 @@ export function MembersList({
   householdSlug,
   householdName,
   ownerCount,
+  activeAssigneeUserId,
 }: MembersListProps) {
   const [localMembers, setLocalMembers] = useState<MemberRow[]>(members);
   const [isPending, startTransition] = useTransition();
@@ -163,6 +166,17 @@ export function MembersList({
 
   const total = localMembers.length;
 
+  // Active/next assignee indices for the "Watering now" / "Up next" pills.
+  // Falls back to -1 when there's no active cycle, which suppresses both pills.
+  // "Up next" wraps around to index 0 (rotation cycles), and is suppressed when
+  // the household has only one member (they'd be both watering and next).
+  const activeIndex =
+    activeAssigneeUserId === null
+      ? -1
+      : localMembers.findIndex((m) => m.userId === activeAssigneeUserId);
+  const nextIndex =
+    activeIndex >= 0 && total > 1 ? (activeIndex + 1) % total : -1;
+
   return (
     <TooltipProvider>
       <ul className="divide-y divide-border">
@@ -171,6 +185,8 @@ export function MembersList({
           const isSelf = member.userId === viewerUserId;
           const viewerIsOwner = viewerRole === "OWNER";
           const targetIsOwner = member.role === "OWNER";
+          const isActiveAssignee = index === activeIndex;
+          const isNextAssignee = index === nextIndex;
 
           // D-18 matrix: which menu items does this row expose?
           // Self row: NO self-departure action — DangerZoneCard owns that.
@@ -200,13 +216,25 @@ export function MembersList({
               className="flex items-center gap-2 py-2"
               data-testid={`member-row-${member.userId}`}
             >
-              {/* Rotation-order prefix — fixed 6-unit column. */}
+              {/* Ordinal rotation position — 1-indexed for human reading. */}
               <span className="w-6 text-xs font-semibold text-muted-foreground">
-                [{member.rotationOrder}]
+                {index + 1}.
               </span>
 
-              <span className="flex-1 text-sm font-semibold text-foreground truncate">
-                {displayName}
+              <span className="flex-1 flex items-center gap-2 min-w-0">
+                <span className="text-sm font-semibold text-foreground truncate">
+                  {displayName}
+                </span>
+                {isActiveAssignee && (
+                  <span className="bg-accent text-accent-foreground text-xs px-1.5 py-0.5 rounded font-medium shrink-0">
+                    Watering now
+                  </span>
+                )}
+                {isNextAssignee && (
+                  <span className="bg-muted text-foreground text-xs px-1.5 py-0.5 rounded font-medium shrink-0">
+                    Up next
+                  </span>
+                )}
               </span>
 
               <span className={rolePillClass}>{roleLabel}</span>
@@ -236,6 +264,16 @@ export function MembersList({
                     <ArrowDown className="h-4 w-4" />
                   </Button>
                 </div>
+              )}
+
+              {/* Spacer keeps the move-arrows column-aligned across rows when
+                  the kebab is suppressed (e.g. owner viewing self-row). Matches
+                  the kebab Button's effective size: 44×44 mobile, 32×32 sm+. */}
+              {viewerIsOwner && !menuHasItems && (
+                <div
+                  aria-hidden="true"
+                  className="size-8 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
+                />
               )}
 
               {menuHasItems && (

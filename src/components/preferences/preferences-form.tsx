@@ -6,22 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toggleGlobalReminders } from "@/features/reminders/actions";
 import { toast } from "sonner";
 import { AccountSettings } from "./account-settings";
-import { DefaultHouseholdSelect } from "./default-household-select";
 
 interface PreferencesFormProps {
   initialRemindersEnabled: boolean;
   userEmail: string;
   isDemo?: boolean;
-  households: Array<{ id: string; name: string }>;
-  defaultHouseholdId: string;
 }
 
 export function PreferencesForm({
   initialRemindersEnabled,
   userEmail,
   isDemo,
-  households,
-  defaultHouseholdId,
 }: PreferencesFormProps) {
   const [remindersEnabled, setRemindersEnabled] = useState(initialRemindersEnabled);
   const [isPending, setIsPending] = useState(false);
@@ -83,25 +78,6 @@ export function PreferencesForm({
           </div>
         </CardContent>
       </Card>
-
-      {/* Default household — only when the user has 2+ memberships;
-          a single-membership user has nothing to swap to. */}
-      {households.length >= 2 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Default household</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-3 text-xs text-muted-foreground">
-              Opens first when you sign in or follow a dashboard link.
-            </p>
-            <DefaultHouseholdSelect
-              households={households}
-              defaultHouseholdId={defaultHouseholdId}
-            />
-          </CardContent>
-        </Card>
-      )}
 
       {/* Account section */}
       <Card>

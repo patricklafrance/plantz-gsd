@@ -224,7 +224,7 @@ export function GeneralForm({
           name="cycleDuration"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cycle duration</FormLabel>
+              <FormLabel>Cycle duration (days)</FormLabel>
               <FormControl>
                 <Select
                   value={field.value}

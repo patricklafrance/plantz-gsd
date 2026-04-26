@@ -251,7 +251,7 @@ export function HouseholdSwitcher({
             </span>
             {isActive && (
               <Check
-                className="h-4 w-4 text-muted-foreground"
+                className="h-4 w-4 text-muted-foreground group-hover:text-accent-foreground group-focus:text-accent-foreground"
                 aria-label="Current household"
               />
             )}
