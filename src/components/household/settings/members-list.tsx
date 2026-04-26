@@ -116,6 +116,14 @@ export function MembersList({
       toast.error(result.error);
       return;
     }
+    // localMembers is seeded once from props (useState), so revalidatePath on
+    // the server doesn't reach this client state. Mirror the role flip locally
+    // so the row updates without a manual refresh.
+    setLocalMembers((prev) =>
+      prev.map((m) =>
+        m.userId === target.userId ? { ...m, role: "OWNER" } : m,
+      ),
+    );
     toast.success(`${target.displayName} is now an owner.`);
   }
 
@@ -130,6 +138,11 @@ export function MembersList({
       toast.error(result.error);
       return;
     }
+    setLocalMembers((prev) =>
+      prev.map((m) =>
+        m.userId === target.userId ? { ...m, role: "MEMBER" } : m,
+      ),
+    );
     toast.success(`${target.displayName} is no longer an owner.`);
   }
 
@@ -144,6 +157,7 @@ export function MembersList({
       toast.error(result.error);
       return;
     }
+    setLocalMembers((prev) => prev.filter((m) => m.userId !== target.userId));
     toast.success(`${target.displayName} has been removed.`);
   }
 
