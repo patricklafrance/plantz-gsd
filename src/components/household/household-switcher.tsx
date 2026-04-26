@@ -236,12 +236,12 @@ export function HouseholdSwitcher({
             disabled={isPending}
             onClick={() => handleSwitch(row.household.slug)}
             aria-current={isActive ? "true" : undefined}
-            className="flex cursor-pointer items-center justify-between gap-2"
+            className="group flex cursor-pointer items-center justify-between gap-2"
           >
             <span className="flex min-w-0 items-center gap-2">
               {row.isDefault && (
                 <Star
-                  className="h-3.5 w-3.5 shrink-0 fill-accent text-accent"
+                  className="h-3.5 w-3.5 shrink-0 fill-accent text-accent group-hover:fill-accent-foreground group-hover:text-accent-foreground group-focus:fill-accent-foreground group-focus:text-accent-foreground"
                   aria-hidden="true"
                 />
               )}
