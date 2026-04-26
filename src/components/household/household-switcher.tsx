@@ -2,7 +2,7 @@
 
 import { useMemo, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Leaf, ChevronDown, Star, Check } from "lucide-react";
+import { Leaf, ChevronDown, ChevronRight, Star, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -233,41 +233,55 @@ export function HouseholdSwitcher({
             key={row.household.id}
             disabled={isActive || isPending}
             onClick={() => handleSwitch(row.household.slug)}
-            className="flex cursor-pointer items-center justify-between gap-2"
+            className={cn(
+              "flex items-center justify-between gap-2",
+              isActive ? "bg-muted/50" : "cursor-pointer",
+            )}
           >
-            <span className="flex items-center gap-2">
+            <span className="flex min-w-0 items-center gap-2">
               {row.isDefault && (
                 <Star
-                  className="h-3.5 w-3.5 fill-accent text-accent"
+                  className="h-3.5 w-3.5 shrink-0 fill-accent text-accent"
                   aria-hidden="true"
                 />
               )}
-              <span className="text-sm font-semibold">
+              <span className="truncate text-sm font-semibold">
                 {row.household.name}
               </span>
             </span>
             {isActive ? (
-              <Check
-                className="h-3.5 w-3.5 text-muted-foreground"
-                aria-hidden="true"
-              />
-            ) : !row.isDefault ? (
-              <button
-                type="button"
-                aria-label={`Make ${row.household.name} default`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSetDefault(row.household.id);
-                }}
-                className="-m-1.5 rounded p-1.5 hover:bg-muted"
-                disabled={isPending}
+              <span
+                className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+                aria-label="Current household"
               >
-                <Star
+                Active
+              </span>
+            ) : (
+              <span className="flex items-center gap-1">
+                {!row.isDefault && (
+                  <button
+                    type="button"
+                    aria-label={`Make ${row.household.name} default`}
+                    title="Set as default"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSetDefault(row.household.id);
+                    }}
+                    className="-m-1 rounded p-1 hover:bg-muted"
+                    disabled={isPending}
+                  >
+                    <Star
+                      className="h-3.5 w-3.5 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                  </button>
+                )}
+                <ChevronRight
                   className="h-4 w-4 text-muted-foreground"
                   aria-hidden="true"
                 />
-              </button>
-            ) : null}
+              </span>
+            )}
           </DropdownMenuItem>
         );
       })}
