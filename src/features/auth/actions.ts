@@ -11,6 +11,7 @@ import { HOUSEHOLD_PATHS } from "@/features/household/paths";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { revalidatePath } from "next/cache";
 import { computeInitialCycleBoundaries } from "@/features/household/cycle";
+import { deriveHouseholdName } from "@/features/household/household-name";
 
 /**
  * Server-action login. Resolves the user's default household slug *before*
@@ -63,6 +64,7 @@ export async function loginUser(input: {
 }
 
 export async function registerUser(data: {
+  name: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -101,6 +103,7 @@ export async function registerUser(data: {
         data: {
           email: parsed.data.email,
           passwordHash,
+          name: parsed.data.name,
         },
       });
 
@@ -130,7 +133,9 @@ export async function registerUser(data: {
 
       const household = await tx.household.create({
         data: {
-          name: "My Plants",                 // D-09
+          // Phase 8.2: derive friendly name from the user's display name.
+          // Falls back to "My plants" when name is empty (defensive — schema requires min 1).
+          name: deriveHouseholdName(parsed.data.name),
           slug,                              // D-10
           timezone: detectedTimezone,        // D-12
           cycleDuration,                     // D-12

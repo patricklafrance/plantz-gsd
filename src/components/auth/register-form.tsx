@@ -32,6 +32,7 @@ export function RegisterForm() {
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -48,6 +49,7 @@ export function RegisterForm() {
     }
 
     const result = await registerUser({
+      name: values.name,
       email: values.email,
       password: values.password,
       confirmPassword: values.confirmPassword,
@@ -78,6 +80,25 @@ export function RegisterForm() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Your name</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      autoComplete="name"
+                      placeholder="Pat"
+                      disabled={isSubmitting}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"
