@@ -9,7 +9,7 @@ Prefer validating the work yourself before asking the human to validate anything
 
 ## Core rule
 
-Always attempt the available automated or agent-executable validations first.
+Always attempt the available automated or agent-executable validations first. DO NOT PROMPT to ask if you should drive the UAT. Drive the UAT whenever possible.
 
 Default order of preference:
 
