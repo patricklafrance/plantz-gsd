@@ -179,7 +179,7 @@ describe("updateHouseholdSettings (HSET-03 / D-13)", () => {
     await updateHouseholdSettings(validInput());
 
     const calls = vi.mocked(revalidatePath).mock.calls;
-    expect(calls).toContainEqual(["/h/[householdSlug]/settings", "page"]);
+    expect(calls).toContainEqual(["/h/[householdSlug]/household-settings", "page"]);
     expect(calls).toContainEqual(["/h/[householdSlug]/dashboard", "page"]);
   });
 });

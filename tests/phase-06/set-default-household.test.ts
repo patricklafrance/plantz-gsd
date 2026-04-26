@@ -133,7 +133,7 @@ describe("setDefaultHousehold (HSET-02 / D-06)", () => {
     expect(mockHouseholdMember.updateMany).not.toHaveBeenCalled();
   });
 
-  test("HSET-02 revalidatePath called for settings + dashboard", async () => {
+  test("HSET-02 revalidatePath called for household layout", async () => {
     mockSession();
     mockMemberAccess();
     mockHouseholdMember.updateMany.mockResolvedValueOnce({ count: 1 } as never);
@@ -142,7 +142,6 @@ describe("setDefaultHousehold (HSET-02 / D-06)", () => {
     await setDefaultHousehold({ householdId: HOUSEHOLD_ID });
 
     const calls = vi.mocked(revalidatePath).mock.calls;
-    expect(calls).toContainEqual(["/h/[householdSlug]/settings", "page"]);
-    expect(calls).toContainEqual(["/h/[householdSlug]/dashboard", "page"]);
+    expect(calls).toContainEqual(["/h/[householdSlug]", "layout"]);
   });
 });

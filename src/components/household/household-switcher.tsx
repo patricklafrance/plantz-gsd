@@ -204,7 +204,7 @@ export function HouseholdSwitcher({
           })}
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => router.push(`/h/${currentSlug}/settings`)}
+            onClick={() => router.push(`/h/${currentSlug}/household-settings`)}
             className="cursor-pointer gap-2 text-sm"
           >
             Household settings

@@ -74,14 +74,14 @@ export function UserMenu({
         />
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          onClick={() => router.push(`/h/${currentSlug}/settings`)}
+          onClick={() => router.push(`/h/${currentSlug}/household-settings`)}
           className="cursor-pointer gap-2"
         >
           <Home className="h-4 w-4" />
           Household settings
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => router.push(`/h/${currentSlug}/availability`)}
+          onClick={() => router.push(`/h/${currentSlug}/availability-settings`)}
           className="cursor-pointer gap-2"
         >
           <CalendarDays className="h-4 w-4" />

@@ -222,7 +222,7 @@ describe("reorderRotation (ROTA-01 / D-11)", () => {
     });
 
     const calls = vi.mocked(revalidatePath).mock.calls;
-    expect(calls).toContainEqual(["/h/[householdSlug]/settings", "page"]);
+    expect(calls).toContainEqual(["/h/[householdSlug]/household-settings", "page"]);
     expect(calls).toContainEqual(["/h/[householdSlug]/dashboard", "page"]);
   });
 });

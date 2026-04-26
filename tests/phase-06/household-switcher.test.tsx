@@ -231,11 +231,12 @@ describe("HouseholdSwitcher (HSET-01 / D-03, D-05, D-09, D-34)", () => {
     ).toBe("/h/new/rooms");
   });
 
-  it("HSET-01 buildSwitchPath handles /h/slug/settings verbatim", () => {
-    expect(buildSwitchPath("/h/old/settings", "new")).toBe("/h/new/settings");
-    // Nested settings tab: /h/old/settings/availability preserved
-    expect(buildSwitchPath("/h/old/settings/availability", "new")).toBe(
-      "/h/new/settings/availability",
+  it("HSET-01 buildSwitchPath handles /h/slug/household-settings verbatim", () => {
+    expect(buildSwitchPath("/h/old/household-settings", "new")).toBe(
+      "/h/new/household-settings",
+    );
+    expect(buildSwitchPath("/h/old/availability-settings", "new")).toBe(
+      "/h/new/availability-settings",
     );
   });
 

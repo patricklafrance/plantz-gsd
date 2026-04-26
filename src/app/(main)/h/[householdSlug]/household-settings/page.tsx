@@ -81,7 +81,7 @@ export default async function SettingsPage({ params }: PageProps) {
     <main className="max-w-2xl mx-auto px-4 py-8 space-y-8 pb-20 sm:pb-8">
       <header>
         <h1 className="text-2xl font-semibold outline-none" tabIndex={-1}>
-          Settings
+          Household settings
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">{household.name}</p>
       </header>
