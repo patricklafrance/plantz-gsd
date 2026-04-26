@@ -126,8 +126,12 @@ export async function createHousehold(data: unknown) {
     return created;
   });
 
-  // Step 7: no revalidatePath — Phase 2 has no UI consumer (D-07). Phase 6's
-  // settings form will revalidate its own path from the form action's route.
+  // Step 7: invalidate the household-scoped layout so the user menu's
+  // HouseholdSwitcher picks up the new membership on the next render. The
+  // layout's `getUserHouseholds` lookup feeds the dropdown — without this
+  // call the Router Cache keeps serving the pre-create layout (only the
+  // user's existing households appear) until a hard reload.
+  revalidatePath("/h/[householdSlug]", "layout");
   return { success: true, household };
 }
 
@@ -503,8 +507,11 @@ export async function acceptInvitation(data: unknown) {
   // activeHouseholdId lives on session.user per auth.ts callbacks.session shape.
   await unstable_update({ user: { activeHouseholdId: householdId } });
 
-  // Step 7: revalidate dashboard (Phase 5/6 will consume the new membership immediately)
-  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
+  // Step 7: revalidate the household layout so the user menu's
+  // HouseholdSwitcher renders the newly-joined household. "page" mode only
+  // refreshes page data; the household list lives in the layout, so a layout
+  // invalidation is required for the dropdown to reflect the new membership.
+  revalidatePath("/h/[householdSlug]", "layout");
   return {
     success: true as const,
     redirectTo: `/h/${invitation.household.slug}/dashboard`,

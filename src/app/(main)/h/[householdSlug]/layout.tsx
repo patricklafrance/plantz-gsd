@@ -149,7 +149,7 @@ export default async function HouseholdLayout({
       <header className="border-b border-border">
         <nav aria-label="Top navigation" className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
           <Link
-            href="/dashboard"
+            href={`/h/${householdSlug}/dashboard`}
             aria-label="Plant Minder home"
             className="flex items-center gap-2 -ml-2 px-2 rounded-md hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
           >

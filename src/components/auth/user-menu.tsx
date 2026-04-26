@@ -85,7 +85,7 @@ export function UserMenu({
           className="cursor-pointer gap-2"
         >
           <CalendarDays className="h-4 w-4" />
-          My availability
+          Availability settings
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/preferences")}

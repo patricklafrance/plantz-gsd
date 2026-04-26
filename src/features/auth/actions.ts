@@ -95,6 +95,7 @@ export async function registerUser(data: {
     // Any failure rolls back ALL three writes (Prisma $transaction guarantee).
     // Per RESEARCH §Pattern 1, the interactive form is required because
     // HouseholdMember needs both user.id and household.id.
+    let createdSlug: string | null = null;
     await db.$transaction(async (tx) => {
       const user = await tx.user.create({
         data: {
@@ -166,17 +167,23 @@ export async function registerUser(data: {
           memberOrderSnapshot: [{ userId: user.id, rotationOrder: 0 }],
         },
       });
+
+      createdSlug = slug;
     });
 
-    // 5. Auto-login (preserve existing pattern verbatim — signIn throws
-    // NEXT_REDIRECT on success which the catch below MUST re-throw).
-    // Server-side re-validation: never trust client-passed callbackUrl
-    // unverified, even though the form already validated it.
+    // 5. Auto-login. Pre-resolve the redirect target to the new household's
+    // dashboard (mirrors loginUser) so signIn lands on the final URL instead
+    // of bouncing through `/dashboard` — the legacy stub briefly renders a
+    // "Page unavailable" before its own redirect resolves.
+    // signIn throws NEXT_REDIRECT on success — the catch below MUST re-throw.
     const safeCallbackUrl = validateCallbackUrl(data.callbackUrl);
+    const finalUrl =
+      safeCallbackUrl ??
+      (createdSlug ? `/h/${createdSlug}/dashboard` : "/dashboard");
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: safeCallbackUrl ?? "/dashboard",
+      redirectTo: finalUrl,
     });
   } catch (error) {
     // CRITICAL: Re-throw redirect errors — they are NOT failures
