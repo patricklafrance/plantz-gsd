@@ -1,4 +1,4 @@
-import { auth } from "../../../../auth";
+import { auth } from "../../../../../../auth";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { PreferencesForm } from "@/components/preferences/preferences-form";

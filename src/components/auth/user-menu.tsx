@@ -88,7 +88,7 @@ export function UserMenu({
           Availability settings
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => router.push("/preferences")}
+          onClick={() => router.push(`/h/${currentSlug}/preferences`)}
           className="cursor-pointer gap-2"
         >
           <Settings className="h-4 w-4" />

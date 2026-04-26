@@ -128,7 +128,7 @@ export async function toggleGlobalReminders(data: unknown) {
 
   // Revalidate all household dashboards via literal pattern (Next.js invalidates all matching)
   revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
-  revalidatePath("/preferences");
+  revalidatePath("/h/[householdSlug]/preferences", "page");
 
   return { success: true };
 }
