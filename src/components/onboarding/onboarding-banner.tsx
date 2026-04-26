@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Leaf, X } from "lucide-react";
+import { Leaf, Loader2, X } from "lucide-react";
 import { completeOnboarding } from "@/features/auth/actions";
 import { seedStarterPlants } from "@/features/demo/actions";
 import { toast } from "sonner";
@@ -83,27 +83,38 @@ export function OnboardingBanner({ userId, householdId }: OnboardingBannerProps)
 
           <div className="flex-1 space-y-1">
             <p className="text-base font-medium">Welcome to Plant Minder</p>
-            <p className="text-base text-muted-foreground">How many plants are you tracking?</p>
+            <p className="text-base text-muted-foreground">
+              {isCompleting
+                ? "Setting up your starter plants…"
+                : "How many plants are you tracking?"}
+            </p>
           </div>
 
           {isCompleted ? (
             <p className="text-sm text-muted-foreground">Got it — your tips are personalized.</p>
           ) : (
             <div className="flex flex-wrap gap-2">
-              {PLANT_RANGES.map((range) => (
-                <Button
-                  key={range}
-                  variant="outline"
-                  className={cn(
-                    "h-11",
-                    selectedRange === range && "border-accent border-2 text-accent bg-accent/10"
-                  )}
-                  onClick={() => handleRangeSelect(range)}
-                  disabled={isCompleting}
-                >
-                  {range}
-                </Button>
-              ))}
+              {PLANT_RANGES.map((range) => {
+                const isSelected = selectedRange === range;
+                return (
+                  <Button
+                    key={range}
+                    variant="outline"
+                    className={cn(
+                      "h-11",
+                      isSelected && "border-accent border-2 text-accent bg-accent/10"
+                    )}
+                    onClick={() => handleRangeSelect(range)}
+                    disabled={isCompleting}
+                    aria-busy={isCompleting && isSelected}
+                  >
+                    {isCompleting && isSelected && (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    )}
+                    {range}
+                  </Button>
+                );
+              })}
             </div>
           )}
         </div>
