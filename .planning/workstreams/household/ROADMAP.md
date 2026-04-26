@@ -21,8 +21,8 @@ This milestone retrofits the v1.0 single-user app into a multi-household, rotati
 - [ ] **Phase 4: Invitation System** - CSPRNG join-link tokens, accept flow (logged-in + logged-out), revocation
 - [ ] **Phase 5: Household Notifications** - Assignee-scoped reminder queries, cycle-start and reassignment banners
 - [ ] **Phase 6: Settings UI + Switcher + Dashboard** - Household switcher, settings page, rotation reorder, availability form, cycle banner
-- [ ] **Phase 7: Demo Mode Compatibility** - Seed demo household with members, cycle, and availability; read-only guard coverage
-- [ ] **Phase 8: Cycle Snooze** - Assignee-only action to defer the current cycle window by N days without triggering reassignment
+- [x] **Phase 7: Demo Mode Compatibility** - Seed demo household with members, cycle, and availability; read-only guard coverage
+- [ ] **Phase 8: Polish + Identity + Coverage (melting pot)** - Bundles cycle-snooze, real-name capture on signup with derived household name, light/dark theme, real-name display in rotation copy, and a critical-path Playwright suite into one shipping phase
 
 ## Phase Details
 
@@ -187,22 +187,32 @@ Plans:
   - [x] 07-01-PLAN.md — Seed expansion: DEMO_SAMPLE_MEMBERS constant + prisma/seed.ts seedDemoHousehold (3 members, mid-window Cycle, future Availability) — HDMO-01
   - [x] 07-02-PLAN.md — startDemoSession simplification (D-11) + static demo-guard audit test (HDMO-02 regression gate) + seed-structure source-grep test
 
-### Phase 8: Cycle Snooze
-**Goal**: An active assignee can defer their current cycle window by N days without triggering reassignment. Keeps the same assignee but pushes `cycle.startDate`/`endDate`. Distinct from `skipCurrentCycle` (which reassigns to the next rotation member). Use case: assignee is traveling/sick for a few days but doesn't want to force a full rotation skip.
-**Depends on**: Phase 5 (banners + bell surface where the snooze control attaches), Phase 6 (dashboard cycle banner)
-**Requirements**: TBD — likely a new `ROTA-0X` for cycle-snooze action + `HDMO-0X` extension for demo-mode block
-**Success Criteria** (what must be TRUE):
-  1. Active assignee can snooze the current cycle by N days (N validated, bounded); non-assignees receive a `ForbiddenError`
-  2. Paused cycles cannot be snoozed — returns an error
-  3. Snooze updates `cycle.startDate` and `cycle.endDate` atomically inside a `$transaction`
-  4. Demo mode silently blocks snooze using the existing read-only guard pattern (no new code path)
-  5. Dashboard surfaces the new end date immediately after snooze (revalidatePath or optimistic UI)
-  6. Per-cycle only — no recurring snooze (members use Availability for recurring unavailability)
-**Plans**: TBD
+### Phase 8: Polish + Identity + Coverage (melting pot)
+**Goal**: Ship a single phase that bundles five tightly-scoped items — none warrants its own phase ceremony, but together they close out the milestone's quality and identity gaps.
+**Depends on**: Phase 5, Phase 6, Phase 7 (full UI + demo surface in place)
+**Requirements**: TBD — new `ROTA-0X` (snooze), `USER-0X` (display name), `QUAL-0X` (E2E coverage), `THEME-0X` (light/dark)
+**Scope** — five items, planned and shipped together:
+
+  **8.1 — Cycle Snooze**: Assignee defers the current cycle window by N days without triggering reassignment. Same assignee; pushes `cycle.startDate`/`endDate` atomically inside a `$transaction`. Distinct from `skipCurrentCycle` (which reassigns). Demo mode silently blocks via the existing read-only guard. UI copy must distinguish "Snooze" (same person, later) from "Skip" (next person, now). Per-cycle only — no recurring snooze.
+
+  **8.2 — Real-Name on Signup + Derived Household Name**: Registration form gains a required "Your name" field stored on existing `User.name` (no schema migration; flush data on deploy boundary). The auto-created solo household's name is derived from the user's name (e.g. "Pat's plants" or "Pat's household") rather than the current default. Existing solo-household names get a one-time pass through the same derivation on the same flush.
+
+  **8.3 — Real-Name Display in Rotation Copy**: Rotation banners ("You're up this week — 7 days left", "X is next") render assignee/next-assignee as `[realname] ([email])` with realname as the highlighted token (bold + foreground) and email muted in parens. Falls back to plain email when name is unset (no `null (email)` artifacts). Household member rows mirror the same pattern.
+
+  **8.4 — Light + Dark Theme**: App supports both light and dark color schemes. System preference is the default; user can override from preferences/account. Both modes pass the same UI-SPEC contrast gates (≥4.5:1 for body text, ≥3:1 for non-text UI). Tailwind v4's `@theme` + OKLCH tokens already in place — this phase wires the toggle, persists the choice, and audits every component for dark-mode breakage.
+
+  **8.5 — E2E Critical-Path Suite**: Playwright tests covering: (a) register → onboarding → dashboard, (b) login → dashboard, (c) add plant → log watering → plant disappears from "needs water today", (d) household switch via switcher + mark default + default-landing on next sign-in, (e) invite second user → accept → assignee handoff at cycle boundary → manual skip. Runs on every PR; failures block merge.
+
+**Plans**: TBD — each scope item gets one plan (5 plans projected); melting-pot phase still gets a single PLAN.md per item to keep blast radius small
 **Pitfall flags**:
-  - Distinction from `skipCurrentCycle` must be obvious in UI copy — "Snooze" (same person, later) vs "Skip" (next person, now)
-  - `snoozeCurrentCycle` Server Action must follow the 7-step D-12 template (session → demo guard → Zod → `requireHouseholdAccess` → assignee check → `$transaction` write → revalidatePath)
-  - Surface decision: dashboard banner meta action vs bell-dropdown action — pick one, don't duplicate
+  - 8.2 + 8.3 share a one-time data flush — schedule it once at the deploy boundary; do NOT run as a Prisma migration step (no schema delta)
+  - 8.3 audit: every codebase site that renders `user.email` or `member.userEmail` is part of the copy contract, not just rotation banners
+  - 8.3 empty-state: unset realname must not render `() (email)` or `null (email)` — fall back to plain email, no parens
+  - 8.4 dark-mode audit: every `bg-*`/`text-*` literal that bypassed the OKLCH token system needs a sweep; UI-SPEC compliance is per-mode, not "light only"
+  - 8.5 seed determinism: each spec seeds its own data (or uses a fresh DB reset hook); shared state across specs is the #1 flaky-test cause
+  - 8.5 time-travel: cycle-boundary tests either set `Date.now`/server clock OR seed cycles with backdated `startDate` — pick one strategy
+  - 8.1 vs 8.5 ordering: snooze ships with its own E2E spec inside 8.5 — don't ship 8.1 without test coverage
+  - `snoozeCurrentCycle` Server Action follows the 7-step D-12 template (session → demo guard → Zod → `requireHouseholdAccess` → assignee check → `$transaction` write → revalidatePath)
 
 ## Progress
 
@@ -214,8 +224,8 @@ Plans:
 | 4. Invitation System | 0/6 | Planned | - |
 | 5. Household Notifications | 2/5 | In Progress|  |
 | 6. Settings UI + Switcher + Dashboard | 0/7 | Planned | - |
-| 7. Demo Mode Compatibility | 0/TBD | Not started | - |
-| 8. Cycle Snooze | 0/TBD | Not started | - |
+| 7. Demo Mode Compatibility | 2/2 | Complete | 2026-04-26 |
+| 8. Polish + Identity + Coverage (melting pot) | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-04-16 — milestone `household`*
