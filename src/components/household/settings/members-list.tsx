@@ -247,7 +247,7 @@ export function MembersList({
                         {ownerCount === 1 ? (
                           <Tooltip>
                             {/* Tooltip-on-disabled: span wrapper + Base UI render prop idiom (checker Blocker 1). */}
-                            <TooltipTrigger render={<span><DropdownMenuItem disabled closeOnClick={false}>Remove from owners</DropdownMenuItem></span>} />
+                            <TooltipTrigger render={<span><DropdownMenuItem disabled closeOnClick={false}>Demote to member</DropdownMenuItem></span>} />
                             <TooltipContent>
                               Need at least one owner
                             </TooltipContent>
@@ -261,7 +261,7 @@ export function MembersList({
                               })
                             }
                           >
-                            Remove from owners
+                            Demote to member
                           </DropdownMenuItem>
                         )}
                       </>
