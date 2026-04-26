@@ -21,6 +21,7 @@ import { ReassignmentBanner } from "@/components/household/reassignment-banner";
 import { PassiveStatusBanner } from "@/components/household/passive-status-banner";
 import { FallbackBanner } from "@/components/household/fallback-banner";
 import { CycleCountdownBanner } from "@/components/household/cycle-countdown-banner";
+import { CycleAssigneeActions } from "@/components/household/cycle-assignee-actions";
 import { DashboardClient } from "@/components/watering/dashboard-client";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TimezoneWarning } from "@/components/shared/timezone-warning";
@@ -320,6 +321,19 @@ export default async function DashboardPage({
                 isSingleMember={members.length === 1}
               />
             )}
+
+          {/* Phase 8.1 — assignee-only Snooze + Skip controls. Mounted whenever
+              the viewer is the active assignee on an active cycle, regardless of
+              which banner above is showing. */}
+          {viewerIsAssignee && currentCycle.status === "active" && (
+            <div className="flex justify-end">
+              <CycleAssigneeActions
+                householdId={household.id}
+                householdSlug={householdSlug}
+                isDemo={session.user.isDemo ?? false}
+              />
+            </div>
+          )}
 
           {/* Layer 3: PassiveStatusBanner — non-assignee, no assignee event, multi-member, active cycle */}
           {!viewerIsAssignee &&

@@ -113,6 +113,21 @@ export const skipCurrentCycleSchema = z.object({
 export type SkipCurrentCycleInput = z.infer<typeof skipCurrentCycleSchema>;
 
 /**
+ * Phase 8.1 — Cycle snooze input. Per-cycle deferral by N days; the same
+ * assignee keeps the cycle. Distinct from skipCurrentCycle (which reassigns).
+ * `days` is constrained to 1, 3, or 7 to mirror the cycle-duration presets and
+ * prevent unbounded deferral.
+ */
+export const snoozeCurrentCycleSchema = z.object({
+  householdId: z.cuid(),
+  householdSlug: z.string().min(1),
+  days: z
+    .union([z.literal(1), z.literal(3), z.literal(7)])
+    .or(z.enum(["1", "3", "7"]).transform(Number)),
+});
+export type SnoozeCurrentCycleInput = z.infer<typeof snoozeCurrentCycleSchema>;
+
+/**
  * INVT-01 / D-16: createInvitation input. OWNER-gated at the action layer.
  * `householdSlug` surfaces in revalidatePath; `householdId` is the authz key.
  */
