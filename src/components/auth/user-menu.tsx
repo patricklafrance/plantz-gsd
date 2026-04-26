@@ -2,7 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Home, LogOut, Settings } from "lucide-react";
+import { CalendarDays, Home, LogOut, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,6 +79,13 @@ export function UserMenu({
         >
           <Home className="h-4 w-4" />
           Household settings
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => router.push(`/h/${currentSlug}/availability`)}
+          className="cursor-pointer gap-2"
+        >
+          <CalendarDays className="h-4 w-4" />
+          My availability
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push("/preferences")}

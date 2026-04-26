@@ -216,18 +216,22 @@ export function HouseholdSwitcher({
 
   // ───────── Mobile variant (returns fragment for embedding in UserMenu) ─────────
   // variant === "mobile" — no wrapping DropdownMenu / trigger; Plan 07 composes
-  // this fragment inside UserMenu's existing DropdownMenuContent.
+  // this fragment inside UserMenu's existing DropdownMenuContent. This is now
+  // the canonical (only) switcher surface — the desktop header replaced its
+  // dropdown with a static Plant Minder logo link, so this fragment must
+  // expose every household the user belongs to (including the current one,
+  // marked with Check) plus the per-row "Set as default" affordance.
   return (
     <>
-      <DropdownMenuLabel className="text-sm font-semibold text-foreground">
-        {currentHouseholdName}
+      <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+        My households
       </DropdownMenuLabel>
-      {sortedHouseholds
-        .filter((row) => row.household.slug !== currentSlug)
-        .map((row) => (
+      {sortedHouseholds.map((row) => {
+        const isActive = row.household.slug === currentSlug;
+        return (
           <DropdownMenuItem
             key={row.household.id}
-            disabled={isPending}
+            disabled={isActive || isPending}
             onClick={() => handleSwitch(row.household.slug)}
             className="flex cursor-pointer items-center justify-between gap-2"
           >
@@ -238,9 +242,16 @@ export function HouseholdSwitcher({
                   aria-hidden="true"
                 />
               )}
-              <span className="text-sm">{row.household.name}</span>
+              <span className="text-sm font-semibold">
+                {row.household.name}
+              </span>
             </span>
-            {!row.isDefault && (
+            {isActive ? (
+              <Check
+                className="h-3.5 w-3.5 text-muted-foreground"
+                aria-hidden="true"
+              />
+            ) : !row.isDefault ? (
               <button
                 type="button"
                 aria-label={`Make ${row.household.name} default`}
@@ -256,9 +267,10 @@ export function HouseholdSwitcher({
                   aria-hidden="true"
                 />
               </button>
-            )}
+            ) : null}
           </DropdownMenuItem>
-        ))}
+        );
+      })}
     </>
   );
 }
