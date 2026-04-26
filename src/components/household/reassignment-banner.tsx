@@ -1,27 +1,25 @@
 import { UserCheck } from "lucide-react";
 import { format } from "date-fns";
+import { MemberName } from "./member-name";
 
 type ReassignType = "manual_skip" | "auto_skip" | "member_left";
 
 interface ReassignmentBannerProps {
-  priorAssigneeName: string;
+  priorAssigneeName?: string | null;
+  priorAssigneeEmail?: string | null;
   reassignType: ReassignType;
   dueCount: number;
   cycleEndDate: Date;
 }
 
 /**
- * HNTF-03 / D-12.2 — Dashboard banner shown to the new assignee after a
- * mid-cycle reassignment (manual skip, auto-skip due to unavailability, or
- * a member leaving). Type-branched subject copy; shared meta.
- *
- * D-06 derivational clearing: caller filters notifications to
- * `notification.cycleId === currentActiveCycle.id` so the previous assignee's
- * banner naturally disappears once the new cycle transitions in. This
- * component is unaware of the filter.
+ * HNTF-03 / D-12.2 — banner shown to the new assignee after a mid-cycle
+ * reassignment. Phase 8.3: priorAssignee renders as [name] (email) with name
+ * highlighted; falls back to email-only or "Someone" when both are missing.
  */
 export function ReassignmentBanner({
   priorAssigneeName,
+  priorAssigneeEmail,
   reassignType,
   dueCount,
   cycleEndDate,
@@ -46,7 +44,8 @@ export function ReassignmentBanner({
       <UserCheck className="h-5 w-5 shrink-0 text-accent mt-0.5" aria-hidden="true" />
       <div className="flex-1 space-y-1">
         <p className="text-sm text-foreground">
-          <span className="font-semibold">{priorAssigneeName}</span> {verbPhrase[reassignType]}
+          <MemberName name={priorAssigneeName} email={priorAssigneeEmail} />{" "}
+          {verbPhrase[reassignType]}
         </p>
         <p className="text-xs text-muted-foreground">{meta}</p>
       </div>

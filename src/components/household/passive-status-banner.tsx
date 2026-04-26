@@ -1,9 +1,12 @@
 import { Users } from "lucide-react";
 import { format } from "date-fns";
+import { MemberName } from "./member-name";
 
 interface PassiveStatusBannerProps {
-  assigneeName: string;
-  nextAssigneeName?: string;
+  assigneeName?: string | null;
+  assigneeEmail?: string | null;
+  nextAssigneeName?: string | null;
+  nextAssigneeEmail?: string | null;
   nextIsFallbackOwner?: boolean;
   memberCount: number;
   cycleEndDate: Date;
@@ -11,29 +14,21 @@ interface PassiveStatusBannerProps {
 
 /**
  * HNTF-04 / D-12.3 — Dashboard passive-status banner for non-assignees.
- * Shows who is currently responsible and (for multi-member households) who is
- * next up. When the "next" is owner-fallback per Phase 3 D-20, the copy
- * changes to "covers if no one's available next."
- *
- * Caller suppression: render nothing when the viewer IS the assignee or when
- * memberCount === 1 AND viewer IS the assignee. When memberCount === 1 and
- * viewer is NOT the assignee (impossible — single-member household means
- * viewer IS the sole member), caller should not render this banner. In other
- * words: this component is only rendered for non-assignees of multi-member
- * households. The nextAssigneeName/memberCount props are defensive fallback
- * guards for the single-member edge case.
+ * Phase 8.3: renders [name] (email) with the name highlighted; falls back to
+ * just email when name is unset (no "() (email)" or "null (email)" artifacts).
  */
 export function PassiveStatusBanner({
   assigneeName,
+  assigneeEmail,
   nextAssigneeName,
+  nextAssigneeEmail,
   nextIsFallbackOwner,
   memberCount,
   cycleEndDate,
 }: PassiveStatusBannerProps) {
-  const showNextLine =
+  const hasNext =
     memberCount > 1 &&
-    typeof nextAssigneeName === "string" &&
-    nextAssigneeName.length > 0;
+    (Boolean(nextAssigneeName?.trim()) || Boolean(nextAssigneeEmail?.trim()));
 
   const formattedEndDate = format(cycleEndDate, "EEE MMM d");
 
@@ -45,11 +40,11 @@ export function PassiveStatusBanner({
       <Users className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" aria-hidden="true" />
       <div className="flex-1 space-y-1">
         <p className="text-sm text-foreground">
-          <span className="font-semibold">{assigneeName}</span> is watering this cycle.
-          {showNextLine && (
+          <MemberName name={assigneeName} email={assigneeEmail} /> is watering this cycle.
+          {hasNext && (
             <>
               {" "}
-              <span className="font-semibold">{nextAssigneeName}</span>
+              <MemberName name={nextAssigneeName} email={nextAssigneeEmail} />
               {nextIsFallbackOwner
                 ? " covers if no one's available next."
                 : " is next up."}

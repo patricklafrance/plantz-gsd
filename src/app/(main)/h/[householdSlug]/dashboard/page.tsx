@@ -203,46 +203,42 @@ export default async function DashboardPage({
   const currentMember = members.find((m) => m.userId === session.user.id);
   const viewerIsOwner = currentMember?.role === "OWNER";
   const owner = members.find((m) => m.role === "OWNER");
+  // Phase 8.3: surface name + email separately so banners can render
+  // [name] (email) with the name highlighted.
   const ownerName = owner ? (owner.userName ?? owner.userEmail ?? "An owner") : "An owner";
   const assignee = currentCycle?.assignedUserId
     ? members.find((m) => m.userId === currentCycle.assignedUserId)
     : null;
-  const assigneeName = assignee
-    ? (assignee.userName ?? assignee.userEmail ?? "A member")
-    : "A member";
+  const assigneeName = assignee?.userName ?? null;
+  const assigneeEmail = assignee?.userEmail ?? null;
   const nextAssigneeMember = nextAssignee
     ? members.find((m) => m.userId === nextAssignee!.userId)
     : null;
-  const nextAssigneeName = nextAssigneeMember
-    ? (nextAssigneeMember.userName ?? nextAssigneeMember.userEmail ?? null)
-    : null;
+  const nextAssigneeName = nextAssigneeMember?.userName ?? null;
+  const nextAssigneeEmail = nextAssigneeMember?.userEmail ?? null;
 
-  // Derive prior-assignee name for reassignment banner.
+  // Derive prior-assignee name + email for reassignment banner.
   // WR-02 (Phase 5 review): prefer the stored priorAssignee snapshot on the
   // notification row — it is correct by construction regardless of rotation
   // churn after emission. Fall back to the legacy rotation-predecessor walk
-  // for notifications emitted before the schema change. Final fallback is
-  // "Someone" (below), so the banner NEVER silently disappears.
+  // for notifications emitted before the schema change.
   let priorAssigneeName: string | null = null;
+  let priorAssigneeEmail: string | null = null;
   if (currentCycle?.assignedUserId && unreadEvent?.type.startsWith("cycle_reassigned_")) {
     if (unreadEvent.priorAssignee) {
-      priorAssigneeName =
-        unreadEvent.priorAssignee.name ?? unreadEvent.priorAssignee.email ?? null;
+      priorAssigneeName = unreadEvent.priorAssignee.name ?? null;
+      priorAssigneeEmail = unreadEvent.priorAssignee.email ?? null;
     } else {
       const sorted = [...members].sort((a, b) => a.rotationOrder - b.rotationOrder);
       const idx = sorted.findIndex((m) => m.userId === currentCycle.assignedUserId);
       const priorIdx = idx > 0 ? idx - 1 : sorted.length > 1 ? sorted.length - 1 : -1;
       if (priorIdx >= 0) {
         const prior = sorted[priorIdx];
-        priorAssigneeName = prior.userName ?? prior.userEmail ?? null;
+        priorAssigneeName = prior.userName ?? null;
+        priorAssigneeEmail = prior.userEmail ?? null;
       }
     }
   }
-
-  // HNTF-03 fallback: when the rotation predecessor cannot be derived (null), the banner
-  // still renders with "Someone" — matches Plan 05-04's CycleEventRow fallback and ensures
-  // the banner is NEVER silently suppressed for an unread cycle_reassigned_* event.
-  const resolvedPriorName = priorAssigneeName ?? "Someone";
 
   // D-24 / D-25 — CycleCountdownBanner gate.
   // The banner renders only when the viewer is the current cycle's assignee,
@@ -295,7 +291,8 @@ export default async function DashboardPage({
           {viewerIsAssignee &&
             unreadEvent?.type.startsWith("cycle_reassigned_") && (
               <ReassignmentBanner
-                priorAssigneeName={resolvedPriorName}
+                priorAssigneeName={priorAssigneeName}
+                priorAssigneeEmail={priorAssigneeEmail}
                 reassignType={
                   unreadEvent.type.replace("cycle_reassigned_", "") as
                     | "manual_skip"
@@ -317,6 +314,7 @@ export default async function DashboardPage({
               <CycleCountdownBanner
                 daysLeft={daysLeft}
                 nextAssigneeName={nextAssigneeName}
+                nextAssigneeEmail={nextAssigneeEmail}
                 cycleEndDate={currentCycle.endDate}
                 isSingleMember={members.length === 1}
               />
@@ -342,7 +340,9 @@ export default async function DashboardPage({
             members.length > 1 && (
               <PassiveStatusBanner
                 assigneeName={assigneeName}
-                nextAssigneeName={nextAssigneeName ?? undefined}
+                assigneeEmail={assigneeEmail}
+                nextAssigneeName={nextAssigneeName}
+                nextAssigneeEmail={nextAssigneeEmail}
                 nextIsFallbackOwner={nextAssignee?.fallback ?? false}
                 memberCount={members.length}
                 cycleEndDate={currentCycle.endDate}

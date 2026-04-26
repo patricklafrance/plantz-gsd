@@ -22,4 +22,5 @@ export interface CycleEventItem {
   createdAt: Date;
   readAt: Date | null;
   priorAssigneeName: string | null; // null for cycle_started + cycle_fallback_owner
+  priorAssigneeEmail?: string | null; // Phase 8.3: paired with name for [name] (email) copy; null when neither resolves
 }

@@ -14,6 +14,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ReminderItem, CycleEventItem } from "@/features/reminders/types";
 import { markNotificationsRead } from "@/features/household/actions";
+import { memberNameText } from "@/components/household/member-name";
 
 interface NotificationBellProps {
   variant: "desktop" | "mobile";
@@ -211,16 +212,17 @@ function CycleEventRow({
         ? AlertTriangle
         : UserCheck;
 
+  const priorLabel = memberNameText(event.priorAssigneeName, event.priorAssigneeEmail);
   const subject =
     event.type === "cycle_started"
       ? "You're up this cycle"
       : event.type === "cycle_fallback_owner"
         ? "You're covering (nobody available)"
         : event.type === "cycle_reassigned_manual_skip"
-          ? `${event.priorAssigneeName ?? "Someone"} skipped — you're covering`
+          ? `${priorLabel} skipped — you're covering`
           : event.type === "cycle_reassigned_auto_skip"
-            ? `${event.priorAssigneeName ?? "Someone"} is unavailable — you're covering`
-            : `${event.priorAssigneeName ?? "Someone"} left — you're covering`;
+            ? `${priorLabel} is unavailable — you're covering`
+            : `${priorLabel} left — you're covering`;
 
   return (
     <DropdownMenuItem

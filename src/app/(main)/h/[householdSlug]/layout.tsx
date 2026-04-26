@@ -94,16 +94,13 @@ export default async function HouseholdLayout({
     );
     cycleEvents = notificationRows.map((row) => {
       // WR-02 (Phase 5 review): prefer the stored priorAssigneeUserId snapshot
-      // populated by transitionCycle at emission time — it is correct by
-      // construction regardless of subsequent rotation churn. For rows emitted
-      // BEFORE the schema change (priorAssignee: null) we fall back to the
-      // legacy rotation-predecessor walk so historical notifications still
-      // render something plausible. If both fail the row surfaces as null and
-      // the bell CycleEventRow + ReassignmentBanner render "Someone".
+      // populated by transitionCycle at emission time. Phase 8.3: surface name
+      // and email separately so the renderer can build [name] (email) copy.
       let priorAssigneeName: string | null = null;
+      let priorAssigneeEmail: string | null = null;
       if (row.priorAssignee) {
-        priorAssigneeName =
-          row.priorAssignee.name ?? row.priorAssignee.email ?? null;
+        priorAssigneeName = row.priorAssignee.name ?? null;
+        priorAssigneeEmail = row.priorAssignee.email ?? null;
       } else {
         // Legacy fallback: rotation predecessor of the current assignee.
         const members = row.cycle?.household?.members ?? [];
@@ -117,9 +114,10 @@ export default async function HouseholdLayout({
             : currentIdx === 0 && sorted.length > 1
               ? sorted[sorted.length - 1]
               : null;
-        priorAssigneeName = priorMember
-          ? (priorMember.user.name ?? priorMember.user.email ?? null)
-          : null;
+        if (priorMember) {
+          priorAssigneeName = priorMember.user.name ?? null;
+          priorAssigneeEmail = priorMember.user.email ?? null;
+        }
       }
 
       return {
@@ -128,6 +126,7 @@ export default async function HouseholdLayout({
         createdAt: row.createdAt,
         readAt: row.readAt,
         priorAssigneeName,
+        priorAssigneeEmail,
       };
     });
   }

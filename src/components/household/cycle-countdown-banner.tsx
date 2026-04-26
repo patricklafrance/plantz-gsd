@@ -6,10 +6,12 @@
 import { Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { MemberName } from "./member-name";
 
 export type CycleCountdownBannerProps = {
   daysLeft: number;
   nextAssigneeName: string | null;
+  nextAssigneeEmail?: string | null;
   cycleEndDate: Date;
   isSingleMember: boolean;
 };
@@ -38,6 +40,7 @@ export type CycleCountdownBannerProps = {
 export function CycleCountdownBanner({
   daysLeft,
   nextAssigneeName,
+  nextAssigneeEmail,
   cycleEndDate,
   isSingleMember,
 }: CycleCountdownBannerProps) {
@@ -45,21 +48,30 @@ export function CycleCountdownBanner({
   const Icon = isUrgent ? Clock : Calendar;
 
   const formattedEndDate = format(cycleEndDate, "MMM d, yyyy");
+  const hasNextToken = Boolean(nextAssigneeName?.trim() || nextAssigneeEmail?.trim());
+  const nextElement = hasNextToken ? (
+    <MemberName name={nextAssigneeName} email={nextAssigneeEmail} />
+  ) : null;
 
-  let primaryLine: string;
+  // Mixed string + JSX rendering: build the line as React children rather than
+  // a plain string so the highlighted name token renders as a `<strong>`.
+  let primary: React.ReactNode;
   if (isSingleMember) {
-    primaryLine = isUrgent
+    primary = isUrgent
       ? "Last day — you're on rotation."
       : `You're on rotation — ${formatDaysLeft(daysLeft)} in this cycle.`;
+  } else if (isUrgent) {
+    primary = nextElement ? (
+      <>Last day — tomorrow passes to {nextElement}.</>
+    ) : (
+      "Last day on rotation."
+    );
   } else {
-    if (isUrgent) {
-      primaryLine = nextAssigneeName
-        ? `Last day — tomorrow passes to ${nextAssigneeName}.`
-        : "Last day on rotation.";
-    } else {
-      const nextClause = nextAssigneeName ? ` ${nextAssigneeName} is next.` : "";
-      primaryLine = `You're up this week — ${formatDaysLeft(daysLeft)}.${nextClause}`;
-    }
+    primary = nextElement ? (
+      <>You&apos;re up this week — {formatDaysLeft(daysLeft)}. {nextElement} is next.</>
+    ) : (
+      `You're up this week — ${formatDaysLeft(daysLeft)}.`
+    );
   }
 
   return (
@@ -80,7 +92,7 @@ export function CycleCountdownBanner({
         aria-hidden="true"
       />
       <div className="flex-1 space-y-1">
-        <p className="text-sm text-foreground">{primaryLine}</p>
+        <p className="text-sm text-foreground">{primary}</p>
         <p className="text-xs text-muted-foreground">Cycle ends {formattedEndDate}</p>
       </div>
     </div>

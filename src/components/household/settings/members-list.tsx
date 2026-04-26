@@ -33,6 +33,7 @@ import {
   removeMember,
   reorderRotation,
 } from "@/features/household/actions";
+import { MemberName, memberNameText } from "@/components/household/member-name";
 
 /**
  * Row contract for the members list. Caller (Plan 07 settings page) pre-sorts
@@ -181,7 +182,9 @@ export function MembersList({
     <TooltipProvider>
       <ul className="divide-y divide-border">
         {localMembers.map((member, index) => {
-          const displayName = member.userName ?? member.userEmail;
+          // Phase 8.3: text-only label used in toasts + aria-label / dialog
+          // copy. JSX renderer below uses <MemberName /> for the rich display.
+          const displayName = memberNameText(member.userName, member.userEmail);
           const isSelf = member.userId === viewerUserId;
           const viewerIsOwner = viewerRole === "OWNER";
           const targetIsOwner = member.role === "OWNER";
@@ -222,8 +225,11 @@ export function MembersList({
               </span>
 
               <span className="flex-1 flex items-center gap-2 min-w-0">
-                <span className="text-sm font-semibold text-foreground truncate">
-                  {displayName}
+                <span className="text-sm truncate">
+                  <MemberName
+                    name={member.userName}
+                    email={member.userEmail}
+                  />
                 </span>
                 {isActiveAssignee && (
                   <span className="bg-accent text-accent-foreground text-xs px-1.5 py-0.5 rounded font-medium shrink-0">
