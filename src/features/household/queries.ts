@@ -47,6 +47,35 @@ export async function getUserHouseholds(userId: string) {
 }
 
 /**
+ * Resolves the slug of the user's "active" household for redirect entry points
+ * (root page, /dashboard legacy stub). Honors the JWT activeHouseholdId hint
+ * when present and still valid; otherwise falls back to the user's default
+ * membership (isDefault desc, then oldest first). Returns null when the user
+ * has no memberships at all — caller decides how to surface that.
+ *
+ * WR-03: JWT hint may be stale (issued before the household existed, or after
+ * it was deleted). Always tolerate a missing/unknown hint and fall through.
+ */
+export async function resolveActiveHouseholdSlug(
+  userId: string,
+  hint?: string,
+): Promise<string | null> {
+  if (hint) {
+    const hinted = await db.household.findUnique({
+      where: { id: hint },
+      select: { slug: true },
+    });
+    if (hinted) return hinted.slug;
+  }
+  const membership = await db.householdMember.findFirst({
+    where: { userId },
+    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+    select: { household: { select: { slug: true } } },
+  });
+  return membership?.household.slug ?? null;
+}
+
+/**
  * Phase 6 consumer: dashboard cycle banner reads this inside the layout chokepoint.
  * Returns the most recent active-or-paused Cycle for the household, or null.
  * Caller is responsible for authorization (layout ran requireHouseholdAccess).

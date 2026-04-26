@@ -1,34 +1,13 @@
 /**
  * Legacy redirect stub — Plan 03a migrates the real dashboard to
- * /h/[householdSlug]/dashboard. This stub redirects to the user's
- * active household dashboard.
- *
- * WR-03: The JWT's activeHouseholdId hint can be stale (JWT issued before the
- * household was created, or the referenced household was deleted). Always fall
- * back to a live membership query so new users aren't silently bounced to
- * /login. When no membership exists at all, surface an explicit error query
- * param instead of a silent redirect.
+ * /h/[householdSlug]/dashboard. The root page (`/`) resolves the active
+ * household directly, so a signed-in user lands on /h/[slug]/dashboard
+ * in one hop. This stub remains for any inbound links that still point
+ * at /dashboard (bookmarks, external references, old emails).
  */
 import { auth } from "../../../../auth";
-import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
-
-async function resolveActiveHouseholdSlug(userId: string, hint?: string) {
-  if (hint) {
-    const hinted = await db.household.findUnique({
-      where: { id: hint },
-      select: { slug: true },
-    });
-    if (hinted) return hinted.slug;
-  }
-  // Live fallback — JWT hint was stale or missing.
-  const membership = await db.householdMember.findFirst({
-    where: { userId },
-    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
-    select: { household: { select: { slug: true } } },
-  });
-  return membership?.household.slug ?? null;
-}
+import { resolveActiveHouseholdSlug } from "@/features/household/queries";
 
 export default async function LegacyDashboardPage() {
   const session = await auth();
