@@ -123,7 +123,12 @@ export async function getReminderItems(
       plantId: plant.id,
       nickname: plant.nickname,
       roomName: plant.room?.name ?? null,
-      statusLabel: daysOverdue === 1 ? "1 day overdue" : `${daysOverdue} days overdue`,
+      statusLabel:
+        daysOverdue === 0
+          ? "Overdue"
+          : daysOverdue === 1
+            ? "1 day overdue"
+            : `${daysOverdue} days overdue`,
       daysOverdue,
     });
   }
