@@ -28,6 +28,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const searchParams = useSearchParams();
   const callbackUrl = validateCallbackUrl(searchParams.get("callbackUrl"));
+  const errorParam = searchParams.get("error");
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
@@ -66,6 +67,16 @@ export function LoginForm() {
         <h1 className="text-2xl font-semibold">Sign in to your account</h1>
       </CardHeader>
       <CardContent>
+        {errorParam === "demo_failed" && (
+          <div
+            role="alert"
+            className="mb-4 rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+          >
+            Couldn&apos;t start the demo session — the demo data is missing.
+            Run <code className="font-mono">npx prisma db seed</code> to set
+            it up, then try again.
+          </div>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
