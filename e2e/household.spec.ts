@@ -35,12 +35,12 @@ test("solo-household assignee sees Snooze + Skip controls (Phase 8.1)", async ({
 test("snooze action surfaces a success toast (Phase 8.1)", async ({ page }) => {
   await registerFreshUser(page, "Snoozer");
 
-  // Open the snooze dropdown and pick "3 days".
+  // Single-click Snooze — the action defers the cycle by one cycle duration
+  // (default 7 days for new households).
   await page.getByRole("button", { name: /snooze cycle/i }).click();
-  await page.getByRole("menuitem", { name: "3 days" }).click();
 
   // sonner renders toasts as live regions; assert the success copy lands.
-  await expect(page.getByText(/cycle ends 3 days later/i)).toBeVisible({
+  await expect(page.getByText(/snoozed — cycle pushed by/i)).toBeVisible({
     timeout: 5000,
   });
 });

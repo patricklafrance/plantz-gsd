@@ -113,17 +113,14 @@ export const skipCurrentCycleSchema = z.object({
 export type SkipCurrentCycleInput = z.infer<typeof skipCurrentCycleSchema>;
 
 /**
- * Phase 8.1 — Cycle snooze input. Per-cycle deferral by N days; the same
+ * Phase 8.1 — Cycle snooze input. Defers the current cycle window by exactly
+ * one cycle duration (read from household.cycleDuration server-side); the same
  * assignee keeps the cycle. Distinct from skipCurrentCycle (which reassigns).
- * `days` is constrained to 1, 3, or 7 to mirror the cycle-duration presets and
- * prevent unbounded deferral.
+ * No client-side duration choice — single action.
  */
 export const snoozeCurrentCycleSchema = z.object({
   householdId: z.cuid(),
   householdSlug: z.string().min(1),
-  days: z
-    .union([z.literal(1), z.literal(3), z.literal(7)])
-    .or(z.enum(["1", "3", "7"]).transform(Number)),
 });
 export type SnoozeCurrentCycleInput = z.infer<typeof snoozeCurrentCycleSchema>;
 

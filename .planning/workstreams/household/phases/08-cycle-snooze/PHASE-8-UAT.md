@@ -21,16 +21,18 @@ npx prisma db seed
 
 ## UAT 8.1 — Cycle Snooze
 
-**Goal:** Active assignee can defer their cycle without reassigning.
+**Goal:** Active assignee can defer their cycle by exactly one cycle duration without reassigning.
 
 1. Visit `http://localhost:3000/login` → click **Explore without signing up**.
 2. On `/h/<slug>/dashboard` look below the green countdown banner (right-aligned).
-3. **Expected:** Two buttons — `Snooze` (with dropdown) and `Skip`.
-4. Click **Snooze** → pick **3 days**.
-5. **Expected:** Countdown banner adds 3 days (e.g. "7 days left" → "10 days left", end-date shifts), toast says "Snoozed — cycle ends 3 days later."
-6. Click **Skip**.
-7. **Expected:** Confirm dialog "Skip your turn?". Confirm → toast "Skipped — passed to the next member.", banner now shows "Alice (alice@demo.plantminder.app) is watering this cycle." (you become a non-assignee viewer; the demo user stays the demo viewer though — actually demo blocks; see step 8).
-8. **Demo-mode block:** since this is a demo session, both Snooze and Skip should toast "Demo mode — sign up to save your changes." If this fires, that's the read-only guard working — the action did NOT write to the DB. (To exercise the real write path, register a new account and rerun on `/h/<your-slug>/dashboard`.)
+3. **Expected:** Two buttons — `Snooze` and `Skip`.
+4. **Demo-mode block:** the demo session blocks writes — clicking Snooze should toast "Demo mode — sign up to save your changes." If this fires, the read-only guard is working. To exercise the real write path, register a new account.
+5. Sign out → register a fresh account (e.g. `Pat`). On the new dashboard, click **Snooze**.
+6. **Expected:** Countdown banner adds one cycle duration (e.g. "7 days left" → "14 days left", end-date shifts by 7 days). Toast says "Snoozed — cycle pushed by 7 days."
+7. Click **Snooze** again.
+8. **Expected:** Same shift — countdown adds another 7 days. (Snooze is per-cycle but not rate-limited; this is a deliberate simplification — no "snooze cap" was specified.)
+9. Click **Skip**.
+10. **Expected:** Confirm dialog "Skip your turn?". Confirm → on a solo household the same person stays the assignee (they are also the next available member), so the banner does not change much. With a multi-member household, responsibility moves to the next member.
 
 ---
 

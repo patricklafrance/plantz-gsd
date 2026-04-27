@@ -189,8 +189,9 @@ export async function skipCurrentCycle(data: unknown) {
 
 /**
  * Phase 8.1 — Cycle snooze. Same-assignee deferral of the current cycle
- * window by N days (1, 3, or 7). Distinct from skipCurrentCycle:
- *   - Snooze: same assignee, push start/end forward, NO notification
+ * window by exactly one cycle duration (read from household.cycleDuration).
+ * Distinct from skipCurrentCycle:
+ *   - Snooze: same assignee, push start/end forward by household.cycleDuration, NO notification
  *   - Skip:   reassign to next available member, write reassigned notification
  *
  * Only the active assignee may snooze. Atomic update inside a $transaction;
@@ -218,10 +219,14 @@ export async function snoozeCurrentCycle(data: unknown) {
     throw err;
   }
 
-  // Step 5+6: atomic load + assignee-gate + window shift
-  const days = parsed.data.days;
+  // Step 5+6: atomic load + assignee-gate + window shift by one cycle duration
+  let snoozedDays = 0;
   try {
     await db.$transaction(async (tx) => {
+      const household = await tx.household.findUniqueOrThrow({
+        where: { id: parsed.data.householdId },
+        select: { cycleDuration: true },
+      });
       const current = await tx.cycle.findFirst({
         where: {
           householdId: parsed.data.householdId,
@@ -236,8 +241,9 @@ export async function snoozeCurrentCycle(data: unknown) {
       if (current.assignedUserId !== session.user!.id) {
         throw new SnoozeError("Only the active assignee can snooze this cycle.");
       }
+      snoozedDays = household.cycleDuration;
       const msPerDay = 1000 * 60 * 60 * 24;
-      const shifted = (d: Date) => new Date(d.getTime() + days * msPerDay);
+      const shifted = (d: Date) => new Date(d.getTime() + snoozedDays * msPerDay);
       await tx.cycle.update({
         where: { id: current.id },
         data: {
@@ -253,7 +259,7 @@ export async function snoozeCurrentCycle(data: unknown) {
 
   // Step 7: revalidate dashboard so the countdown updates
   revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
-  return { success: true as const, days };
+  return { success: true as const, days: snoozedDays };
 }
 
 class SnoozeError extends Error {
