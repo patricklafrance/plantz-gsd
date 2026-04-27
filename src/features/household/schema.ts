@@ -113,18 +113,6 @@ export const skipCurrentCycleSchema = z.object({
 export type SkipCurrentCycleInput = z.infer<typeof skipCurrentCycleSchema>;
 
 /**
- * Phase 8.1 — Cycle snooze input. Defers the current cycle window by exactly
- * one cycle duration (read from household.cycleDuration server-side); the same
- * assignee keeps the cycle. Distinct from skipCurrentCycle (which reassigns).
- * No client-side duration choice — single action.
- */
-export const snoozeCurrentCycleSchema = z.object({
-  householdId: z.cuid(),
-  householdSlug: z.string().min(1),
-});
-export type SnoozeCurrentCycleInput = z.infer<typeof snoozeCurrentCycleSchema>;
-
-/**
  * INVT-01 / D-16: createInvitation input. OWNER-gated at the action layer.
  * `householdSlug` surfaces in revalidatePath; `householdId` is the authz key.
  */

@@ -6,10 +6,11 @@ interface CycleStartBannerProps {
   // `assigneeName` is NOT accepted. The UI-SPEC copy "You're up this cycle."
   // addresses the viewer in second person and never names them. The dashboard
   // page (Plan 05-05) only mounts this banner when viewerIsAssignee === true,
-  // so the second-person addressing is authoritative. PATTERNS.md entry for
-  // this component will be updated to match this 2-prop interface.
+  // so the second-person addressing is authoritative.
   dueCount: number;
   cycleEndDate: Date;
+  /** Phase 8.1: optional right-aligned action slot (e.g. Skip button). */
+  action?: React.ReactNode;
 }
 
 /**
@@ -21,7 +22,7 @@ interface CycleStartBannerProps {
  *   viewerIsAssignee && unreadNotification?.type === "cycle_started"
  * Props-only: no DB calls, no hooks.
  */
-export function CycleStartBanner({ dueCount, cycleEndDate }: CycleStartBannerProps) {
+export function CycleStartBanner({ dueCount, cycleEndDate, action }: CycleStartBannerProps) {
   const formattedEndDate = format(cycleEndDate, "EEE MMM d");
   const meta =
     dueCount > 0
@@ -40,6 +41,7 @@ export function CycleStartBanner({ dueCount, cycleEndDate }: CycleStartBannerPro
         </p>
         <p className="text-xs text-muted-foreground">{meta}</p>
       </div>
+      {action && <div className="shrink-0 self-center">{action}</div>}
     </div>
   );
 }

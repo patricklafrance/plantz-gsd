@@ -14,6 +14,8 @@ export type CycleCountdownBannerProps = {
   nextAssigneeEmail?: string | null;
   cycleEndDate: Date;
   isSingleMember: boolean;
+  /** Phase 8.1: optional right-aligned action slot (e.g. Skip button). */
+  action?: React.ReactNode;
 };
 
 /**
@@ -43,6 +45,7 @@ export function CycleCountdownBanner({
   nextAssigneeEmail,
   cycleEndDate,
   isSingleMember,
+  action,
 }: CycleCountdownBannerProps) {
   const isUrgent = daysLeft <= 1;
   const Icon = isUrgent ? Clock : Calendar;
@@ -95,6 +98,7 @@ export function CycleCountdownBanner({
         <p className="text-sm text-foreground">{primary}</p>
         <p className="text-xs text-muted-foreground">Cycle ends {formattedEndDate}</p>
       </div>
+      {action && <div className="shrink-0 self-center">{action}</div>}
     </div>
   );
 }

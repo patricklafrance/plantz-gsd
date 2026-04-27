@@ -10,6 +10,8 @@ interface ReassignmentBannerProps {
   reassignType: ReassignType;
   dueCount: number;
   cycleEndDate: Date;
+  /** Phase 8.1: optional right-aligned action slot (e.g. Skip button). */
+  action?: React.ReactNode;
 }
 
 /**
@@ -23,6 +25,7 @@ export function ReassignmentBanner({
   reassignType,
   dueCount,
   cycleEndDate,
+  action,
 }: ReassignmentBannerProps) {
   const verbPhrase: Record<ReassignType, string> = {
     manual_skip: "skipped — you're covering this cycle.",
@@ -49,6 +52,7 @@ export function ReassignmentBanner({
         </p>
         <p className="text-xs text-muted-foreground">{meta}</p>
       </div>
+      {action && <div className="shrink-0 self-center">{action}</div>}
     </div>
   );
 }

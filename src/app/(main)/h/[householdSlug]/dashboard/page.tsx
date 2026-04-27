@@ -21,7 +21,7 @@ import { ReassignmentBanner } from "@/components/household/reassignment-banner";
 import { PassiveStatusBanner } from "@/components/household/passive-status-banner";
 import { FallbackBanner } from "@/components/household/fallback-banner";
 import { CycleCountdownBanner } from "@/components/household/cycle-countdown-banner";
-import { CycleAssigneeActions } from "@/components/household/cycle-assignee-actions";
+import { SkipCycleButton } from "@/components/household/skip-cycle-button";
 import { DashboardClient } from "@/components/watering/dashboard-client";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TimezoneWarning } from "@/components/shared/timezone-warning";
@@ -278,16 +278,23 @@ export default async function DashboardPage({
             />
           )}
 
-          {/* Layer 2: assignee-role event — mutually exclusive per D-19 unique index */}
+          {/* Layer 2: assignee-role event — mutually exclusive per D-19 unique index.
+              Phase 8.1: Skip button is rendered INSIDE the banner via the action slot. */}
           {viewerIsAssignee && unreadEvent?.type === "cycle_started" && (
             <CycleStartBanner
               dueCount={reminderCountForBanner}
               cycleEndDate={currentCycle.endDate}
+              action={
+                currentCycle.status === "active" ? (
+                  <SkipCycleButton
+                    householdId={household.id}
+                    householdSlug={householdSlug}
+                    isDemo={session.user.isDemo ?? false}
+                  />
+                ) : undefined
+              }
             />
           )}
-          {/* HNTF-03: unconditional render when viewer is assignee AND event type is cycle_reassigned_*.
-              priorAssigneeName uses resolvedPriorName ("Someone" fallback when derivation fails)
-              so the banner NEVER silently disappears. Matches Plan 05-04 CycleEventRow fallback. */}
           {viewerIsAssignee &&
             unreadEvent?.type.startsWith("cycle_reassigned_") && (
               <ReassignmentBanner
@@ -301,13 +308,19 @@ export default async function DashboardPage({
                 }
                 dueCount={reminderCountForBanner}
                 cycleEndDate={currentCycle.endDate}
+                action={
+                  currentCycle.status === "active" ? (
+                    <SkipCycleButton
+                      householdId={household.id}
+                      householdSlug={householdSlug}
+                      isDemo={session.user.isDemo ?? false}
+                    />
+                  ) : undefined
+                }
               />
             )}
 
-          {/* D-24: CycleCountdownBanner — assignee steady-state, no unread event.
-              Slots between the reassignment-layer and the non-assignee passive
-              banner. Mutual-exclusive with CycleStart / Reassignment via the
-              `!hasUnreadCycleEvent` half of the D-25 gate. */}
+          {/* D-24: CycleCountdownBanner — assignee steady-state, no unread event. */}
           {viewerIsAssignee &&
             currentCycle.status === "active" &&
             !hasUnreadCycleEvent && (
@@ -317,21 +330,15 @@ export default async function DashboardPage({
                 nextAssigneeEmail={nextAssigneeEmail}
                 cycleEndDate={currentCycle.endDate}
                 isSingleMember={members.length === 1}
+                action={
+                  <SkipCycleButton
+                    householdId={household.id}
+                    householdSlug={householdSlug}
+                    isDemo={session.user.isDemo ?? false}
+                  />
+                }
               />
             )}
-
-          {/* Phase 8.1 — assignee-only Snooze + Skip controls. Mounted whenever
-              the viewer is the active assignee on an active cycle, regardless of
-              which banner above is showing. */}
-          {viewerIsAssignee && currentCycle.status === "active" && (
-            <div className="flex justify-end">
-              <CycleAssigneeActions
-                householdId={household.id}
-                householdSlug={householdSlug}
-                isDemo={session.user.isDemo ?? false}
-              />
-            </div>
-          )}
 
           {/* Layer 3: PassiveStatusBanner — non-assignee, no assignee event, multi-member, active cycle */}
           {!viewerIsAssignee &&

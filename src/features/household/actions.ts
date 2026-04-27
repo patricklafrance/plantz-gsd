@@ -10,7 +10,6 @@ import {
   createAvailabilitySchema,
   deleteAvailabilitySchema,
   skipCurrentCycleSchema,
-  snoozeCurrentCycleSchema,
   createInvitationSchema,
   revokeInvitationSchema,
   acceptInvitationSchema,
@@ -185,89 +184,6 @@ export async function skipCurrentCycle(data: unknown) {
   // Step 7: revalidate dashboard so the clicking user sees the new banner immediately.
   revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
   return { success: true };
-}
-
-/**
- * Phase 8.1 — Cycle snooze. Same-assignee deferral of the current cycle
- * window by exactly one cycle duration (read from household.cycleDuration).
- * Distinct from skipCurrentCycle:
- *   - Snooze: same assignee, push start/end forward by household.cycleDuration, NO notification
- *   - Skip:   reassign to next available member, write reassigned notification
- *
- * Only the active assignee may snooze. Atomic update inside a $transaction;
- * paused cycles are blocked (assignee gate is null).
- */
-export async function snoozeCurrentCycle(data: unknown) {
-  // Step 1: session
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Not authenticated." };
-
-  // Step 2: demo guard
-  if (session.user.isDemo) {
-    return { error: "Demo mode — sign up to save your changes." };
-  }
-
-  // Step 3: Zod parse
-  const parsed = snoozeCurrentCycleSchema.safeParse(data);
-  if (!parsed.success) return { error: "Invalid input." };
-
-  // Step 4: live household access
-  try {
-    await requireHouseholdAccess(parsed.data.householdId);
-  } catch (err) {
-    if (err instanceof ForbiddenError) return { error: err.message };
-    throw err;
-  }
-
-  // Step 5+6: atomic load + assignee-gate + window shift by one cycle duration
-  let snoozedDays = 0;
-  try {
-    await db.$transaction(async (tx) => {
-      const household = await tx.household.findUniqueOrThrow({
-        where: { id: parsed.data.householdId },
-        select: { cycleDuration: true },
-      });
-      const current = await tx.cycle.findFirst({
-        where: {
-          householdId: parsed.data.householdId,
-          status: "active",
-        },
-        orderBy: { cycleNumber: "desc" },
-        select: { id: true, assignedUserId: true, startDate: true, endDate: true },
-      });
-      if (!current) {
-        throw new SnoozeError("No active cycle to snooze.");
-      }
-      if (current.assignedUserId !== session.user!.id) {
-        throw new SnoozeError("Only the active assignee can snooze this cycle.");
-      }
-      snoozedDays = household.cycleDuration;
-      const msPerDay = 1000 * 60 * 60 * 24;
-      const shifted = (d: Date) => new Date(d.getTime() + snoozedDays * msPerDay);
-      await tx.cycle.update({
-        where: { id: current.id },
-        data: {
-          startDate: shifted(current.startDate),
-          endDate: shifted(current.endDate),
-        },
-      });
-    });
-  } catch (err) {
-    if (err instanceof SnoozeError) return { error: err.message };
-    throw err;
-  }
-
-  // Step 7: revalidate dashboard so the countdown updates
-  revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
-  return { success: true as const, days: snoozedDays };
-}
-
-class SnoozeError extends Error {
-  readonly name = "SnoozeError" as const;
-  constructor(message: string) {
-    super(message);
-    Object.setPrototypeOf(this, SnoozeError.prototype);
-  }
 }
 
 /**

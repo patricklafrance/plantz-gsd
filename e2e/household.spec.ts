@@ -19,28 +19,28 @@ async function registerFreshUser(page: import("@playwright/test").Page, name: st
   await page.waitForURL(/\/h\/[A-Za-z0-9]+\/dashboard/, { timeout: 15000 });
 }
 
-test("solo-household assignee sees Snooze + Skip controls (Phase 8.1)", async ({ page }) => {
+test("solo-household assignee sees Skip button inside the banner (Phase 8.1)", async ({ page }) => {
   await registerFreshUser(page, "SoloOwner");
 
-  // Solo household: registered user is the active cycle assignee. The
-  // CycleAssigneeActions row mounts below the cycle-countdown banner.
+  // The Skip button is rendered as the right-side action slot of the
+  // CycleCountdownBanner — visible whenever the viewer is the active assignee.
   await expect(
-    page.getByRole("button", { name: /snooze cycle/i }),
+    page.getByRole("button", { name: /skip my turn/i }),
   ).toBeVisible({ timeout: 10000 });
-  await expect(
-    page.getByRole("button", { name: /skip cycle/i }),
-  ).toBeVisible();
 });
 
-test("snooze action surfaces a success toast (Phase 8.1)", async ({ page }) => {
-  await registerFreshUser(page, "Snoozer");
+test("skip-my-turn confirms via dialog and toasts on success (Phase 8.1)", async ({ page }) => {
+  await registerFreshUser(page, "Skipper");
 
-  // Single-click Snooze — the action defers the cycle by one cycle duration
-  // (default 7 days for new households).
-  await page.getByRole("button", { name: /snooze cycle/i }).click();
+  await page.getByRole("button", { name: /skip my turn/i }).click();
+  // AlertDialog appears with "Skip your turn?" title.
+  await expect(page.getByRole("alertdialog")).toBeVisible();
+  await page
+    .getByRole("button", { name: /skip my turn/i, exact: false })
+    .last()
+    .click();
 
-  // sonner renders toasts as live regions; assert the success copy lands.
-  await expect(page.getByText(/snoozed — cycle pushed by/i)).toBeVisible({
+  await expect(page.getByText(/passed to the next member/i)).toBeVisible({
     timeout: 5000,
   });
 });
