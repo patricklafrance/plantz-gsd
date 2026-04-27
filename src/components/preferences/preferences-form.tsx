@@ -43,14 +43,7 @@ export function PreferencesForm({
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
-      <header>
-        <h1 tabIndex={-1} className="text-2xl font-semibold outline-none">
-          Preferences
-        </h1>
-      </header>
-
-      {/* Notifications section */}
+    <div className="space-y-8">
       <Card>
         <CardHeader>
           <CardTitle>Notifications</CardTitle>
@@ -79,10 +72,9 @@ export function PreferencesForm({
         </CardContent>
       </Card>
 
-      {/* Account section */}
       <Card>
         <CardHeader>
-          <CardTitle>Account</CardTitle>
+          <CardTitle>Sign-in</CardTitle>
         </CardHeader>
         <CardContent>
           <AccountSettings userEmail={userEmail} isDemo={isDemo} />
