@@ -30,6 +30,7 @@ interface FilterChipsProps {
   activeRoomId?: string;
   activeStatus?: string;
   activeSort?: string;
+  basePath: string;
 }
 
 function Chip({
@@ -70,6 +71,7 @@ export function FilterChips({
   activeRoomId,
   activeStatus,
   activeSort,
+  basePath,
 }: FilterChipsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -81,7 +83,8 @@ export function FilterChips({
     } else {
       params.delete(key);
     }
-    router.push(`/plants?${params.toString()}`);
+    const qs = params.toString();
+    router.push(qs ? `${basePath}?${qs}` : basePath);
   }
 
   const currentStatusLabel =

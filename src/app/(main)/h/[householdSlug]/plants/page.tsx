@@ -82,18 +82,19 @@ export default async function PlantsPage({
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 tabIndex={-1} className="text-2xl font-semibold outline-none">My Plants</h1>
+        <h1 tabIndex={-1} className="text-2xl font-semibold outline-none">Plants</h1>
         <AddPlantDialog catalog={catalog} rooms={rooms} householdId={household.id} />
       </div>
 
       {/* Search, filter, sort block */}
       <div className="space-y-2">
-        <SearchBar defaultValue={sp.search} />
+        <SearchBar defaultValue={sp.search} basePath={`/h/${householdSlug}/plants`} />
         <FilterChips
           rooms={rooms}
           activeRoomId={sp.room}
           activeStatus={sp.status}
           activeSort={sp.sort}
+          basePath={`/h/${householdSlug}/plants`}
         />
       </div>
 

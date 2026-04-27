@@ -15,13 +15,15 @@ function debounce<T extends (...args: Parameters<T>) => void>(fn: T, delay: numb
   };
 }
 
-export function SearchBar({ defaultValue }: { defaultValue?: string }) {
+export function SearchBar({ defaultValue, basePath }: { defaultValue?: string; basePath: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [value, setValue] = useState(defaultValue ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
   const searchParamsRef = useRef(searchParams);
   searchParamsRef.current = searchParams;
+  const basePathRef = useRef(basePath);
+  basePathRef.current = basePath;
 
   const updateURL = useMemo(
     () =>
@@ -32,16 +34,18 @@ export function SearchBar({ defaultValue }: { defaultValue?: string }) {
         } else {
           params.delete("search");
         }
-        router.push(`/plants?${params.toString()}`);
+        const qs = params.toString();
+        router.push(qs ? `${basePathRef.current}?${qs}` : basePathRef.current);
       }, 300),
-    [] // stable — reads from ref
+    [] // stable — reads from refs
   );
 
   function handleClear() {
     setValue("");
     const params = new URLSearchParams(searchParams.toString());
     params.delete("search");
-    router.push(`/plants?${params.toString()}`);
+    const qs = params.toString();
+    router.push(qs ? `${basePath}?${qs}` : basePath);
     inputRef.current?.focus();
   }
 
