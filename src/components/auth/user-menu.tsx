@@ -2,7 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Home, LogOut, UserCog } from "lucide-react";
+import { CalendarDays, FlaskConical, Home, LogOut, UserCog } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +24,7 @@ interface UserMenuProps {
   }>;
   currentSlug: string;
   currentHouseholdName: string;
+  isDemo?: boolean;
 }
 
 function getInitials(email: string, name?: string | null): string {
@@ -49,6 +50,7 @@ export function UserMenu({
   households,
   currentSlug,
   currentHouseholdName,
+  isDemo = false,
 }: UserMenuProps) {
   const router = useRouter();
   const initials = getInitials(email, name);
@@ -108,6 +110,19 @@ export function UserMenu({
           Account
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+
+        {!isDemo && (
+          <>
+            <DropdownMenuItem
+              onClick={() => router.push(`/h/${currentSlug}/demo-tools`)}
+              className="cursor-pointer gap-2"
+            >
+              <FlaskConical className="h-4 w-4" />
+              Demo tools
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
 
         <DropdownMenuItem
           onClick={() => signOut({ callbackUrl: "/login" })}

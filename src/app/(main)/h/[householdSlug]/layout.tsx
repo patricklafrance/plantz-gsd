@@ -194,6 +194,7 @@ export default async function HouseholdLayout({
               }))}
               currentSlug={householdSlug}
               currentHouseholdName={household.name}
+              isDemo={isDemo}
             />
           </div>
         </nav>

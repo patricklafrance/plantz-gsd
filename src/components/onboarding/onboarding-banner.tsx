@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Leaf, Loader2, X } from "lucide-react";
 import { completeOnboarding } from "@/features/auth/actions";
-import { seedStarterPlants } from "@/features/demo/actions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -39,11 +38,7 @@ export function OnboardingBanner({ userId, householdId }: OnboardingBannerProps)
     setSelectedRange(range);
     setIsCompleting(true);
 
-    // Fire both actions concurrently
-    const [onboardingResult, seedResult] = await Promise.all([
-      completeOnboarding({ plantCountRange: range }),
-      seedStarterPlants(range, householdId),
-    ]);
+    const onboardingResult = await completeOnboarding({ plantCountRange: range });
 
     setIsCompleting(false);
 
@@ -53,16 +48,7 @@ export function OnboardingBanner({ userId, householdId }: OnboardingBannerProps)
       return;
     }
 
-    if (seedResult && "error" in seedResult) {
-      toast.error(`Could not seed starter plants: ${seedResult.error}`);
-      // Onboarding itself succeeded; do NOT auto-dismiss so the user can
-      // retry or dismiss manually.
-      setSelectedRange(null);
-      return;
-    }
-
     setIsCompleted(true);
-    // Collapse banner after brief confirmation display
     setTimeout(() => setDismissed(true), 1500);
   }
 
@@ -85,7 +71,7 @@ export function OnboardingBanner({ userId, householdId }: OnboardingBannerProps)
             <p className="text-base font-medium">Welcome to Plant Minder</p>
             <p className="text-base text-muted-foreground">
               {isCompleting
-                ? "Setting up your starter plants…"
+                ? "Saving…"
                 : "How many plants are you tracking?"}
             </p>
           </div>
