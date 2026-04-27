@@ -309,7 +309,7 @@ export default async function DashboardPage({
                 dueCount={reminderCountForBanner}
                 cycleEndDate={currentCycle.endDate}
                 action={
-                  currentCycle.status === "active" ? (
+                  currentCycle.status === "active" && members.length > 1 ? (
                     <SkipCycleButton
                       householdId={household.id}
                       householdSlug={householdSlug}
@@ -331,11 +331,13 @@ export default async function DashboardPage({
                 cycleEndDate={currentCycle.endDate}
                 isSingleMember={members.length === 1}
                 action={
-                  <SkipCycleButton
-                    householdId={household.id}
-                    householdSlug={householdSlug}
-                    isDemo={session.user.isDemo ?? false}
-                  />
+                  members.length > 1 ? (
+                    <SkipCycleButton
+                      householdId={household.id}
+                      householdSlug={householdSlug}
+                      isDemo={session.user.isDemo ?? false}
+                    />
+                  ) : undefined
                 }
               />
             )}

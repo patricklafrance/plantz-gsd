@@ -23,7 +23,13 @@ import {
   reorderRotationSchema,
 } from "./schema";
 import { generateInvitationToken, hashInvitationToken } from "@/lib/crypto";
-import { computeInitialCycleBoundaries, transitionCycle } from "./cycle";
+import {
+  computeInitialCycleBoundaries,
+  findNextAssignee,
+  isUniqueViolation,
+  mapReasonToNotificationType,
+  transitionCycle,
+} from "./cycle";
 import { findOverlappingPeriod } from "./availability";
 import { requireHouseholdAccess, ForbiddenError } from "./guards";
 import { HOUSEHOLD_PATHS } from "./paths";
@@ -136,24 +142,27 @@ export async function createHousehold(data: unknown) {
 }
 
 /**
- * AVLB-04 / D-14: active assignee manually skips their current cycle.
- * 7-step template. Only the current assignee may call this.
+ * Phase 8 — Skip my turn = reassign the CURRENT cycle to the next available
+ * member. Distinct from the original "end this cycle, start a new one"
+ * behavior in transitionCycle: same cycleNumber, same startDate / endDate;
+ * only `assignedUserId` changes.
+ *
+ * Use case: "oops, I forgot to set my availability and I can't water this
+ * week — can someone else cover this cycle?"
+ *
+ * Solo households — the UI hides the button when `members.length === 1`,
+ * but the action defensively rejects that case too.
  */
 export async function skipCurrentCycle(data: unknown) {
-  // Step 1: session
   const session = await auth();
   if (!session?.user?.id) return { error: "Not authenticated." };
-
-  // Step 2: demo guard
   if (session.user.isDemo) {
     return { error: "Demo mode — sign up to save your changes." };
   }
 
-  // Step 3: Zod parse
   const parsed = skipCurrentCycleSchema.safeParse(data);
   if (!parsed.success) return { error: "Invalid input." };
 
-  // Step 4: live household access check
   try {
     await requireHouseholdAccess(parsed.data.householdId);
   } catch (err) {
@@ -161,29 +170,102 @@ export async function skipCurrentCycle(data: unknown) {
     throw err;
   }
 
-  // Step 5: load current cycle and assert caller is the assignee
-  const currentCycle = await db.cycle.findFirst({
-    where: {
-      householdId: parsed.data.householdId,
-      status: { in: ["active", "paused"] },
-    },
-    orderBy: { cycleNumber: "desc" },
-    select: { id: true, assignedUserId: true, status: true },
-  });
-  if (!currentCycle) {
-    return { error: "No active cycle found for this household." };
-  }
-  if (currentCycle.assignedUserId !== session.user.id) {
-    return { error: "Only the active assignee can skip this cycle." };
+  const userId = session.user.id;
+  const householdId = parsed.data.householdId;
+
+  try {
+    await db.$transaction(async (tx) => {
+      // Lock the current active cycle row.
+      const lockedRows = await tx.$queryRaw<
+        Array<{
+          id: string;
+          assignedUserId: string | null;
+          startDate: Date;
+          endDate: Date;
+        }>
+      >`
+        SELECT id, "assignedUserId", "startDate", "endDate"
+        FROM "Cycle"
+        WHERE "householdId" = ${householdId}
+          AND status = 'active'
+        ORDER BY "cycleNumber" DESC
+        LIMIT 1
+        FOR UPDATE SKIP LOCKED
+      `;
+      if (lockedRows.length === 0) {
+        throw new SkipError("No active cycle to skip.");
+      }
+      const cycle = lockedRows[0];
+      if (cycle.assignedUserId !== userId) {
+        throw new SkipError("Only the active assignee can skip this cycle.");
+      }
+
+      const members = await tx.householdMember.findMany({
+        where: { householdId },
+        orderBy: { rotationOrder: "asc" },
+        select: { userId: true, rotationOrder: true, role: true },
+      });
+      if (members.length <= 1) {
+        throw new SkipError(
+          "You're the only member of this household — invite someone first.",
+        );
+      }
+
+      // Use today (not cycle.endDate) for the availability check — we want
+      // "who can take over RIGHT NOW", not "who'll be available when this
+      // cycle would have ended".
+      const next = await findNextAssignee(tx, householdId, members, {
+        assignedUserId: userId,
+        endDate: new Date(),
+      });
+      if (!next) {
+        throw new SkipError(
+          "Everyone else is unavailable right now — try again later.",
+        );
+      }
+
+      // Update in place — keep cycleNumber, startDate, endDate; just hand
+      // the rest of this cycle to the next member.
+      await tx.cycle.update({
+        where: { id: cycle.id },
+        data: { assignedUserId: next.userId },
+      });
+
+      // Notify the new assignee. Same row shape transitionCycle would have
+      // emitted, but the cycleId is the EXISTING cycle (no new row).
+      const notificationType = mapReasonToNotificationType("manual_skip");
+      try {
+        await tx.householdNotification.create({
+          data: {
+            householdId,
+            recipientUserId: next.userId,
+            type: notificationType,
+            cycleId: cycle.id,
+            priorAssigneeUserId: userId,
+          },
+        });
+      } catch (err) {
+        if (!isUniqueViolation(err)) throw err;
+        // Re-skipping back to a recipient who already has a pending
+        // cycle_reassigned_manual_skip notification for this cycle is a
+        // no-op on the notification side.
+      }
+    });
+  } catch (err) {
+    if (err instanceof SkipError) return { error: err.message };
+    throw err;
   }
 
-  // Step 6: shared transition function (manual_skip). This is the single
-  // cycle-mutation path — we do NOT touch Cycle rows directly here.
-  await transitionCycle(parsed.data.householdId, "manual_skip");
-
-  // Step 7: revalidate dashboard so the clicking user sees the new banner immediately.
   revalidatePath(HOUSEHOLD_PATHS.dashboard, "page");
-  return { success: true };
+  return { success: true as const };
+}
+
+class SkipError extends Error {
+  readonly name = "SkipError" as const;
+  constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, SkipError.prototype);
+  }
 }
 
 /**
