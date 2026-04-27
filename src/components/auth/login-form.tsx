@@ -107,29 +107,29 @@ export function LoginForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <div className="relative">
+                  <div className="relative">
+                    <FormControl>
                       <Input
                         type={showPassword ? "text" : "password"}
                         className="pr-11"
                         {...field}
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-1/2 -translate-y-1/2 h-11 w-11"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </Button>
-                    </div>
-                  </FormControl>
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 h-11 w-11"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

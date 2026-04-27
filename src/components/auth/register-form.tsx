@@ -123,31 +123,31 @@ export function RegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <div className="relative">
+                  <div className="relative">
+                    <FormControl>
                       <Input
                         type={showPassword ? "text" : "password"}
                         className="pr-11"
                         disabled={isSubmitting}
                         {...field}
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-1/2 -translate-y-1/2 h-11 w-11"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                        disabled={isSubmitting}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </Button>
-                    </div>
-                  </FormControl>
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 h-11 w-11"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      disabled={isSubmitting}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -158,31 +158,31 @@ export function RegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Confirm password</FormLabel>
-                  <FormControl>
-                    <div className="relative">
+                  <div className="relative">
+                    <FormControl>
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
                         className="pr-11"
                         disabled={isSubmitting}
                         {...field}
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-0 top-1/2 -translate-y-1/2 h-11 w-11"
-                        onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                        disabled={isSubmitting}
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="h-5 w-5" />
-                        ) : (
-                          <Eye className="h-5 w-5" />
-                        )}
-                      </Button>
-                    </div>
-                  </FormControl>
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-1/2 -translate-y-1/2 h-11 w-11"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      disabled={isSubmitting}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

@@ -6,7 +6,10 @@ test("home page loads without errors", async ({ page }) => {
   await expect(page.locator("body")).toBeVisible();
 });
 
-test("home page displays Plantz heading", async ({ page }) => {
+test("unauthenticated / redirects to login with sign-in heading", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Plantz" })).toBeVisible();
+  await expect(page).toHaveURL(/\/login/);
+  await expect(
+    page.getByRole("heading", { name: "Sign in to your account" }),
+  ).toBeVisible();
 });

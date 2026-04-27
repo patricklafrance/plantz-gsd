@@ -191,8 +191,8 @@ export function EditPlantDialog({ plant, rooms, householdId }: EditPlantDialogPr
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Watering interval</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <FormControl>
                       <Input
                         type="number"
                         min={1}
@@ -204,9 +204,9 @@ export function EditPlantDialog({ plant, rooms, householdId }: EditPlantDialogPr
                           field.onChange(parseInt(e.target.value, 10) || 1)
                         }
                       />
-                      <span className="text-sm text-muted-foreground">days</span>
-                    </div>
-                  </FormControl>
+                    </FormControl>
+                    <span className="text-sm text-muted-foreground">days</span>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

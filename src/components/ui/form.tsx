@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
 import {
   Controller,
   FormProvider,
@@ -99,12 +100,12 @@ function FormLabel({
   );
 }
 
-function FormControl({ ...props }: React.ComponentProps<"div">) {
+function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
   const { error, formItemId, formDescriptionId, formMessageId } =
     useFormField();
 
   return (
-    <div
+    <Slot
       data-slot="form-control"
       id={formItemId}
       aria-describedby={
