@@ -318,7 +318,7 @@ export async function createAvailability(data: unknown) {
     const s = formatDate(overlap.startDate, "MMM d, yyyy");
     const e = formatDate(overlap.endDate, "MMM d, yyyy");
     return {
-      error: `You already have an availability period covering those dates (${s} → ${e}). Delete it first, or pick non-overlapping dates.`,
+      error: `You already have time off covering those dates (${s} → ${e}). Delete it first, or pick non-overlapping dates.`,
     };
   }
 
@@ -333,8 +333,8 @@ export async function createAvailability(data: unknown) {
     },
   });
 
-  // Step 7: revalidate the settings page so the new row appears.
-  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
+  // Step 7: revalidate the time-off page so the new row appears.
+  revalidatePath(HOUSEHOLD_PATHS.timeOff, "page");
   return { success: true };
 }
 
@@ -361,14 +361,14 @@ export async function deleteAvailability(data: unknown) {
     where: { id: parsed.data.availabilityId },
     select: { id: true, userId: true, householdId: true },
   });
-  if (!row) return { error: "Availability period not found." };
+  if (!row) return { error: "Time off not found." };
 
   try {
     const { role } = await requireHouseholdAccess(row.householdId);
     // D-09: owning member OR household owner
     if (row.userId !== session.user.id && role !== "OWNER") {
       throw new ForbiddenError(
-        "You can only delete your own availability periods.",
+        "You can only delete your own time off.",
       );
     }
   } catch (err) {
@@ -379,8 +379,8 @@ export async function deleteAvailability(data: unknown) {
   // Step 6: delete
   await db.availability.delete({ where: { id: row.id } });
 
-  // Step 7: revalidate settings
-  revalidatePath(HOUSEHOLD_PATHS.settings, "page");
+  // Step 7: revalidate time-off page
+  revalidatePath(HOUSEHOLD_PATHS.timeOff, "page");
   return { success: true };
 }
 

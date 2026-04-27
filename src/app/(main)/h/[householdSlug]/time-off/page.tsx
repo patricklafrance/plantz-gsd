@@ -15,7 +15,7 @@ type PageProps = {
   params: Promise<{ householdSlug: string }>;
 };
 
-export default async function AvailabilityPage({ params }: PageProps) {
+export default async function TimeOffPage({ params }: PageProps) {
   const { householdSlug } = await params;
 
   const session = await auth();
@@ -40,7 +40,7 @@ export default async function AvailabilityPage({ params }: PageProps) {
     <main className="max-w-2xl mx-auto px-4 py-8 space-y-8 pb-20 sm:pb-8">
       <header>
         <h1 className="text-2xl font-semibold outline-none" tabIndex={-1}>
-          Availability settings
+          Time off
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">{household.name}</p>
       </header>
@@ -48,11 +48,11 @@ export default async function AvailabilityPage({ params }: PageProps) {
       <Card>
         <CardHeader className="pb-4">
           <CardTitle className="text-xl font-semibold">
-            Availability windows
+            Your time off
           </CardTitle>
           <CardDescription>
-            Tell your household when you&apos;re unavailable. The rotation will
-            skip your turn during these dates.
+            Block dates when you can&apos;t water — vacation, travel, or anything
+            else. The rotation will skip your turn during these dates.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

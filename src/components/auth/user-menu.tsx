@@ -2,7 +2,7 @@
 
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, FlaskConical, Home, LogOut, UserCog } from "lucide-react";
+import { FlaskConical, Home, LogOut, Plane, UserCog } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +39,7 @@ function getInitials(email: string, name?: string | null): string {
 /**
  * Phase 8 ribbon refresh — three logical groups in one dropdown:
  *   1. My households (HouseholdSwitcher mobile fragment)
- *   2. Settings → Household / Availabilities / Account (renamed from
+ *   2. Settings → Household / Time off / Account (renamed from
  *      "Account preferences"; the route is still /preferences)
  *   3. Appearance (inline theme toggle)
  * followed by Sign out.
@@ -96,11 +96,11 @@ export function UserMenu({
           Household
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={() => router.push(`/h/${currentSlug}/availability-settings`)}
+          onClick={() => router.push(`/h/${currentSlug}/time-off`)}
           className="cursor-pointer gap-2"
         >
-          <CalendarDays className="h-4 w-4" />
-          Availabilities
+          <Plane className="h-4 w-4" />
+          Time off
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => router.push(`/h/${currentSlug}/preferences`)}

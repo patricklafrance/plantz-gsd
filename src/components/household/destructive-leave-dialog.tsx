@@ -76,7 +76,7 @@ export function DestructiveLeaveDialog({
             <li>
               {roomCount} {roomWord} and your notes
             </li>
-            <li>All reminders and availability periods</li>
+            <li>All reminders and time-off entries</li>
           </ul>
           <p className="font-medium text-foreground">
             This can&apos;t be undone.

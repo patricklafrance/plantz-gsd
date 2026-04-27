@@ -96,12 +96,12 @@ export function AvailabilitySection({
         reason: reason.trim() || undefined,
       });
       if ("error" in result) {
-        const message = result.error ?? "Couldn't add availability. Try again.";
+        const message = result.error ?? "Couldn't add time off. Try again.";
         setFormError(message);
         toast.error(message);
         return;
       }
-      toast.success("Availability period added.");
+      toast.success("Time off added.");
       setStartDate(undefined);
       setEndDate(undefined);
       setReason("");
@@ -122,7 +122,7 @@ export function AvailabilitySection({
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+          <div className="flex-1 space-y-2">
             <Label>Start date</Label>
             <Popover>
               <PopoverTrigger render={<Button type="button" variant="outline" className="w-full justify-start font-normal" aria-label="Start date"><CalendarIcon className="mr-2 h-4 w-4" />{startDate ? format(startDate, "MMM d, yyyy") : "Pick a date"}</Button>} />
@@ -144,7 +144,7 @@ export function AvailabilitySection({
               </p>
             )}
           </div>
-          <div className="flex-1">
+          <div className="flex-1 space-y-2">
             <Label>End date</Label>
             <Popover>
               <PopoverTrigger render={<Button type="button" variant="outline" className="w-full justify-start font-normal" aria-label="End date"><CalendarIcon className="mr-2 h-4 w-4" />{endDate ? format(endDate, "MMM d, yyyy") : "Pick a date"}</Button>} />
@@ -190,13 +190,13 @@ export function AvailabilitySection({
           </p>
         )}
         <Button type="submit" disabled={!canSubmit}>
-          Add unavailability period
+          Add time off
         </Button>
       </form>
 
       {upcoming.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No upcoming availability periods.
+          No upcoming time off.
         </p>
       ) : (
         <div className="space-y-2">
@@ -257,11 +257,11 @@ function DeleteAvailabilityButton({
       });
       if ("error" in result) {
         toast.error(
-          result.error ?? "Couldn't delete availability. Try again.",
+          result.error ?? "Couldn't delete time off. Try again.",
         );
         return;
       }
-      toast.success("Availability period deleted.");
+      toast.success("Time off deleted.");
     });
   }
 
@@ -271,7 +271,7 @@ function DeleteAvailabilityButton({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Delete this availability period?
+            Delete this time off?
           </AlertDialogTitle>
           <AlertDialogDescription>
             If this was covering an upcoming turn, the rotation may reassign
@@ -285,7 +285,7 @@ function DeleteAvailabilityButton({
             onClick={handleDelete}
             disabled={isPending}
           >
-            Delete period
+            Delete
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
