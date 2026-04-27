@@ -1,8 +1,10 @@
 # Phase 8 — UAT (Plant Minder)
 
-**Branch:** `feat/household` (5 atomic commits — `f86ed29` … `9de59d9`)
+**Branch:** `feat/household` (through `f67e1e5`)
 **DB:** Reset + reseeded autonomously during the build run. Demo user + 8 plants + 3 members ready.
-**Dev server:** `npm run dev` → `http://localhost:3000` (was already running on PID 23688 during the autonomous run)
+**Dev server:** `npm run dev` → `http://localhost:3000`
+
+> **Reality check before reading:** Snooze was removed in `49d716e` — there is no Snooze button anywhere. Skip my turn now reassigns the *current* cycle in place rather than ending it and starting a new one (`f67e1e5`). The seed feature was split out of onboarding into a dedicated Demo tools page in the ribbon (`4692c64`). UATs below reflect the current code, not the original autonomous-run plan.
 
 ---
 
@@ -19,20 +21,22 @@ npx prisma db seed
 
 ---
 
-## UAT 8.1 — Cycle Snooze
+## UAT 8.1 — Skip my turn (reassign current cycle in place)
 
-**Goal:** Active assignee can defer their cycle by exactly one cycle duration without reassigning.
+**Goal:** Active assignee hands the *rest of the current cycle* to the next available member. Same cycle number, same end date — only `assignedUserId` changes. Solo households can't skip (no one to hand off to).
+
+**Prereq:** demo session has 3 members (Demo User + Alice + Bob). Use it for the multi-member path.
 
 1. Visit `http://localhost:3000/login` → click **Explore without signing up**.
-2. On `/h/<slug>/dashboard` look below the green countdown banner (right-aligned).
-3. **Expected:** Two buttons — `Snooze` and `Skip`.
-4. **Demo-mode block:** the demo session blocks writes — clicking Snooze should toast "Demo mode — sign up to save your changes." If this fires, the read-only guard is working. To exercise the real write path, register a new account.
-5. Sign out → register a fresh account (e.g. `Pat`). On the new dashboard, click **Snooze**.
-6. **Expected:** Countdown banner adds one cycle duration (e.g. "7 days left" → "14 days left", end-date shifts by 7 days). Toast says "Snoozed — cycle pushed by 7 days."
-7. Click **Snooze** again.
-8. **Expected:** Same shift — countdown adds another 7 days. (Snooze is per-cycle but not rate-limited; this is a deliberate simplification — no "snooze cap" was specified.)
-9. Click **Skip**.
-10. **Expected:** Confirm dialog "Skip your turn?". Confirm → on a solo household the same person stays the assignee (they are also the next available member), so the banner does not change much. With a multi-member household, responsibility moves to the next member.
+2. On `/h/<demo-slug>/dashboard` find the green countdown banner. The Skip control lives **inside the banner's action slot**, not below it.
+3. **Expected (banner copy):** *"You're up this week — N days left. **Alice** (alice@demo.plantminder.app) is next."* with a **Skip my turn** button to the right.
+4. **Demo-mode block:** click **Skip my turn** → confirm the dialog → toast should say *"Demo mode — sign up to save your changes."* Banner does not change. Confirms the read-only guard.
+5. To exercise the real write path: sign out → register a fresh account `Pat`. New solo household — **the Skip button should NOT render** (only one member, no one to reassign to). Verify it's absent.
+6. Open a second browser/profile, register `Sam`. From Pat's account, send Sam an invite (Household settings → Invitations → copy link), accept it as Sam. Both should now belong to Pat's household.
+7. Back on Pat's dashboard, the Skip button is now visible inside the banner. Click it → confirm.
+8. **Expected:** Banner now shows Sam as the active assignee (*"Sam (sam-uat@…) is on rotation — N days left in this cycle"*) with the **same end date** as before. Cycle number unchanged in the database. Toast: success.
+9. Switch to Sam's session → bell badge has 1 unread; the dropdown shows a *"Pat (pat-uat@…) skipped — you're now watering"* notification.
+10. **Edge case:** as Sam, click **Skip my turn** again → it hands back to Pat with another notification. (No "skip cap" — deliberate simplification.)
 
 ---
 
@@ -75,14 +79,16 @@ Use the demo session for this UAT (3 members already seeded).
 
 **Goal:** Theme switcher persists, system preference is the default, both modes are usable.
 
-1. From any logged-in session, open avatar menu → **Account preferences**.
-2. **Expected:** New "Appearance" card with three radio buttons — Light / Dark / System.
+**Note:** since `7f65293`, the theme controls are **inline at the top of the user menu** (three radios — Light / Dark / Sys), not on the Account preferences page.
+
+1. From any logged-in session, click the avatar in the top-right.
+2. **Expected:** First row of the dropdown contains three radios labelled `Light` / `Dark` / `Sys` (in that order, above the household section).
 3. Click **Dark**.
 4. **Expected:** Whole app flips to dark mode immediately. Header, dashboard banner, member rows, sidebar, dialog backgrounds — all dark surfaces. The accent green stays visible (banner border, "Watering now" pill, focus ring).
 5. Refresh the page.
 6. **Expected:** Dark mode is preserved (next-themes localStorage).
-7. Click **Light** → verify everything goes back to the light palette.
-8. Click **System** → matches your OS appearance setting.
+7. Reopen the menu → click **Light** → verify everything goes back to the light palette.
+8. Click **Sys** → matches your OS appearance setting.
 9. Open dev tools → no React hydration warnings ("Text content does not match…") in console.
 
 ---
@@ -104,6 +110,34 @@ npx playwright test
   - `watering.spec.ts` is a smoke (selectors are tolerant) — if shadcn `AddPlantDialog` field labels differ from the regexes, expect a flake.
   - `invite.spec.ts` opens two browser contexts in parallel; the invite-link locator depends on the InvitationsCard rendering the URL as visible text — flake if a copy-only-button design lands.
   - First-run cost: dev server boot for `webServer` config.
+
+---
+
+## UAT 8.6 — Onboarding no longer seeds plants
+
+**Goal:** Picking a plant-count range during onboarding only personalizes — it does NOT auto-create plants.
+
+1. Sign out → register a fresh account (e.g. `pat-onboarding-uat@example.com`).
+2. **Expected:** Lands on dashboard with the *"Welcome to Plant Minder — How many plants are you tracking?"* banner. Below it: *"No plants yet — Add your first plant to start tracking watering."*
+3. Click **1-5 plants**.
+4. **Expected:** Banner collapses to *"Got it — your tips are personalized."* Dashboard still shows **"No plants yet"** — no auto-seeded sample plants.
+5. **Negative check:** No "Setting up your starter plants…" loading copy, no toast about seeded plants.
+
+---
+
+## UAT 8.7 — Demo tools page (ribbon)
+
+**Goal:** Seed feature lives on a dedicated, clearly-labelled page reachable from the user menu — hidden for the demo session, visible for real users, idempotent for repeated test runs.
+
+1. **Hidden for demo:** while in the Explore-without-signing-up demo session, open the user menu → confirm there is **no "Demo tools"** entry.
+2. Try to navigate directly to `http://localhost:3000/h/<demo-slug>/demo-tools` → server should redirect you back to `/h/<demo-slug>/dashboard`.
+3. **Visible for real users:** sign out → log in (or register) as a real account → open the user menu.
+4. **Expected:** A **Demo tools** entry appears (FlaskConical icon, between Account and Sign out).
+5. Click it → lands on `/h/<slug>/demo-tools`.
+6. **Expected:** Heading "Demo & testing tools", a yellow *"Heads up"* card calling out "for testing and demo purposes only", and a "Seed starter plants" card with a 4-button range selector (1-5 / 6-15 / 16-30 / 30+) and a primary **Seed starter plants** button.
+7. Click **Seed starter plants** with the default 1-5 selection → confirm dialog → accept.
+8. **Expected:** Toast *"Seeded 5 plants."* Visit `/h/<slug>/dashboard` → "Recently Watered (5)" group lists the 5 starter plants.
+9. **Idempotency:** click Seed again with the same range → toast says *"Seeded 5 plants."* again, dashboard now shows 10 plants (no de-duplication — duplicates stack, as documented).
 
 ---
 
