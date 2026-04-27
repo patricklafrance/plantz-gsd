@@ -45,8 +45,8 @@ export function PreferencesForm({
   return (
     <div className="space-y-8">
       <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold">Notifications</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
@@ -73,8 +73,8 @@ export function PreferencesForm({
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Sign-in</CardTitle>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold">Sign-in</CardTitle>
         </CardHeader>
         <CardContent>
           <AccountSettings userEmail={userEmail} isDemo={isDemo} />
