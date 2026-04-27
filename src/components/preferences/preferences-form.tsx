@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toggleGlobalReminders } from "@/features/reminders/actions";
 import { toast } from "sonner";
 import { AccountSettings } from "./account-settings";
-import { ThemeSelector } from "./theme-selector";
 
 interface PreferencesFormProps {
   initialRemindersEnabled: boolean;
@@ -47,7 +46,7 @@ export function PreferencesForm({
     <div className="mx-auto max-w-2xl space-y-8">
       <header>
         <h1 tabIndex={-1} className="text-2xl font-semibold outline-none">
-          Account preferences
+          Preferences
         </h1>
       </header>
 
@@ -77,16 +76,6 @@ export function PreferencesForm({
               aria-label="In-app reminders"
             />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Appearance section (Phase 8.4) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Appearance</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ThemeSelector />
         </CardContent>
       </Card>
 

@@ -45,20 +45,28 @@ test("snooze action surfaces a success toast (Phase 8.1)", async ({ page }) => {
   });
 });
 
-test("preferences page exposes a theme selector (Phase 8.4)", async ({ page }) => {
+test("user menu exposes inline appearance toggle (Phase 8.4)", async ({ page }) => {
   await registerFreshUser(page, "ThemeUser");
-  // Navigate via the user menu rather than typing the URL — keeps the
-  // assertion close to the production flow.
+
   await page.getByRole("button", { name: /user menu/i }).click();
-  await page.getByRole("menuitem", { name: /account preferences/i }).click();
-
-  await page.waitForURL(/\/preferences/);
-  await expect(page.getByRole("heading", { name: /appearance/i })).toBeVisible();
-  await expect(page.getByRole("radio", { name: /^light$/i })).toBeVisible();
-  await expect(page.getByRole("radio", { name: /^dark$/i })).toBeVisible();
-  await expect(page.getByRole("radio", { name: /^system$/i })).toBeVisible();
-
-  // Pick dark, confirm <html> gets the .dark class.
-  await page.getByRole("radio", { name: /^dark$/i }).click();
+  // The inline toggle is a 3-button radiogroup labeled "Appearance" inside
+  // the dropdown content. Pick dark, then confirm html.dark applies.
+  const darkBtn = page.getByRole("radio", { name: /dark theme/i });
+  await expect(darkBtn).toBeVisible();
+  await darkBtn.click();
   await expect(page.locator("html")).toHaveClass(/dark/);
+});
+
+test("user-menu Settings group has Household / Availabilities / Account", async ({ page }) => {
+  await registerFreshUser(page, "Settler");
+
+  await page.getByRole("button", { name: /user menu/i }).click();
+  await expect(page.getByRole("menuitem", { name: /^Household$/ })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: /^Availabilities$/ })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: /^Account$/ })).toBeVisible();
+
+  // Account links to /preferences (page title "Preferences")
+  await page.getByRole("menuitem", { name: /^Account$/ }).click();
+  await page.waitForURL(/\/preferences/);
+  await expect(page.getByRole("heading", { name: /^Preferences$/ })).toBeVisible();
 });
