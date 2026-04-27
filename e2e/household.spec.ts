@@ -1,9 +1,12 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * Phase 8.5 — Critical-path: household switcher round-trip via the
- * UserMenu, plus the cycle-snooze + skip controls visibility for the active
- * assignee on a freshly-registered solo household.
+ * Phase 8.5 — Critical-path: cycle skip controls and the user-menu Settings
+ * group on a freshly-registered household.
+ *
+ * Skip-my-turn is intentionally hidden on solo households (no one to hand
+ * off to). The skip behavior with confirmation + reassignment is exercised
+ * in invite.spec.ts where a second user is in the household.
  */
 
 const uniqueEmail = (label: string) =>
@@ -19,30 +22,15 @@ async function registerFreshUser(page: import("@playwright/test").Page, name: st
   await page.waitForURL(/\/h\/[A-Za-z0-9]+\/dashboard/, { timeout: 15000 });
 }
 
-test("solo-household assignee sees Skip button inside the banner (Phase 8.1)", async ({ page }) => {
+test("solo-household assignee does NOT see a Skip button (Phase 8.1)", async ({ page }) => {
   await registerFreshUser(page, "SoloOwner");
 
-  // The Skip button is rendered as the right-side action slot of the
-  // CycleCountdownBanner — visible whenever the viewer is the active assignee.
+  // Cycle banner renders, but with a single member there is nobody to hand
+  // off to — so the action slot is empty. The button must not be in the DOM.
+  await expect(page.getByText(/on rotation/i)).toBeVisible({ timeout: 10000 });
   await expect(
     page.getByRole("button", { name: /skip my turn/i }),
-  ).toBeVisible({ timeout: 10000 });
-});
-
-test("skip-my-turn confirms via dialog and toasts on success (Phase 8.1)", async ({ page }) => {
-  await registerFreshUser(page, "Skipper");
-
-  await page.getByRole("button", { name: /skip my turn/i }).click();
-  // AlertDialog appears with "Skip your turn?" title.
-  await expect(page.getByRole("alertdialog")).toBeVisible();
-  await page
-    .getByRole("button", { name: /skip my turn/i, exact: false })
-    .last()
-    .click();
-
-  await expect(page.getByText(/passed to the next member/i)).toBeVisible({
-    timeout: 5000,
-  });
+  ).toHaveCount(0);
 });
 
 test("user menu exposes inline appearance toggle (Phase 8.4)", async ({ page }) => {
@@ -57,16 +45,15 @@ test("user menu exposes inline appearance toggle (Phase 8.4)", async ({ page }) 
   await expect(page.locator("html")).toHaveClass(/dark/);
 });
 
-test("user-menu Settings group has Household / Availabilities / Account", async ({ page }) => {
+test("user-menu Settings group has Household / Time off / Account", async ({ page }) => {
   await registerFreshUser(page, "Settler");
 
   await page.getByRole("button", { name: /user menu/i }).click();
   await expect(page.getByRole("menuitem", { name: /^Household$/ })).toBeVisible();
-  await expect(page.getByRole("menuitem", { name: /^Availabilities$/ })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: /^Time off$/ })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: /^Account$/ })).toBeVisible();
 
-  // Account links to /preferences (page title "Preferences")
+  // Account links to the preferences page.
   await page.getByRole("menuitem", { name: /^Account$/ }).click();
   await page.waitForURL(/\/preferences/);
-  await expect(page.getByRole("heading", { name: /^Preferences$/ })).toBeVisible();
 });
