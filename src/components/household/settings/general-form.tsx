@@ -203,16 +203,21 @@ export function GeneralForm({
             <FormItem>
               <FormLabel>Timezone</FormLabel>
               <FormControl>
-                <select
-                  {...field}
-                  className="flex h-8 w-full items-center rounded-lg border border-input bg-background px-2.5 text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
                 >
-                  {timezones.map((zone) => (
-                    <option key={zone} value={zone}>
-                      {zone}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a timezone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timezones.map((zone) => (
+                      <SelectItem key={zone} value={zone}>
+                        {zone}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
