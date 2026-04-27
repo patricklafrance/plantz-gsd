@@ -69,7 +69,11 @@ export function UserMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        {/* 1. My households */}
+        {/* 1. Appearance — inline theme toggle, no nav. */}
+        <ThemeToggleInline />
+        <DropdownMenuSeparator />
+
+        {/* 2. My households */}
         <HouseholdSwitcher
           variant="mobile"
           households={households}
@@ -78,7 +82,7 @@ export function UserMenu({
         />
         <DropdownMenuSeparator />
 
-        {/* 2. Settings group */}
+        {/* 3. Settings group */}
         <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
           Settings
         </DropdownMenuLabel>
@@ -103,10 +107,6 @@ export function UserMenu({
           <UserCog className="h-4 w-4" />
           Account
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-
-        {/* 3. Appearance — inline theme toggle, no nav. */}
-        <ThemeToggleInline />
         <DropdownMenuSeparator />
 
         <DropdownMenuItem
