@@ -11,11 +11,10 @@ import { cn } from "@/lib/utils";
 const PLANT_RANGES = ["1-5 plants", "6-15 plants", "16-30 plants", "30+ plants"] as const;
 
 interface OnboardingBannerProps {
-  userId: string;
   householdId: string;
 }
 
-export function OnboardingBanner({ userId, householdId }: OnboardingBannerProps) {
+export function OnboardingBanner({ householdId }: OnboardingBannerProps) {
   const [dismissed, setDismissed] = useState(false);
   const [selectedRange, setSelectedRange] = useState<string | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);

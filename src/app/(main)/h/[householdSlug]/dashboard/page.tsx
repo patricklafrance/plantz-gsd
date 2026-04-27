@@ -260,7 +260,7 @@ export default async function DashboardPage({
   return (
     <div className="space-y-6">
       {!user?.onboardingCompleted && (
-        <OnboardingBanner userId={session.user.id} householdId={household.id} />
+        <OnboardingBanner householdId={household.id} />
       )}
 
       <TimezoneWarning storedTimezone={user?.timezone ?? null} />
