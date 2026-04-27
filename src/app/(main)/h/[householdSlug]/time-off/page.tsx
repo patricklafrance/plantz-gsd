@@ -1,12 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "../../../../../../auth";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentHousehold } from "@/features/household/context";
 import { getHouseholdAvailabilities } from "@/features/household/queries";
 import { AvailabilitySection } from "@/components/household/settings/availability-section";
@@ -43,20 +37,12 @@ export default async function TimeOffPage({ params }: PageProps) {
           Time off
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Block dates you can&apos;t water
+          Block dates when you can&apos;t water — vacation, travel, or anything
+          else. The rotation will skip your turn during these dates.
         </p>
       </header>
 
       <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-xl font-semibold">
-            Your time off
-          </CardTitle>
-          <CardDescription>
-            Block dates when you can&apos;t water — vacation, travel, or anything
-            else. The rotation will skip your turn during these dates.
-          </CardDescription>
-        </CardHeader>
         <CardContent className="space-y-4">
           <AvailabilitySection
             availabilities={availabilityRows}
